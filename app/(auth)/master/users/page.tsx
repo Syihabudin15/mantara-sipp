@@ -1,0 +1,788 @@
+"use client";
+
+import { FormInput } from "@/components";
+import { FilterData } from "@/components/utils/CompUtils";
+import { IDRFormat, IDRToNumber } from "@/components/utils/PembiayaanUtil";
+import { IActionTable, IPageProps, UserType } from "@/libs/IInterfaces";
+import { useAccess } from "@/libs/Permission";
+import {
+  BankOutlined,
+  DeleteOutlined,
+  DollarCircleOutlined,
+  EditOutlined,
+  EnvironmentOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  PlusCircleFilled,
+  PrinterOutlined,
+  SaveOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import { AgentFronting, Cabang, Role, Sumdan, User } from "@prisma/client";
+import {
+  App,
+  Button,
+  Card,
+  Input,
+  Modal,
+  Select,
+  Table,
+  TableProps,
+  Tag,
+} from "antd";
+import { HookAPI } from "antd/es/modal/useModal";
+import moment from "moment";
+import { useEffect, useState } from "react";
+
+export default function Page() {
+  const [upsert, setUpsert] = useState<IActionTable<UserType>>({
+    upsert: false,
+    delete: false,
+    proses: false,
+    selected: undefined,
+  });
+  const [pageProps, setPageProps] = useState<IPageProps<UserType>>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    data: [],
+    search: "",
+    roleId: "",
+    pkwt_status: "",
+    position: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [cabangs, setCabangs] = useState<Cabang[]>([]);
+  const [sumdans, setSumdans] = useState<Sumdan[]>([]);
+  const [agents, setAgents] = useState<AgentFronting[]>([]);
+  const { modal } = App.useApp();
+  const { hasAccess } = useAccess("/master/users");
+
+  const getData = async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    params.append("page", pageProps.page.toString());
+    params.append("limit", pageProps.limit.toString());
+    if (pageProps.search) params.append("search", pageProps.search);
+
+    if (pageProps.roleId) params.append("roleId", pageProps.roleId);
+    if (pageProps.pkwt_status)
+      params.append("pkwt_status", pageProps.pkwt_status);
+    if (pageProps.position) params.append("position", pageProps.position);
+
+    const res = await fetch(`/api/user?${params.toString()}`);
+    const json = await res.json();
+    setPageProps((prev) => ({
+      ...prev,
+      data: json.data,
+      total: json.total,
+    }));
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      await getData();
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [
+    pageProps.page,
+    pageProps.limit,
+    pageProps.search,
+    pageProps.roleId,
+    pageProps.pkwt_status,
+    pageProps.position,
+  ]);
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/roles");
+      const resJson = await res.json();
+      setRoles(resJson.data);
+      const resC = await fetch("/api/unit");
+      const resCJson = await resC.json();
+      setCabangs(resCJson.data);
+      const resS = await fetch("/api/sumdan");
+      const resSJson = await resS.json();
+      setSumdans(resSJson.data);
+      const resagent = await fetch("/api/agent");
+      const resagents = await resagent.json();
+      setAgents(resagents.data);
+    })();
+  }, []);
+
+  const columns: TableProps<UserType>["columns"] = [
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      render(value, record, index) {
+        return (
+          <div>
+            <div>{(pageProps.page - 1) * pageProps.limit + index + 1}</div>
+            <div className="opacity-80 text-xs">{record.id}</div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Nama Lengkap",
+      dataIndex: "fullname",
+      key: "fullname",
+      sorter: (a, b) => a.fullname.localeCompare(b.fullname),
+      render(value, record, index) {
+        return (
+          <div>
+            <p>{record.fullname}</p>
+            <div className="text-xs">@{record.username}</div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Kontak",
+      dataIndex: "kontak",
+      key: "kontak",
+      render(value, record, index) {
+        return (
+          <div className="text-xs text-blue-400">
+            <div>
+              <MailOutlined /> {record.email}
+            </div>
+            <div>
+              <PhoneOutlined /> {record.phone}
+            </div>
+            <div>
+              <Tag color={"blue"}>{record.Role.name}</Tag>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Unit Pelayanan",
+      dataIndex: "tambahan",
+      key: "tambahan",
+      sorter: (a, b) => a.fullname.localeCompare(b.fullname),
+      render(value, record, index) {
+        return (
+          <div>
+            <Tag color={"blue"}>{record.position}</Tag>
+            <div className="text-xs text-blue-400">
+              <div>
+                <EnvironmentOutlined /> {record.Cabang.name}
+              </div>
+              {record.Sumdan && (
+                <div>
+                  <BankOutlined /> {record.Sumdan.name}
+                </div>
+              )}
+              {record.target && (
+                <div>
+                  <DollarCircleOutlined /> Target: {IDRFormat(record.target)}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "PKWT Status",
+      dataIndex: "expiredAt",
+      render: (_, record) => (
+        <div className="flex gap-2">
+          <div>
+            <div className="font-bold">{record.pkwt_status}</div>
+            <div className="text-xs opacity-80">
+              {moment(record.start_pkwt).format("DD/MM/YYYY")}
+            </div>
+            <div className="text-xs opacity-80">
+              {moment(record.end_pkwt).format("DD/MM/YYYY")}
+            </div>
+          </div>
+        </div>
+      ),
+      shouldCellUpdate: () => false,
+    },
+    {
+      title: "Posisi & NIP",
+      dataIndex: "salary",
+      key: "salary",
+      render(value, record, index) {
+        return (
+          <div className="text-xs">
+            <div>{record.position}</div>
+            <div>@{record.nip}</div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Updated",
+      dataIndex: "updated_at",
+      key: "updated_at",
+      render: (date) => moment(date).format("DD-MM-YYYY"),
+    },
+    {
+      title: "Aksi",
+      key: "action",
+      width: 100,
+      render: (_, record) => (
+        <div className="flex gap-2">
+          {hasAccess("update") && (
+            <Button
+              icon={<EditOutlined />}
+              onClick={() =>
+                setUpsert({ ...upsert, upsert: true, selected: record })
+              }
+              size="small"
+              type="primary"
+            ></Button>
+          )}
+          {hasAccess("delete") && (
+            <Button
+              icon={<DeleteOutlined />}
+              onClick={() =>
+                setUpsert({ ...upsert, delete: true, selected: record })
+              }
+              size="small"
+              type="primary"
+              danger
+            ></Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+  return (
+    <Card
+      title={
+        <div className="flex gap-2 font-bold text-xl">
+          <UserOutlined /> Users Management
+        </div>
+      }
+      styles={{ body: { padding: 5 } }}
+    >
+      <div className="flex justify-between my-1">
+        <div className="flex gap-2">
+          {hasAccess("write") && (
+            <Button
+              size="small"
+              type="primary"
+              icon={<PlusCircleFilled />}
+              onClick={() =>
+                setUpsert({ ...upsert, upsert: true, selected: undefined })
+              }
+            >
+              Add User
+            </Button>
+          )}
+          <FilterData
+            children={
+              <>
+                <div className="my-2">
+                  <p>Role User :</p>
+                  <Select
+                    style={{ width: "100%" }}
+                    options={roles.map((r) => ({ label: r.name, value: r.id }))}
+                    onChange={(e) => setPageProps({ ...pageProps, roleId: e })}
+                    placeholder="role..."
+                    size="small"
+                    allowClear
+                  />
+                </div>
+                <div className="my-2">
+                  <p>Status PKWT :</p>
+                  <Select
+                    style={{ width: "100%" }}
+                    options={[
+                      { label: "TIERING", value: "TIERING" },
+                      { label: "BARU", value: "BARU" },
+                      { label: "LANJUT", value: "LANJUT" },
+                      { label: "TETAP", value: "TETAP" },
+                    ]}
+                    onChange={(e) =>
+                      setPageProps({ ...pageProps, pkwt_status: e })
+                    }
+                    placeholder="status pkwt..."
+                    size="small"
+                    allowClear
+                  />
+                </div>
+                <div className="my-2">
+                  <p>Posisi :</p>
+
+                  <Select
+                    style={{ width: "100%" }}
+                    options={[
+                      { label: "MOC", value: "MOC" },
+                      { label: "SPV", value: "SPV" },
+                      { label: "KORWIL", value: "KORWIL" },
+                      { label: "ADMIN", value: "ADMIN" },
+                      {
+                        label: "KEPALA OPERASIONAL",
+                        value: "KEPALA OPERASIONAL",
+                      },
+                      {
+                        label: "STAFF OPERASIONAL",
+                        value: "STAFF OPERASIONAL",
+                      },
+                      { label: "KEPALA BISNIS", value: "KEPALA BISNIS" },
+                      { label: "STAFF BISNIS", value: "STAFF BISNIS" },
+                      { label: "MANAJER KEUANGAN", value: "MANAJER KEUANGAN" },
+                      { label: "STAFF KEUANGAN", value: "STAFF KEUANGAN" },
+                      {
+                        label: "KEPALA VERIFIKASI",
+                        value: "KEPALA VERIFIKASI",
+                      },
+                      { label: "STAFF VERIFIKASI", value: "STAFF VERIFIKASI" },
+                      { label: "KEPALA DOKUMEN", value: "KEPALA DOKUMEN" },
+                      { label: "STAFF DOKUMEN", value: "STAFF DOKUMEN" },
+                      { label: "KEPALA IT", value: "KEPALA IT" },
+                      { label: "STAFF IT", value: "STAFF IT" },
+                      { label: "FUNDING", value: "FUNDING" },
+                      { label: "GENERAL AFFAIRS", value: "GENERAL AFFAIRS" },
+                    ]}
+                    onChange={(e) =>
+                      setPageProps({ ...pageProps, position: e })
+                    }
+                    placeholder="status jabatan..."
+                    size="small"
+                    allowClear
+                  />
+                </div>
+              </>
+            }
+          />
+        </div>
+        <div className="flex gap-2 justify-end">
+          <Input.Search
+            size="small"
+            style={{ width: 170 }}
+            placeholder="Cari user..."
+            onChange={(e) =>
+              setPageProps({ ...pageProps, search: e.target.value })
+            }
+          />
+        </div>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={pageProps.data}
+        size="small"
+        loading={loading}
+        rowKey={"id"}
+        bordered
+        scroll={{ x: "max-content", y: "60vh" }}
+        pagination={{
+          current: pageProps.page,
+          pageSize: pageProps.limit,
+          total: pageProps.total,
+          onChange: (page, pageSize) => {
+            setPageProps((prev) => ({
+              ...prev,
+              page,
+              limit: pageSize,
+            }));
+          },
+          pageSizeOptions: [50, 100, 500, 1000],
+        }}
+      />
+      <UpsertUser
+        open={upsert.upsert}
+        record={upsert.selected}
+        setOpen={(v: boolean) => setUpsert({ ...upsert, upsert: v })}
+        getData={getData}
+        modal={modal}
+        roles={roles}
+        cabangs={cabangs}
+        sumdans={sumdans}
+        agents={agents}
+        key={upsert.selected ? "upsert" + upsert.selected.id : "create"}
+      />
+      <DeleteUser
+        open={upsert.delete}
+        setOpen={(v: boolean) => setUpsert({ ...upsert, delete: v })}
+        getData={getData}
+        record={upsert.selected}
+        key={upsert.selected ? "delete" + upsert.selected.id : "delete"}
+        modal={modal}
+      />
+    </Card>
+  );
+}
+
+function UpsertUser({
+  record,
+  open,
+  setOpen,
+  getData,
+  modal,
+  roles,
+  cabangs,
+  sumdans,
+  agents,
+}: {
+  record?: User;
+  open: boolean;
+  setOpen: Function;
+  getData?: Function;
+  modal: HookAPI;
+  roles: Role[];
+  cabangs: Cabang[];
+  sumdans: Sumdan[];
+  agents: AgentFronting[];
+}) {
+  const [data, setData] = useState(record ? record : defaultUser);
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    setLoading(true);
+    if ("Cabang" in data) {
+      delete data.Cabang;
+    }
+    if ("Role" in data) {
+      delete data.Role;
+    }
+    if ("Sumdan" in data) {
+      delete data.Sumdan;
+    }
+    await fetch("/api/user", {
+      method: record ? "PUT" : "POST",
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then(async (res) => {
+        if (res.status === 201 || res.status === 200) {
+          modal.success({
+            title: "BERHASIL",
+            content: `Data berhasil ${record ? "di Update" : "ditambahkan"}!`,
+          });
+          setOpen(false);
+          getData && (await getData());
+        } else {
+          modal.error({
+            title: "ERROR",
+            content: res.msg,
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        modal.error({
+          title: "ERROR",
+          content: "Internal Server Error",
+        });
+      });
+    setLoading(false);
+  };
+
+  return (
+    <Modal
+      title={record ? "Update User " + record.fullname : "Add New User"}
+      open={open}
+      onCancel={() => setOpen(false)}
+      footer={[]}
+      loading={loading}
+      style={{ top: 20 }}
+      width={1200}
+    >
+      <div className="flex gap-4 flex-wrap">
+        <div className="flex-1 flex flex-col gap-3">
+          <div className="hidden">
+            <FormInput
+              data={{
+                label: "USER ID",
+                mode: "horizontal",
+                type: "text",
+                value: data.id,
+                onChange: (e: string) => setData({ ...data, id: e }),
+              }}
+            />
+          </div>
+          <FormInput
+            data={{
+              label: "Role User",
+              mode: "horizontal",
+              required: true,
+              type: "select",
+              value: data.roleId,
+              onChange: (e: string) => setData({ ...data, roleId: e }),
+              options: roles.map((r) => ({ label: r.name, value: r.id })),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Cabang",
+              mode: "horizontal",
+              required: true,
+              type: "select",
+              value: data.cabangId,
+              onChange: (e: string) => setData({ ...data, cabangId: e }),
+              options: cabangs.map((r) => ({ label: r.name, value: r.id })),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Mitra",
+              mode: "horizontal",
+              type: "select",
+              value: data.sumdanId,
+              onChange: (e: string) => setData({ ...data, sumdanId: e }),
+              options: sumdans.map((r) => ({ label: r.name, value: r.id })),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Agent Fronting",
+              mode: "horizontal",
+              type: "select",
+              value: data.agentFrontingId,
+              onChange: (e: string) => setData({ ...data, agentFrontingId: e }),
+              options: agents.map((r) => ({ label: r.name, value: r.id })),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Nama Lengkap",
+              mode: "horizontal",
+              required: true,
+              type: "text",
+              value: data.fullname,
+              onChange: (e: string) => setData({ ...data, fullname: e }),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Nomor NIK",
+              mode: "horizontal",
+              required: true,
+              type: "text",
+              value: data.nik,
+              onChange: (e: string) => setData({ ...data, nik: e }),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Username",
+              mode: "horizontal",
+              required: true,
+              type: "text",
+              value: data.username,
+              onChange: (e: string) => setData({ ...data, username: e }),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Email",
+              mode: "horizontal",
+              type: "text",
+              value: data.email,
+              onChange: (e: string) => setData({ ...data, email: e }),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Password",
+              mode: "horizontal",
+              type: "password",
+              required: true,
+              value: record ? null : data.password,
+              onChange: (e: string) => setData({ ...data, password: e }),
+            }}
+          />
+        </div>
+        <div className="flex-1 flex flex-col gap-3">
+          <FormInput
+            data={{
+              label: "No Telepon",
+              mode: "horizontal",
+              type: "text",
+              value: data.phone,
+              onChange: (e: string) => setData({ ...data, phone: e }),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Posisi",
+              mode: "horizontal",
+              type: "select",
+              value: data.position,
+              onChange: (e: string) => setData({ ...data, position: e }),
+              options: [
+                { label: "MOC", value: "MOC" },
+                { label: "SPV", value: "SPV" },
+                { label: "KORWIL", value: "KORWIL" },
+                { label: "ADMIN", value: "ADMIN" },
+                { label: "KEPALA OPERASIONAL", value: "KEPALA OPERASIONAL" },
+                { label: "STAFF OPERASIONAL", value: "STAFF OPERASIONAL" },
+                { label: "KEPALA BISNIS", value: "KEPALA BISNIS" },
+                { label: "STAFF BISNIS", value: "STAFF BISNIS" },
+                { label: "MANAJER KEUANGAN", value: "MANAJER KEUANGAN" },
+                { label: "STAFF KEUANGAN", value: "STAFF KEUANGAN" },
+                { label: "KEPALA VERIFIKASI", value: "KEPALA VERIFIKASI" },
+                { label: "STAFF VERIFIKASI", value: "STAFF VERIFIKASI" },
+                { label: "KEPALA DOKUMEN", value: "KEPALA DOKUMEN" },
+                { label: "STAFF DOKUMEN", value: "STAFF DOKUMEN" },
+                { label: "KEPALA IT", value: "KEPALA IT" },
+                { label: "STAFF IT", value: "STAFF IT" },
+                { label: "FUNDING", value: "FUNDING" },
+                { label: "GENERAL AFFAIRS", value: "GENERAL AFFAIRS" },
+              ],
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Target Perbulan",
+              mode: "horizontal",
+              type: "text",
+              value: IDRFormat(data.target),
+              onChange: (e: string) =>
+                setData({ ...data, target: IDRToNumber(e || "0") }),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Status PKWT",
+              mode: "horizontal",
+              type: "select",
+              options: [
+                { label: "TIERING", value: "TIERING" },
+                { label: "BARU", value: "BARU" },
+                { label: "LANJUT", value: "LANJUT" },
+                { label: "TETAP", value: "TETAP" },
+              ],
+              value: data.pkwt_status,
+              onChange: (e: string) => setData({ ...data, pkwt_status: e }),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Awal PKWT",
+              mode: "horizontal",
+              type: "date",
+              value: moment(data.start_pkwt).format("YYYY-MM-DD"),
+              onChange: (e: string) =>
+                setData({ ...data, start_pkwt: new Date(e) }),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Akhir PKWT",
+              mode: "horizontal",
+              type: "date",
+              value: moment(data.end_pkwt).format("YYYY-MM-DD"),
+              onChange: (e: string) =>
+                setData({ ...data, end_pkwt: new Date(e) }),
+            }}
+          />
+        </div>
+      </div>
+      <div className="flex justify-end gap-4">
+        <Button onClick={() => setOpen(false)}>Cancel</Button>
+        <Button
+          icon={<SaveOutlined />}
+          type="primary"
+          onClick={() => handleSave()}
+        >
+          Save
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+export function DeleteUser({
+  record,
+  open,
+  setOpen,
+  getData,
+  modal,
+}: {
+  record?: User;
+  open: boolean;
+  setOpen: Function;
+  getData?: Function;
+  modal: HookAPI;
+}) {
+  const [loading, setLoading] = useState(false);
+  const handleDelete = async () => {
+    setLoading(true);
+    await fetch(`/api/user?id=${record?.id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (res.ok) {
+          modal.success({
+            title: "SUCCESS",
+            content: data.msg,
+          });
+          setOpen(false);
+          getData && (await getData());
+        } else {
+          modal.error({
+            title: "ERROR",
+            content: data.msg,
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        modal.error({
+          title: "ERROR",
+          content: "Internal Server Error",
+        });
+      });
+    setLoading(false);
+  };
+  return (
+    <Modal
+      loading={loading}
+      footer={[]}
+      open={open}
+      onCancel={() => setOpen(false)}
+      width={400}
+      style={{ top: 20 }}
+      title={"Delete User " + record?.fullname}
+    >
+      <p>Are you sure you want to delete this user?</p>
+      <div className="flex justify-end gap-4">
+        <Button onClick={() => setOpen(false)}>Cancel</Button>
+        <Button danger onClick={handleDelete} loading={loading}>
+          Delete
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+const defaultUser: User = {
+  id: "",
+  fullname: "",
+  username: "",
+  email: null,
+  phone: null,
+  password: "",
+  cabangId: "",
+  roleId: "",
+  sumdanId: null,
+  nip: "",
+  target: 0,
+  position: null,
+  start_pkwt: new Date(),
+  end_pkwt: new Date(),
+  pkwt_status: "BARU",
+  nik: null,
+  agentFrontingId: null,
+
+  status: true,
+  created_at: new Date(),
+  updated_at: new Date(),
+};

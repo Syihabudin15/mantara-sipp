@@ -1,0 +1,525 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum EDapemStatus {
+  DRAFT
+  BATAL
+  PENDING
+  PROSES
+  DISETUJUI
+  DITOLAK
+  LUNAS
+}
+
+enum ESubmissionStatus {
+  PENDING
+  DISETUJUI
+  DITOLAK
+}
+
+enum EMarginType {
+  FLAT
+  ANUITAS
+}
+
+enum EMarriageStatus {
+  KAWIN
+  BELUM_KAWIN
+  JANDA
+  DUDA
+}
+
+enum EDocStatus {
+  UNIT
+  DELIVERY
+  PUSAT
+  MITRA
+}
+
+enum ESettleStatus {
+  MENINGGAL
+  TOPUP
+  LEPAS
+  JATUHTEMPO
+}
+
+model Role {
+  id         String @id @default(uuid())
+  name       String @unique
+  permission String @db.Text
+
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  User       User[]
+}
+
+model Sumdan {
+  id             String    @id @default(uuid())
+  name           String
+  code           String
+  description    String?   @db.Text
+  logo           String?
+  address        String?   @db.Text
+  phone          String?
+  email          String?
+  tbo            Int       @default(3)
+  rounded        Int       @default(1)
+  rounded_sumdan Int       @default(1)
+  limit          BigInt    @default(0)
+  c_margin       Float
+  c_adm          Float
+  c_gov          Int
+  c_stamps       Int
+  c_account      Int
+  c_information  Int
+  c_provisi      Int       @default(0)
+  dsr            Float
+  sk_no          String?
+  sk_date        DateTime?
+  pic1           String?
+  pic2           String?
+
+  status              Boolean               @default(true)
+  created_at          DateTime              @default(now())
+  updated_at          DateTime              @default(now())
+  User                User[]
+  ProdukPembiayaan    ProdukPembiayaan[]
+  Dropping            Dropping[]
+  Berkas              Berkas[]
+  Jaminan             Jaminan[]
+  SumdanAgentFronting SumdanAgentFronting[]
+}
+
+model Area {
+  id         String   @id @default(uuid())
+  name       String
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  Cabang     Cabang[]
+}
+
+model Cabang {
+  id      String  @id @default(uuid())
+  name    String
+  address String? @db.Text
+  phone   String?
+  Area    Area    @relation(fields: [areaId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  areaId     String
+  User       User[]
+}
+
+model User {
+  id          String    @id @default(uuid())
+  nip         String?
+  fullname    String
+  username    String    @unique
+  password    String
+  email       String?
+  phone       String?
+  target      Int       @default(0)
+  position    String?
+  pkwt_status String?
+  start_pkwt  DateTime?
+  end_pkwt    DateTime?
+  nik         String?
+
+  status          Boolean         @default(true)
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @default(now())
+  Role            Role            @relation(fields: [roleId], references: [id], onUpdate: Cascade)
+  Cabang          Cabang          @relation(fields: [cabangId], references: [id], onUpdate: Cascade)
+  Sumdan          Sumdan?         @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
+  AgentFronting   AgentFronting?  @relation(fields: [agentFrontingId], references: [id], onUpdate: Cascade)
+  roleId          String
+  cabangId        String
+  sumdanId        String?
+  CreateDDapem    Dapem[]         @relation("CreateDapemRelation")
+  AODapem         Dapem[]         @relation("AODapemRelation")
+  AORelateDapem   Dapem[]         @relation("AORelateDapemRelation")
+  JournalDetail   JournalDetail[]
+  agentFrontingId String?
+}
+
+model ProdukPembiayaan {
+  id          String      @id @default(uuid())
+  name        String
+  c_margin    Float
+  c_adm       Float
+  c_insurance Float
+  c_provisi   Float       @default(0)
+  max_tenor   Int
+  max_plafond Int
+  min_age     Int
+  max_age     Int
+  max_paid    Int
+  margin_type EMarginType
+
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  Sumdan     Sumdan   @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
+  sumdanId   String
+  Dapem      Dapem[]
+}
+
+model JenisPembiayaan {
+  id       String @id
+  name     String
+  c_blokir Int
+  c_mutasi Int    @default(0)
+
+  status_takeover Boolean  @default(false)
+  status_mutasi   Boolean  @default(false)
+  status          Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @default(now())
+  Dapem           Dapem[]
+}
+
+model Debitur {
+  nopen      String   @unique
+  salary     Int
+  fullname   String
+  nik        String?
+  birthdate  DateTime
+  birthplace String?
+  religion   String?
+  address    String
+  ward       String?
+  district   String?
+  city       String?
+  province   String?
+  pos_code   String?
+  npwp       String?
+  phone      String?
+  education  String?
+  gender     String?
+
+  no_skep        String?
+  name_skep      String?
+  date_skep      DateTime?
+  tmt_skep       DateTime?
+  rank_skep      String?
+  publisher_skep String?
+  group_skep     String?
+  soul_code      Int?
+  job_year       Int?
+
+  pay_office     String?
+  start_flagging String?
+  end_flagging   String?
+
+  mother_name    String?
+  account_name   String?
+  account_number String?
+  Dapem          Dapem[]
+}
+
+model Dapem {
+  id               String      @id @default(uuid())
+  tenor            Int
+  plafond          Int
+  c_margin         Float
+  c_margin_sumdan  Float
+  c_adm            Float
+  c_adm_sumdan     Float
+  c_insurance      Float
+  c_gov            Int
+  c_stamp          Int
+  c_account        Int
+  c_mutasi         Int
+  c_blokir         Int
+  c_retensi        Int
+  c_takeover       Int
+  c_bpp            Int
+  c_provisi        Float       @default(0)
+  c_provisi_sumdan Float       @default(0)
+  c_infomation     Int
+  tbo              Int
+  rounded          Int
+  rounded_sumdan   Int         @default(0)
+  margin_type      EMarginType
+
+  takeover_from String?
+  takeover_date DateTime?
+
+  dom_status  Boolean
+  address     String
+  ward        String
+  district    String
+  city        String
+  province    String?
+  pos_code    String?
+  geolocation String?
+
+  house_status    String?
+  house_year      String?
+  job             String?
+  job_address     String?
+  business        String?
+  marriage_status EMarriageStatus @default(BELUM_KAWIN)
+  aw_name         String?
+  aw_nik          String?
+  aw_birthdate    DateTime?
+  aw_birthplace   String?
+  aw_job          String?
+  aw_address      String?
+  aw_relate       String?
+  aw_phone        String?
+
+  f_name    String?
+  f_relate  String?
+  f_phone   String?
+  f_address String?
+
+  dropping_status   EDapemStatus       @default(DRAFT)
+  verif_status      ESubmissionStatus?
+  verif_desc        String?            @db.Text
+  slik_status       ESubmissionStatus?
+  slik_desc         String?            @db.Text
+  approv_status     ESubmissionStatus?
+  approv_desc       String?            @db.Text
+  takeover_status   EDapemStatus       @default(DRAFT)
+  takeover_desc     String?            @db.Text
+  takeover_date_exc DateTime?
+  mutasi_status     EDapemStatus       @default(DRAFT)
+  mutasi_desc       String?            @db.Text
+  mutasi_date_exc   DateTime?
+  flagging_status   EDapemStatus       @default(DRAFT)
+  flagging_desc     String?            @db.Text
+  flagging_date_exc DateTime?
+  cash_status       EDapemStatus       @default(DRAFT)
+  cash_desc         String?            @db.Text
+  document_status   EDocStatus         @default(UNIT)
+  document_desc     String?            @db.Text
+  guarantee_status  EDocStatus         @default(UNIT)
+  guarantee_desc    String?            @db.Text
+  ao_fee            Int                @default(0)
+  ao_fee_status     EDapemStatus       @default(DRAFT)
+  ao_fee_desc       String?            @db.Text
+
+  used_for      String
+  no_contract   String
+  date_contract DateTime?
+
+  file_slik       String?
+  file_proses     String?
+  file_submission String?
+  video_interview String?
+  video_insurance String?
+  file_contract   String?
+  file_takeover   String?
+  file_mutasi     String?
+  file_flagging   String?
+
+  status           Boolean          @default(true)
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @default(now())
+  Debitur          Debitur          @relation(fields: [nopen], references: [nopen], onUpdate: Cascade)
+  ProdukPembiayaan ProdukPembiayaan @relation(fields: [produkPembiayaanId], references: [id], onUpdate: Cascade)
+  JenisPembiayaan  JenisPembiayaan  @relation(fields: [jenisPembiayaanId], references: [id], onUpdate: Cascade)
+  CreatedBy        User             @relation("CreateDapemRelation", fields: [createdById], references: [id], onUpdate: Cascade)
+  AO               User?            @relation("AODapemRelation", fields: [aoId], references: [id], onUpdate: Cascade)
+  AORelate         User?            @relation("AORelateDapemRelation", fields: [aoRelateId], references: [id], onUpdate: Cascade)
+  Dropping         Dropping?        @relation(fields: [droppingId], references: [id], onUpdate: Cascade)
+  Berkas           Berkas?          @relation(fields: [berkasId], references: [id], onUpdate: Cascade)
+  Jaminan          Jaminan?         @relation(fields: [jaminanId], references: [id], onUpdate: Cascade)
+  AgentFronting    AgentFronting?   @relation(fields: [agentFrontingId], references: [id], onUpdate: Cascade)
+
+  nopen              String
+  produkPembiayaanId String
+  jenisPembiayaanId  String
+  createdById        String
+  aoId               String?
+  aoRelateId         String?
+  droppingId         String?
+  berkasId           String?
+  jaminanId          String?
+  Angsuran           Angsuran[]
+  Pelunasan          Pelunasan?
+  agentFrontingId    String?
+  payOffice          PayOffice? @relation(fields: [payOfficeId], references: [id])
+  payOfficeId        String?
+  insurance          Insurance? @relation(fields: [insuranceId], references: [id])
+  insuranceId        String?
+}
+
+model PayOffice {
+  id          String  @id @default(uuid())
+  name        String
+  code        String?
+  description String?
+  file        String?
+  up          String?
+
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  Dapem      Dapem[]
+}
+
+model Insurance {
+  id          String  @id @default(uuid())
+  name        String
+  code        String?
+  description String?
+  file        String?
+  up          String?
+
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+  Dapem      Dapem[]
+}
+
+model Dropping {
+  id         String    @id @default(uuid())
+  file_sub   String?
+  file_proof String?   @db.Text
+  status     Boolean
+  process_at DateTime?
+  created_at DateTime
+  Dapem      Dapem[]
+  Sumdan     Sumdan    @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
+  sumdanId   String
+}
+
+model Berkas {
+  id         String     @id @default(uuid())
+  file_sub   String?
+  file_proof String?
+  status     EDocStatus
+  process_at DateTime?
+  created_at DateTime
+  Dapem      Dapem[]
+  Sumdan     Sumdan     @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
+  sumdanId   String
+}
+
+model Jaminan {
+  id         String     @id @default(uuid())
+  file_sub   String?
+  file_proof String?
+  status     EDocStatus
+  process_at DateTime?
+  created_at DateTime
+  Dapem      Dapem[]
+  Sumdan     Sumdan     @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
+  sumdanId   String
+}
+
+model Pelunasan {
+  id               String        @id @default(uuid())
+  amount           Int
+  amount_sumdan    Int
+  desc_sumdan      String?       @db.Text
+  penalty          Int
+  desc             String?       @db.Text
+  file_sub         String?
+  guarantee_status EDocStatus    @default(MITRA)
+  type             ESettleStatus
+  Dapem            Dapem         @relation(fields: [dapemId], references: [id], onUpdate: Cascade)
+
+  status_paid ESubmissionStatus @default(PENDING)
+  process_at  DateTime?
+  created_at  DateTime
+  dapemId     String            @unique
+}
+
+model Angsuran {
+  id          String    @id @default(uuid())
+  counter     Int
+  principal   Int
+  margin      Int
+  date_pay    DateTime
+  date_paid   DateTime?
+  remaining   Int
+  inst_sumdan Int       @default(0)
+  fee_banpot  Int       @default(0)
+  Dapem       Dapem     @relation(fields: [dapemId], references: [id], onUpdate: Cascade)
+  dapemId     String
+}
+
+// AKUNTING
+enum AccountType {
+  ASSET
+  KEWAJIBAN
+  MODAL
+  PENDAPATAN
+  BEBAN
+}
+
+model CategoryOfAccount {
+  id            String              @id @default(uuid())
+  name          String
+  type          AccountType
+  status        Boolean             @default(true)
+  parentId      String?
+  Parent        CategoryOfAccount?  @relation("AccountHierarchy", fields: [parentId], references: [id], onUpdate: Cascade)
+  Children      CategoryOfAccount[] @relation("AccountHierarchy")
+  JournalDetail JournalDetail[]
+}
+
+model JournalEntry {
+  id   String   @id @default(uuid())
+  date DateTime
+
+  JournalDetail JournalDetail[]
+}
+
+model JournalDetail {
+  id         String  @id @default(uuid())
+  debit      Int     @default(0)
+  credit     Int     @default(0)
+  desciption String?
+
+  JournalEntry        JournalEntry      @relation(fields: [journalEntryId], references: [id], onUpdate: Cascade)
+  CategoryOfAccount   CategoryOfAccount @relation(fields: [categoryOfAccountId], references: [id], onUpdate: Cascade)
+  User                User?             @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  journalEntryId      String
+  categoryOfAccountId String
+  userId              String?
+}
+
+model AgentFronting {
+  id          String  @id @default(uuid())
+  name        String
+  code        String?
+  description String?
+  file        String?
+  up          String?
+  target      Int     @default(0)
+
+  status              Boolean               @default(true)
+  created_at          DateTime              @default(now())
+  updated_at          DateTime              @default(now())
+  SumdanAgentFronting SumdanAgentFronting[]
+  User                User[]
+  Dapem               Dapem[]
+}
+
+model SumdanAgentFronting {
+  id              String        @id @default(uuid())
+  Sumdan          Sumdan        @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
+  sumdanId        String
+  AgentFronting   AgentFronting @relation(fields: [agentFrontingId], references: [id], onUpdate: Cascade)
+  agentFrontingId String
+}
