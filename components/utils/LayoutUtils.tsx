@@ -842,7 +842,7 @@ export const DetailDapem = ({
                 type: "textarea",
                 class: "flex-1",
                 disabled: true,
-                value: `${data.mutasi_from} ${data.JenisPembiayaan.status_mutasi ? "-> " + data.mutasi_to : ""}`,
+                // value: `${data.mutasi_from} ${data.JenisPembiayaan.status_mutasi ? "-> " + data.mutasi_to : ""}`,
               }}
             />
             <FormInput

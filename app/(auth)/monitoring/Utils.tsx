@@ -77,7 +77,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
           setData({
             ...data,
             Debitur: res.data,
-            mutasi_from: res.data.pay_office,
+            // mutasi_from: res.data.pay_office,
           });
         }
       });
@@ -185,7 +185,6 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
     data.Debitur.salary,
     data.produkPembiayaanId,
     data.margin_type,
-    data.insurance_type,
     data.c_margin,
     data.c_margin_sumdan,
     data.rounded,
@@ -257,7 +256,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
         house_status: data.house_status ?? "",
         house_year: data.house_year ?? 0,
         business: data.business,
-        mutasi_from: data.pay_office,
+        // mutasi_from: data.pay_office,
         used_for: data.purpose_use,
         job: data.curr_job,
         f_name: data.family_name,
@@ -1397,11 +1396,11 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                   type: "text",
                   class: "flex-1",
                   required: true,
-                  value: data.mutasi_from,
+                  value: data.Debitur.pay_office,
                   onChange: (e: string) =>
                     setData({
                       ...data,
-                      mutasi_from: e,
+                      // mutasi_from: e,
                       Debitur: { ...data.Debitur, pay_office: e },
                     }),
                 }}
@@ -1412,12 +1411,12 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                   label: "Kantor Bayar Tujuan",
                   type: "text",
                   class: "flex-1",
-                  value: data.mutasi_to,
-                  onChange: (e: string) =>
-                    setData({
-                      ...data,
-                      mutasi_to: e,
-                    }),
+                  // value: data.mutasi_to,
+                  // onChange: (e: string) =>
+                  //   setData({
+                  //     ...data,
+                  //     mutasi_to: e,
+                  //   }),
                 }}
               />
               <FormInput
@@ -1638,9 +1637,9 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     type: "select",
                     class: "flex-1",
                     options: [{ label: "BUMI PUTERA", value: "BUMI PUTERA" }],
-                    value: data.insurance_type,
-                    onChange: (e: string) =>
-                      setData({ ...data, insurance_type: e as EMarginType }),
+                    // value: data.insurance_type,
+                    // onChange: (e: string) =>
+                    //   setData({ ...data, insurance_type: e as EMarginType }),
                   }}
                 />
               </div>
@@ -2247,13 +2246,13 @@ const defaultData: IDapem = {
   rounded: 0,
   rounded_sumdan: 0,
   margin_type: "ANUITAS",
-  insurance_type: "BUMI PUTERA",
+  // insurance_type: "BUMI PUTERA",
   agentFrontingId: null,
 
   takeover_from: null,
   takeover_date: null,
-  mutasi_from: null,
-  mutasi_to: null,
+  // mutasi_from: null,
+  // mutasi_to: null,
 
   dom_status: false,
   address: "",
@@ -2349,6 +2348,8 @@ const defaultData: IDapem = {
   droppingId: null,
   berkasId: null,
   jaminanId: null,
+  payOfficeId: null,
+  insuranceId: null,
 };
 
 interface ITemp {

@@ -438,7 +438,8 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                     ...(data.JenisPembiayaan.status_mutasi
                       ? [
                           {
-                            value: `Akan dilakukan mutasi kantor bayar gaji pensiun dari ${data.mutasi_from} ke ${data.mutasi_to}`,
+                            // value: `Akan dilakukan mutasi kantor bayar gaji pensiun dari ${data.mutasi_from} ke ${data.mutasi_to}`,
+                            value: `Akan dilakukan mutasi kantor bayar gaji pensiun`,
                           },
                         ]
                       : []),

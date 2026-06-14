@@ -205,8 +205,12 @@ export const AnalisaPerhitungan = (record: IDapem) => {
     <p>Informasi Lainnya : </p>
     <ul style="list-style-type: disc;">
       ${record.JenisPembiayaan.status_takeover ? `<li>Instansi takeover ke <span class="font-bold">${record.takeover_from}</span> dengan estimasi pelaksanaan tanggal <span class="font-bold">${moment(record.takeover_date).format("DD MMMM YYYY")}</span></li>` : ""}
-      ${record.JenisPembiayaan.status_mutasi ? `<li>Akan dilakukan mutasi kantor bayar gaji pensiun dari <span class="font-bold">${record.mutasi_from} ke ${record.mutasi_to}</span>` : ""}
     </ul>
-  </div>
-`;
+    </div>
+    `;
 };
+
+// <ul style="list-style-type: disc;">
+//   ${record.JenisPembiayaan.status_takeover ? `<li>Instansi takeover ke <span class="font-bold">${record.takeover_from}</span> dengan estimasi pelaksanaan tanggal <span class="font-bold">${moment(record.takeover_date).format("DD MMMM YYYY")}</span></li>` : ""}
+//   ${record.JenisPembiayaan.status_mutasi ? `<li>Akan dilakukan mutasi kantor bayar gaji pensiun dari <span class="font-bold">${record.Debitur.pay_office} ke ${record.payOfficeId}</span>` : ""}
+// </ul>

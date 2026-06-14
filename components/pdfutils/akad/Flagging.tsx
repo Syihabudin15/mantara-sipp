@@ -4,7 +4,6 @@ import { Header, ListStyle } from "../utils";
 
 export const Flagging = (record: IDapem) => {
   return `
-  ${Header("SURAT PERNYATAAN DEBITUR", `MITRA KERJA ${record.mutasi_to || record.mutasi_from}`, undefined, undefined, undefined)}
   
   <p>Yang bertanda tangan dibawah ini :</p>
 
@@ -46,16 +45,8 @@ export const Flagging = (record: IDapem) => {
     </div>
   </div>
 
-  <p class="mt-6">Sehubungan dengan saya telah mengambil fasilitas kredit pembiayaan pensiun pada ${process.env.NEXT_PUBLIC_APP_FULLNAME} mitra kerja dari ${record.mutasi_to || record.mutasi_from} dengan perjanjian kredit nomor ${record.no_contract}, maka dengan ini saya menyatakan bahwa :</p>
 
   <div class="ml-1">
-  ${ListStyle(
-    [
-      `Pada saat penerimaan pembayaran Manfaat Tabungan Hari Tua (THT) dan/atau Pensiun saya setiap bulan dari PT. ${record.Debitur.group_skep} (PERSERO), agar dibayarkan melalui rekening saya nomor: ${record.Debitur.account_number || "....................................."} atasnama ${record.Debitur.fullname} pada ${record.mutasi_to || record.mutasi_from} sampai dengan kredit saya lunas;`,
-      `Memberi kuasa kepada ${record.mutasi_to || record.mutasi_from} untuk melakukan pengecekan data kepesertaan saya dan sekaligus untuk mendaftarkan Flagging data saya pada PT. ${record.Debitur.group_skep} (PERSERO) selama jangka waktu kredit yang telah disetujui, yaitu dari tanggal ${moment(record.date_contract).format("DD-MM-YYYY")} (${moment(record.date_contract).format("DDDD MMMM YYYY")}) sampai dengan tanggal ${moment(record.date_contract).add(record.tenor, "month").format("DD-MM-YYYY")} (${moment(record.date_contract).add(record.tenor, "month").format("DDDD MMMM YYYY")}).`,
-    ],
-    "number",
-  )}
   </div>
   <p class="mt-2">
     Demikian surat pernyataan dan kuasa ini saya buat atas kesadaran penuh tanpa paksaan pihak manapun.
@@ -67,7 +58,6 @@ export const Flagging = (record: IDapem) => {
       ${ListStyle(
         [
           `Lembar 1 untuk PT ${record.Debitur.group_skep} (PERSERO)`,
-          `Lembar 2 untuk ${record.mutasi_to || record.mutasi_from}`,
           `Lembar 3 untuk Debitur`,
           `Lembar 4 untuk Arsip`,
         ],
@@ -86,3 +76,39 @@ export const Flagging = (record: IDapem) => {
 
 `;
 };
+
+// ${Header("SURAT PERNYATAAN DEBITUR", `MITRA KERJA ${record.mutasi_to || record.mutasi_from}`, undefined, undefined, undefined)}
+
+// ${ListStyle(
+//     [
+//       `Pada saat penerimaan pembayaran Manfaat Tabungan Hari Tua (THT) dan/atau Pensiun saya setiap bulan dari PT. ${record.Debitur.group_skep} (PERSERO), agar dibayarkan melalui rekening saya nomor: ${record.Debitur.account_number || "....................................."} atasnama ${record.Debitur.fullname} pada ${record.mutasi_to || record.mutasi_from} sampai dengan kredit saya lunas;`,
+//     ],
+//     "number",
+//   )}
+
+{
+  /* <p class="mt-6">
+  Sehubungan dengan saya telah mengambil fasilitas kredit pembiayaan pensiun
+  pada ${process.env.NEXT_PUBLIC_APP_FULLNAME} mitra kerja dari $
+  {record.mutasi_to || record.mutasi_from} dengan perjanjian kredit nomor $
+  {record.no_contract}, maka dengan ini saya menyatakan bahwa :
+</p>; */
+}
+
+// ${ListStyle(
+//     [
+//       `Pada saat penerimaan pembayaran Manfaat Tabungan Hari Tua (THT) dan/atau Pensiun saya setiap bulan dari PT. ${record.Debitur.group_skep} (PERSERO), agar dibayarkan melalui rekening saya nomor: ${record.Debitur.account_number || "....................................."} atasnama ${record.Debitur.fullname} pada ${record.mutasi_to || record.mutasi_from} sampai dengan kredit saya lunas;`,
+//       `Memberi kuasa kepada ${record.mutasi_to || record.mutasi_from} untuk melakukan pengecekan data kepesertaan saya dan sekaligus untuk mendaftarkan Flagging data saya pada PT. ${record.Debitur.group_skep} (PERSERO) selama jangka waktu kredit yang telah disetujui, yaitu dari tanggal ${moment(record.date_contract).format("DD-MM-YYYY")} (${moment(record.date_contract).format("DDDD MMMM YYYY")}) sampai dengan tanggal ${moment(record.date_contract).add(record.tenor, "month").format("DD-MM-YYYY")} (${moment(record.date_contract).add(record.tenor, "month").format("DDDD MMMM YYYY")}).`,
+//     ],
+//     "number",
+//   )}
+
+// ${ListStyle(
+//         [
+//           `Lembar 1 untuk PT ${record.Debitur.group_skep} (PERSERO)`,
+//           `Lembar 2 untuk ${record.mutasi_to || record.mutasi_from}`,
+//           `Lembar 3 untuk Debitur`,
+//           `Lembar 4 untuk Arsip`,
+//         ],
+//         "number",
+//       )}
