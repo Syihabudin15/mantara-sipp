@@ -92,7 +92,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
         <p>Rp.</p>
         <div class="text-right w-24">
-          <p >${IDRFormat(angsuran - angsuranSumdan)}</p>
+          <p >${IDRFormat(Math.max(0, angsuran - angsuranSumdan))}</p>
         </div>
       </div>
     </div>
