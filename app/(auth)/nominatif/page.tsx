@@ -403,6 +403,19 @@ export default function Page() {
       },
     },
     {
+      title: "Asuransi",
+      dataIndex: "biaya_sumdan",
+      key: "biaya_sumdan",
+      render(value, record, index) {
+        const asuransi = record.plafond * (record.c_insurance / 100);
+        return (
+          <div className="text-xs text-right">
+            <span>{IDRFormat(asuransi)}</span>
+          </div>
+        );
+      },
+    },
+    {
       title: "Biaya Sumdan",
       dataIndex: "biaya_sumdan",
       key: "biaya_sumdan",
@@ -411,29 +424,14 @@ export default function Page() {
         const provisi = record.plafond * (record.c_provisi_sumdan / 100);
         const total = adm + provisi + record.c_account_sumdan;
         return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Admin</span>
-              <span>{IDRFormat(adm)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Provisi</span>
-              <span>{IDRFormat(provisi)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Rekening</span>
-              <span>{IDRFormat(record.c_account_sumdan)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(total)}</span>
-            </div>
+          <div className="text-xs text-right">
+            <span>{IDRFormat(total)}</span>
           </div>
         );
       },
     },
     {
-      title: "Biaya Adm Koperasi",
+      title: "Adm Koperasi",
       dataIndex: "biaya",
       key: "biaya",
       render(value, record, index) {
@@ -442,29 +440,14 @@ export default function Page() {
         const adm_ff = record.plafond * (record.c_adm_ff / 100);
         const total = adm + adm_mitra + adm_ff;
         return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Adm Kop</span>
-              <span>{IDRFormat(adm)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Adm Mitra</span>
-              <span>{IDRFormat(adm_mitra)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Adm FF</span>
-              <span>{IDRFormat(adm_ff)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(total)}</span>
-            </div>
+          <div className="text-xs text-right">
+            <span>{IDRFormat(total)}</span>
           </div>
         );
       },
     },
     {
-      title: "Biaya Prov Koperasi",
+      title: "Prov Koperasi",
       dataIndex: "biaya",
       key: "biaya",
       render(value, record, index) {
@@ -475,89 +458,53 @@ export default function Page() {
         const bpb = record.plafond * (record.c_fee_bpb / 100);
         const total = ao + cabang + area + bpp + bpb;
         return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee AO</span>
-              <span>{IDRFormat(ao)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee Cabang</span>
-              <span>{IDRFormat(cabang)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee Area</span>
-              <span>{IDRFormat(area)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee BPP</span>
-              <span>{IDRFormat(bpp)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee BPB</span>
-              <span>{IDRFormat(bpb)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(total)}</span>
-            </div>
+          <div className="text-xs text-right">
+            <span>{IDRFormat(total)}</span>
           </div>
         );
       },
     },
     {
-      title: "Biaya Lainnya",
+      title: "Tatalaksana",
       dataIndex: "biaya",
       key: "biaya",
       render(value, record, index) {
         return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Tatalaksana</span>
-              <span>{IDRFormat(record.c_gov)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Materai</span>
-              <span>{IDRFormat(record.c_stamp)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Flagging</span>
-              <span>{IDRFormat(record.c_flagging)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Sistem</span>
-              <span>{IDRFormat(record.c_infomation)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Mutasi</span>
-              <span>{IDRFormat(record.c_mutasi)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(record.c_mutasi + record.c_infomation)}</span>
-            </div>
+          <div className="text-xs text-right">
+            <span className="text-right">
+              {IDRFormat(
+                record.c_gov +
+                  record.c_flagging +
+                  record.c_infomation +
+                  record.c_stamp +
+                  record.c_bop +
+                  record.c_mutasi,
+              )}
+            </span>
           </div>
         );
       },
     },
     {
-      title: "BOP & Takeover",
+      title: "Rek/Anggota",
       dataIndex: "blokir",
       key: "blokir",
       render(value, record, index) {
         return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">BOP</span>
-              <span>{IDRFormat(record.c_bop)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Takeover</span>
-              <span>{IDRFormat(record.c_takeover)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(record.c_bop + record.c_takeover)}</span>
-            </div>
+          <div className="text-xs text-right">
+            <span>{IDRFormat(record.c_takeover)}</span>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Takeover",
+      dataIndex: "blokir",
+      key: "blokir",
+      render(value, record, index) {
+        return (
+          <div className="text-xs text-right">
+            <span>{IDRFormat(record.c_takeover)}</span>
           </div>
         );
       },
@@ -857,7 +804,7 @@ export default function Page() {
         loading={loading}
         rowKey={"id"}
         bordered
-        scroll={{ x: "max-content", y: "60vh" }}
+        scroll={{ x: "max-content", y: "48vh" }}
         pagination={{
           current: pageProps.page,
           pageSize: pageProps.limit,
@@ -870,6 +817,7 @@ export default function Page() {
             }));
           },
           pageSizeOptions: [50, 100, 500, 1000],
+          showSizeChanger: true,
         }}
         summary={(pageData) => {
           const angs = pageData.reduce(
@@ -1007,115 +955,47 @@ export default function Page() {
                 className="text-center font-bold"
               ></Table.Summary.Cell>
 
-              <Table.Summary.Cell index={9} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">Adm</p>
-                  <p className="text-right">{IDRFormat(adm_sumdan)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Provisi</p>
-                  <p className="text-right">{IDRFormat(prov_sumdan)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Rek</p>
-                  <p className="text-right">{IDRFormat(rek_sumdan)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
+              <Table.Summary.Cell index={12} className="font-bold">
+                <div className="text-right">{IDRFormat(asuransi)}</div>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={14} className="font-bold">
+                <div className="text-right">
                   {IDRFormat(adm_sumdan + prov_sumdan + rek_sumdan)}
                 </div>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={20} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">Adm Kop</p>
-                  <p className="text-right">{IDRFormat(adm)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Adm Mitra</p>
-                  <p className="text-right">{IDRFormat(adm_mitra)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Adm FF</p>
-                  <p className="text-right">{IDRFormat(adm_ff)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
+              <Table.Summary.Cell index={14} className="font-bold">
+                <div className="text-right">
                   {IDRFormat(adm + adm_mitra + adm_ff)}
                 </div>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={21} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">Fee AO</p>
-                  <p className="text-right">{IDRFormat(fee_ao)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Fee Cabang</p>
-                  <p className="text-right">{IDRFormat(fee_cabang)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Fee Area</p>
-                  <p className="text-right">{IDRFormat(fee_area)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Fee BPP</p>
-                  <p className="text-right">{IDRFormat(fee_bpp)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Fee BPB</p>
-                  <p className="text-right">{IDRFormat(fee_bpb)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
+              <Table.Summary.Cell index={15} className="font-bold">
+                <div className="text-right">
                   {IDRFormat(
                     fee_ao + fee_cabang + fee_area + fee_bpp + fee_bpb,
                   )}
                 </div>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={22} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">Tatalaksana</p>
-                  <p className="text-right">{IDRFormat(tatalaksana)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Rekening</p>
-                  <p className="text-right">{IDRFormat(rek)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Materai</p>
-                  <p className="text-right">{IDRFormat(materai)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Flagging</p>
-                  <p className="text-right">{IDRFormat(flagging)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Sistem</p>
-                  <p className="text-right">{IDRFormat(inform)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Mutasi</p>
-                  <p className="text-right">{IDRFormat(mutasi)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
+              <Table.Summary.Cell index={16} className="font-bold">
+                <div className="text-right">
                   {IDRFormat(
-                    tatalaksana + rek + materai + flagging + inform + mutasi,
+                    tatalaksana +
+                      rek +
+                      materai +
+                      flagging +
+                      inform +
+                      mutasi +
+                      bop,
                   )}
                 </div>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={23} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">BOP</p>
-                  <p className="text-right">{IDRFormat(bop)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Takeover</p>
-                  <p className="text-right">{IDRFormat(takeover)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
-                  {IDRFormat(bop + takeover)}
-                </div>
+              <Table.Summary.Cell index={17} className="font-bold">
+                <div className="text-right">{IDRFormat(rek)}</div>
               </Table.Summary.Cell>
-              <Table.Summary.Cell index={24} className="font-bold">
-                <div className="border-t border-gray-500 text-right">
-                  {IDRFormat(blokir)}
-                </div>
+              <Table.Summary.Cell index={18} className="font-bold">
+                <div className="text-right">{IDRFormat(takeover)}</div>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={19} className="font-bold">
+                <div className="text-right">{IDRFormat(blokir)}</div>
               </Table.Summary.Cell>
             </Table.Summary.Row>
           );

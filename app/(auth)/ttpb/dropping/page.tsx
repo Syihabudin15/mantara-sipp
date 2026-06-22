@@ -338,7 +338,7 @@ export default function Page() {
         size="small"
         rowKey={"id"}
         bordered
-        scroll={{ x: "max-content", y: "60vh" }}
+        scroll={{ x: "max-content", y: "48vh" }}
         pagination={{
           current: pageProps.page,
           pageSize: pageProps.limit,
@@ -351,6 +351,7 @@ export default function Page() {
             }));
           },
           pageSizeOptions: [50, 100, 500, 1000],
+          showSizeChanger: true,
         }}
         loading={loading}
         expandable={{

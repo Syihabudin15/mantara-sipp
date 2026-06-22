@@ -510,7 +510,7 @@ export default function Page() {
         loading={loading}
         rowKey={"id"}
         bordered
-        scroll={{ x: "max-content", y: "60vh" }}
+        scroll={{ x: "max-content", y: "48vh" }}
         rowSelection={rowSelection}
         pagination={{
           current: pageProps.page,
@@ -524,6 +524,7 @@ export default function Page() {
             }));
           },
           pageSizeOptions: [50, 100, 500, 1000],
+          showSizeChanger: true,
         }}
         summary={(pageData) => {
           const angs = pageData.reduce(
