@@ -72,7 +72,7 @@ export const Header = (
       <p class="text-center ">${subtitle ? subtitle : ""}</p>
       <p class="text-center ">${subtitlemore ? subtitlemore : ""}</p>
     </div>
-    <div class="flex-1">
+    <div class="flex-1 flex justify-end">
     ${rightlogo ? `<img src="${rightlogo}" alt="Logo" class="h-16 mr-4" />` : '<div class="h-16 mr-4"></div>'}
     </div>
   </div>`;

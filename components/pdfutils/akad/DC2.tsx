@@ -56,8 +56,7 @@ export const DocChecklist2 = (record: IDapem) => {
       </div>
     </div>
     <div class="flex-1 font-bold text-center flex flex-col justify-center">
-      <p class="text-lg">${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</p>
-      <p>DOKUMEN CHECKLIST BERKAS JAMINAN</p>
+      <p class="text-lg">DOKUMEN CHECKLIST BERKAS JAMINAN</p>
       <p>(${record.ProdukPembiayaan.Sumdan.name})</p>
     </div>
   </div>

@@ -29,7 +29,7 @@ export const BPK = (record: IDapem) => {
   const ao = record.AO || record.AOCabang || record.AOArea;
 
   return `
-  ${Header(process.env.NEXT_PUBLIC_APP_COMPANY_NAME, "BUKTI PENCAIRAN KREDIT (BPK)", record.no_contract, record.ProdukPembiayaan.Sumdan.logo, undefined)}
+  ${Header("BUKTI PENCAIRAN KREDIT (BPK)", record.no_contract, undefined, record.ProdukPembiayaan.Sumdan.logo, undefined)}
   
   <div class="my-4">
   ${ListNonStyle([
@@ -219,8 +219,8 @@ export const BPK = (record: IDapem) => {
     <div class="flex-1">
       <p>Diotorisasi oleh</p>
       <div class="h-28"></div>
-      <p class="border-b font-bold">${process.env.NEXT_PUBLIC_APP_OPS_NAME}</p>
-      <p>${process.env.NEXT_PUBLIC_APP_OPS_NAME}</p>
+      <p class="border-b font-bold">${process.env.NEXT_PUBLIC_APP_OPS_NAME || ""}</p>
+      <p>${process.env.NEXT_PUBLIC_APP_OPS_NAME || ""}</p>
     </div>
   </div>
 

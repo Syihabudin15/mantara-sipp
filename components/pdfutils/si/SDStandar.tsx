@@ -136,13 +136,20 @@ const generateSD = (record: IDocument) => {
         <p>Demikian surat ini kami sampaikan sebagai bukti konfirmasi penerimaan dana dan kelengkapan administrasi realisasi pembiayaan. Atas kerja sama yang baik, kami ucapkan terima kasih.</p>
       </div>
 
-      <div class="mt-20 flex justify-end">
+      <div class="mt-20 flex justify-between items-start gap-10">
         <div class="w-96 text-center">
           <p>${process.env.NEXT_PUBLIC_APP_COMPANY_CITY}, ${moment(record.created_at).format("DD-MM-YYYY")}</p>
-          <p>${process.env.NEXT_PUBLIC_APP_COMPANY_NAME?.toUpperCase()}</p>
+          <p>Yang Menyerahkan</p>
           <div class="h-28"></div>
           <p class="border-b">${process.env.NEXT_PUBLIC_APP_PB_NAME}</p>
           <p>${process.env.NEXT_PUBLIC_APP_PB_POSITION}</p>
+        </div>
+        <div class="w-96 text-center">
+          <p class="h-6"></p>
+          <p>Yang Menerima</p>
+          <div class="h-32"></div>
+          <p class="border-b"></p>
+          <p class="h-5"></p>
         </div>
       </div>
 
