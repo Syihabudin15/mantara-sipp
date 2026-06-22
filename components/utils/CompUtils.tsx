@@ -213,6 +213,7 @@ export const ProsesPembiayaan = ({
                 data.c_margin + data.c_margin_sumdan,
                 data.margin_type,
                 data.rounded,
+                data.c_ned,
               ).angsuran,
             ),
             disabled: true,
@@ -332,6 +333,7 @@ export const MappingToExcelDapem = (data: IDapem[]) => {
       d.c_margin + d.c_margin_sumdan,
       d.margin_type,
       d.rounded,
+      d.c_ned,
     ).angsuran;
     const angsSumdan = GetAngsuran(
       d.plafond,
@@ -424,6 +426,7 @@ export const MappingToTagihan = (data: IDapem[], periode?: string) => {
       d.c_margin + d.c_margin_sumdan,
       d.margin_type,
       d.rounded,
+      d.c_ned,
     ).angsuran;
     const angsSumdan = GetAngsuran(
       d.plafond,

@@ -64,15 +64,17 @@ export const Header = (
   rightlogo?: string | null,
 ) => `
   <div class="page-header flex items-center ${rightlogo || leftlogo ? "justify-between" : "justify-center"} mb-6 border-b pb-4">
+    <div class="flex-1">
     ${leftlogo ? `<img src="${leftlogo}" alt="Logo" class="h-16 mr-4" />` : ""}
+    </div>
     <div class="text-center">
-      <h2 class="text-center text-xl font-semibold mb-2 ">${
-        title || "JUDUL HALAMAN"
-      }</h2>
+      <h2 class="text-center text-xl font-semibold mb-2 ">${title || ""}</h2>
       <p class="text-center ">${subtitle ? subtitle : ""}</p>
       <p class="text-center ">${subtitlemore ? subtitlemore : ""}</p>
     </div>
+    <div class="flex-1">
     ${rightlogo ? `<img src="${rightlogo}" alt="Logo" class="h-16 mr-4" />` : '<div class="h-16 mr-4"></div>'}
+    </div>
   </div>`;
 
 export const ListStyle = (

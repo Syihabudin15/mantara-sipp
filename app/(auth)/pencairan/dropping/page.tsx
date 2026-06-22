@@ -140,7 +140,16 @@ export default function Page() {
         const biaya = record.Dapems.reduce(
           (acc, curr) =>
             acc +
-            (curr.plafond * (curr.c_adm_sumdan / 100) + curr.c_account_sumdan),
+            (curr.plafond * (curr.c_adm_sumdan / 100) +
+              curr.c_account_sumdan +
+              curr.c_blokir *
+                GetAngsuran(
+                  curr.plafond,
+                  curr.tenor,
+                  curr.c_margin_sumdan,
+                  curr.margin_type,
+                  curr.rounded_sumdan,
+                ).angsuran),
           0,
         );
         return (

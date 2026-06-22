@@ -104,6 +104,7 @@ model Sumdan {
   c_stamps      Int
   c_flagging    Int
   c_information Int
+  c_ned         Int       @default(0)
   max_bop       Int
   rounded       Int       @default(1)
   dsr           Float
@@ -308,6 +309,7 @@ model Dapem {
   c_fee_bpp      Float       @default(0)
   c_fee_bpb      Float       @default(0)
   c_fee_fronting Float       @default(0)
+  c_ned          Int         @default(0)
   c_takeover     Int
   c_bop          Int
   tbo            Int
@@ -454,6 +456,7 @@ model PayOffice {
   date_contract DateTime?
   file          String?   @db.Text
   pic           String?
+  logo          String?
 
   status     Boolean   @default(true)
   created_at DateTime  @default(now())
@@ -471,6 +474,7 @@ model Insurance {
   date_contract DateTime?
   file          String?   @db.Text
   pic           String?
+  logo          String?
 
   status     Boolean  @default(true)
   created_at DateTime @default(now())
@@ -542,6 +546,7 @@ model Angsuran {
   remaining   Int
   inst_sumdan Int       @default(0)
   fee_banpot  Int       @default(0)
+  c_ned       Int       @default(0)
   Dapem       Dapem     @relation(fields: [dapemId], references: [id], onUpdate: Cascade)
   dapemId     String
 }

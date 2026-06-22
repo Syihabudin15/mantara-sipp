@@ -2,6 +2,7 @@ import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header, ListStyle } from "../utils";
 import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
+moment.locale("id");
 
 export const Kesanggupan = (record: IDapem, isFor: string) => {
   const angsuran = GetAngsuran(
@@ -10,6 +11,7 @@ export const Kesanggupan = (record: IDapem, isFor: string) => {
     record.c_margin + record.c_margin_sumdan,
     record.margin_type,
     record.rounded,
+    record.c_ned,
   ).angsuran;
   return `
   ${Header("SURAT PERNYATAAN DAN KESANGGUPAN", isFor, undefined, undefined, undefined)}

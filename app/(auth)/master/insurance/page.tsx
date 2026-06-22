@@ -309,6 +309,16 @@ function UpsertJenis({
               setData({ ...data, date_contract: e ? new Date(e) : null }),
           }}
         />
+        <FormInput
+          data={{
+            label: "Logo Mitra",
+            mode: "horizontal",
+            type: "upload",
+            accept: "image/png,image/jpg,image/jpeg",
+            value: data.logo,
+            onChange: (e: string) => setData({ ...data, logo: e }),
+          }}
+        />
         <div className="flex justify-end gap-4">
           <Button onClick={() => setOpen(false)}>Cancel</Button>
           <Button
@@ -402,6 +412,7 @@ const defaultData: IInsurance = {
   pic: null,
   description: null,
   file: null,
+  logo: null,
   Dapems: [],
 
   status: true,

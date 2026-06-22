@@ -56,46 +56,51 @@ export const GetAngsuran = (
   bunga: number,
   type: EMarginType,
   rounded: number,
+  ned?: number,
   round?: boolean,
 ) => {
   if (type === "FLAT") {
     const pokok = plafond / tenor;
     const margin = (plafond * (bunga / 100)) / 12;
-    const angsuran = pokok + margin;
+    const angs = pokok + margin;
+    const angsuran = round
+      ? angs
+        ? Math.round(angs / rounded) * rounded
+        : 0
+      : angs
+        ? Math.ceil(angs / rounded) * rounded
+        : 0;
     return {
       pokok,
       margin,
-      angsuran: round
-        ? angsuran
-          ? Math.round(angsuran / rounded) * rounded
-          : 0
-        : angsuran
-          ? Math.ceil(angsuran / rounded) * rounded
-          : 0,
+      ned: ned || 0,
+      angsuran: angs + (ned || 0),
     };
   } else if (type === "ANUITAS") {
     const r = bunga / 12 / 100;
 
-    const angsuran =
+    const angs =
       (plafond * (r * Math.pow(1 + r, tenor))) / (Math.pow(1 + r, tenor) - 1);
     const pokok = plafond / tenor;
-    const margin = angsuran - pokok;
-
+    const margin = angs - pokok;
+    const angsuran = round
+      ? angs
+        ? Math.round(angs / rounded) * rounded
+        : 0
+      : angs
+        ? Math.ceil(angs / rounded) * rounded
+        : 0;
     return {
-      angsuran: round
-        ? angsuran
-          ? Math.round(angsuran / rounded) * rounded
-          : 0
-        : angsuran
-          ? Math.ceil(angsuran / rounded) * rounded
-          : 0,
+      angsuran: angs + (ned || 0),
       pokok,
+      ned: ned || 0,
       margin,
     };
   } else {
     return {
       pokok: 0,
       margin: 0,
+      ned: ned || 0,
       angsuran: 0,
     };
   }
@@ -121,6 +126,7 @@ export const GetDapem = (data: IDapem) => {
     data.c_margin + data.c_margin_sumdan,
     data.margin_type || "ANUITAS",
     data.rounded,
+    data.c_ned,
   ).angsuran;
   const blok = data.c_blokir * angs;
   const biaya =

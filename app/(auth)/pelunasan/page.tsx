@@ -198,6 +198,7 @@ export default function Page() {
                   record.Dapem.c_margin + record.Dapem.c_margin_sumdan,
                   record.Dapem.margin_type,
                   record.Dapem.rounded,
+                  record.Dapem.c_ned,
                 ).angsuran,
               )}
             </Tag>
@@ -808,6 +809,7 @@ const UpsertData = ({
                       data.Dapem.c_margin + data.Dapem.c_margin_sumdan,
                       data.Dapem.margin_type,
                       data.Dapem.rounded,
+                      data.Dapem.c_ned,
                     ).angsuran,
                   )
                 : 0,
@@ -974,6 +976,7 @@ const ProsesData = ({
         data.Dapem.c_margin + data.Dapem.c_margin_sumdan,
         data.Dapem.margin_type,
         data.Dapem.rounded,
+        data.Dapem.c_ned,
       ).angsuran;
       const angsuranmitra = GetAngsuran(
         data.Dapem.plafond,

@@ -214,6 +214,7 @@ export default function Page() {
           record.c_margin + record.c_margin_sumdan,
           record.margin_type,
           record.rounded,
+          record.c_ned,
         ).angsuran;
         const angssumdan = GetAngsuran(
           record.plafond,
@@ -534,6 +535,7 @@ export default function Page() {
                 curr.c_margin + curr.c_margin_sumdan,
                 curr.margin_type,
                 curr.rounded,
+                curr.c_ned,
               ).angsuran,
             0,
           );

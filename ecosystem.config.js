@@ -8,7 +8,7 @@ module.exports = {
       exec_mode: "fork", // ⬅️ lebih hemat daripada cluster
       autorestart: true,
       watch: false,
-      max_memory_restart: "250M",
+      max_memory_restart: "500M",
       env: {
         NODE_ENV: "production",
         PORT: 3001,

@@ -15,7 +15,6 @@ import {
   DeleteOutlined,
   EditOutlined,
   FileFilled,
-  FolderOpenOutlined,
   FormOutlined,
   PrinterOutlined,
   SecurityScanOutlined,
@@ -146,6 +145,7 @@ export default function Page() {
               curr.c_margin + curr.c_margin_sumdan,
               curr.margin_type,
               curr.rounded,
+              curr.c_ned,
             ).angsuran,
           0,
         );

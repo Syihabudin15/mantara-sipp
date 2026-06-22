@@ -639,16 +639,6 @@ function UpsertSumdan({
                       onChange: (e: string) => setData({ ...data, pic: e }),
                     }}
                   />
-                  <FormInput
-                    data={{
-                      label: "Logo Mitra",
-                      mode: "horizontal",
-                      type: "upload",
-                      accept: "image/png,image/jpg,image/jpeg",
-                      value: data.logo,
-                      onChange: (e: string) => setData({ ...data, logo: e }),
-                    }}
-                  />
                 </div>
               </div>
             ),
@@ -915,6 +905,16 @@ function UpsertSumdan({
                         data.c_fee_bpp +
                         data.c_fee_bpb
                       }%`,
+                    }}
+                  />
+                  <FormInput
+                    data={{
+                      label: "NED",
+                      mode: "horizontal",
+                      type: "text",
+                      value: IDRFormat(data.c_ned),
+                      onChange: (e: any) =>
+                        setData({ ...data, c_ned: IDRToNumber(e || "0") }),
                     }}
                   />
                   <FormInput
@@ -1550,6 +1550,7 @@ const defaultSumdan: ISumdan = {
   c_fee_area: 0,
   c_fee_bpp: 0,
   c_fee_bpb: 0,
+  c_ned: 0,
   max_bop: 0,
   dsr: 0,
   ProdukPembiayaans: [],

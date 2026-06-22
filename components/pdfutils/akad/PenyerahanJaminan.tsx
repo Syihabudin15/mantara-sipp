@@ -1,5 +1,6 @@
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
+moment.locale("id");
 
 export const PenyerahanJaminan = (record: IDapem) => {
   return `

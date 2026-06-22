@@ -279,6 +279,7 @@ const columnDapem: TableProps<IDapem>["columns"] = [
                 record.c_margin + record.c_margin_sumdan,
                 record.margin_type,
                 record.rounded,
+                record.c_ned,
               ).angsuran,
             )}
           </Tag>

@@ -37,6 +37,7 @@ export const GET = async (req: NextRequest) => {
             some: {
               OR: [
                 { no_contract: { contains: search } },
+                { id: { contains: search } },
                 {
                   Debitur: {
                     OR: [

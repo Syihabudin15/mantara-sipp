@@ -2,6 +2,7 @@ import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header } from "../utils";
 import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
+moment.locale("id");
 
 export const FormCeklist1 = (record: IDapem) => {
   const angsuran = GetAngsuran(
@@ -10,6 +11,7 @@ export const FormCeklist1 = (record: IDapem) => {
     record.c_margin + record.c_margin_sumdan,
     record.margin_type,
     record.rounded,
+    record.c_ned,
   ).angsuran;
 
   const ao = record.AO || record.AOCabang || record.AOArea;

@@ -2,6 +2,7 @@ import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header } from "../utils";
+moment.locale("id");
 
 export const JadwalAngsuran = (record: IDapem, sub?: string) => {
   const angs = GetAngsuran(
@@ -10,6 +11,7 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
     record.c_margin + record.c_margin_sumdan,
     record.margin_type,
     record.rounded,
+    record.c_ned,
   ).angsuran;
   const angsSumdan = GetAngsuran(
     record.plafond,
@@ -105,7 +107,7 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal + r.margin)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.margin)}</td>
-            <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(angs - angsSumdan)}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${r.counter === 0 ? "0" : IDRFormat(angs - angsSumdan)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.remaining)}</td>
           </tr>
         `,

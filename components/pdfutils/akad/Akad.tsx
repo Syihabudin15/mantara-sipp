@@ -3,12 +3,20 @@ import { AnalisaPerhitungan } from "./Analisa";
 import { IDapem } from "@/libs/IInterfaces";
 import { JadwalAngsuran } from "./KartuAngsuran";
 import { PerjanjianKredit } from "./PerjanjianKredit";
-import { SPKDR } from "./SKPDR";
-import { BuktiPencairan } from "./BuktiPencairan";
+// import { SPKDR } from "./SKPDR";
+// import { BuktiPencairan } from "./BuktiPencairan";
 // import { Pemotongan } from "./Pemotongan";
-import { Kesanggupan } from "./Kesanggupan";
+// import { Kesanggupan } from "./Kesanggupan";
 import { PenyerahanJaminan } from "./PenyerahanJaminan";
 import { FormCeklist1 } from "./FormCeklist1";
+import { PersetujuanPencairan } from "./PersetujuanPencairan";
+import { BPK } from "./BPK";
+import { SPK } from "./SPK";
+import { FLagging } from "./Flagging";
+import { PernyataanKuasa } from "./PernyataanKuasa";
+import { TTPJ } from "./TTPJ";
+import { DocChecklist1 } from "./DC1";
+import { DocChecklist2 } from "./DC2";
 
 moment.locale("id");
 
@@ -83,21 +91,29 @@ const generateContractHtml = (record: IDapem) => {
       <div class="page text-justify" style="font-size: 12px;">
         ${PerjanjianKredit(record)}
       </div>
-
-      <div class="page text-justify" style="font-size: 11px;">
-        ${SPKDR(record)}
+      <div class="page text-justify" style="font-size: 12px;">
+        ${PersetujuanPencairan(record)}
+      </div>
+      <div class="page text-justify" style="font-size: 12px;">
+        ${BPK(record)}
+      </div>
+      <div class="page text-justify" style="font-size: 12px;">
+        ${SPK(record)}
+      </div>
+      <div class="page text-justify" style="font-size: 12px;">
+        ${PernyataanKuasa(record)}
+      </div>
+      <div class="page pt-0 text-justify" style="font-size: 12px;">
+        ${FLagging(record)}
       </div>
       <div class="page text-justify" style="font-size: 11px;">
-        ${BuktiPencairan(record, record.ProdukPembiayaan.Sumdan.name)}
+        ${TTPJ(record)}
       </div>
       <div class="page text-justify" style="font-size: 11px;">
-        ${Kesanggupan(record, record.ProdukPembiayaan.Sumdan.name)}
+        ${DocChecklist1(record)}
       </div>
       <div class="page text-justify" style="font-size: 11px;">
-        ${PenyerahanJaminan(record)}
-      </div>
-      <div class="page text-justify" style="font-size: 11px;">
-        ${FormCeklist1(record)}
+        ${DocChecklist2(record)}
       </div>
       
     </body>

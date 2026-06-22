@@ -60,6 +60,7 @@ export const POST = async (req: NextRequest) => {
       margin: 0,
       remaining: find.plafond,
       inst_sumdan: 0,
+      c_ned: 0,
       fee_banpot: 0,
     });
     return NextResponse.json(
@@ -173,6 +174,7 @@ function GenerateAnuitas(dapem: Dapem): Angsuran[] {
       remaining: sisa,
       dapemId: dapem.id,
       inst_sumdan: angsudan,
+      c_ned: dapem.c_ned,
       fee_banpot: 0,
     });
   }
@@ -218,6 +220,7 @@ function GenerateFlat(dapem: Dapem): Angsuran[] {
       remaining: sisa,
       dapemId: dapem.id,
       inst_sumdan: angsudan,
+      c_ned: dapem.c_ned,
       fee_banpot: 0,
     });
   }

@@ -61,7 +61,10 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
             }}
           >
             <Image
-              src={process.env.NEXT_PUBLIC_APP_LOGO}
+              src={
+                data.ProdukPembiayaan.Sumdan.logo ||
+                process.env.NEXT_PUBLIC_APP_LOGO
+              }
               style={{ width: 50 }}
             />
             <View style={{ flex: 1 }}>
@@ -78,13 +81,13 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                 {moment(data.created_at || new Date()).format("YYYY")}
               </Text>
             </View>
-            <Image
+            {/* <Image
               src={
                 data.ProdukPembiayaan.Sumdan.logo ||
                 process.env.NEXT_PUBLIC_APP_LOGO
               }
               style={{ width: 50 }}
-            />
+            /> */}
           </View>
           <View style={styles.section}>
             <Text
@@ -305,7 +308,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                       },
                       {
                         key: "Pembulatan",
-                        value: `${IDRFormat(data.rounded)}`,
+                        value: `${IDRFormat(data.rounded)} (Rp. ${angs - angsasli})`,
                         currency: true,
                       },
                     ]}

@@ -54,6 +54,7 @@ const hitungPendingTerimaBersih = (droppingall: IDapem[]) => {
       curr.c_margin + curr.c_margin_sumdan,
       curr.margin_type,
       curr.rounded,
+      curr.c_ned,
     ).angsuran;
 
     const biaya =
@@ -134,6 +135,21 @@ export default function Page() {
   const tagihanBulanIniValue = data.droppingall
     .filter((d) => d.dropping_status === "DISETUJUI")
     .reduce((acc, curr) => acc + GetSisaPokokMargin(curr as IDapem).install, 0);
+  const totalTagihan = data.droppingall
+    .filter((d) => d.dropping_status === "DISETUJUI")
+    .reduce(
+      (acc, curr) =>
+        acc +
+        GetAngsuran(
+          curr.plafond,
+          curr.tenor,
+          curr.c_margin + curr.c_margin_sumdan,
+          curr.margin_type,
+          curr.rounded,
+          curr.c_ned,
+        ).angsuran,
+      0,
+    );
 
   const totalPendingTakeover = data.droppingall
     .filter(
@@ -228,6 +244,17 @@ export default function Page() {
             subValueColor="text-rose-600"
           />
 
+          <StatisticCard
+            name="Total Tagihan"
+            icon={<MoneyCollectOutlined />}
+            iconBg="bg-sky-50 text-sky-600"
+            mainValue={`Rp ${IDRFormat(totalTagihan)}`}
+            subValue={`${
+              data.droppingall.filter((d) => d.dropping_status === "DISETUJUI")
+                .length
+            } NOA Menagih`}
+            subValueColor="text-slate-500"
+          />
           <StatisticCard
             name="Tagihan Bulan Berjalan"
             icon={<MoneyCollectOutlined />}

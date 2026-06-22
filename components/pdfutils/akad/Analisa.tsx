@@ -7,11 +7,18 @@ import {
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header, ListNonStyle } from "../utils";
+moment.locale("id");
 
 export const AnalisaPerhitungan = (record: IDapem) => {
   const age = GetFullAge(
     record.Debitur.birthdate,
     record.date_contract || record.created_at,
+  );
+  const ageLunas = GetFullAge(
+    record.date_contract || record.created_at,
+    moment(record.date_contract || record.created_at)
+      .add(record.tenor, "month")
+      .toDate(),
   );
   const angsuran = GetAngsuran(
     record.plafond,
@@ -19,6 +26,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
     record.c_margin + record.c_margin_sumdan,
     record.margin_type,
     record.rounded,
+    record.c_ned,
   ).angsuran;
 
   const dapem = GetDapem(record);
@@ -62,6 +70,10 @@ export const AnalisaPerhitungan = (record: IDapem) => {
           .add(record.tenor, "month")
           .format("DD/MM/YYYY"),
       },
+      {
+        key: "Est Usia Lunas",
+        value: `${ageLunas.year} Thn ${ageLunas.month} Bln ${ageLunas.day} Hr`,
+      },
       { key: "Plafond", value: IDRFormat(record.plafond), currency: true },
       {
         key: "Jangka Waktu",
@@ -79,7 +91,17 @@ export const AnalisaPerhitungan = (record: IDapem) => {
           value: `${(record.c_margin + record.c_margin_sumdan).toFixed(2)}% /Tahun`,
         },
         {
-          key: "Angsuran Perbulan",
+          key: "Angsuran",
+          value: IDRFormat(angsuran - record.c_ned),
+          currency: true,
+        },
+        {
+          key: "NED",
+          value: IDRFormat(record.c_ned),
+          currency: true,
+        },
+        {
+          key: "Jumlah Angsuran Perulan",
           value: IDRFormat(angsuran),
           currency: true,
         },
@@ -241,13 +263,13 @@ export const AnalisaPerhitungan = (record: IDapem) => {
       <p>${(record.Debitur.city || "KOTA BANDUNG").toLowerCase().replace("kota", "").replace("kabupaten", "").toUpperCase()}, ${moment(record.date_contract).format("DD-MM-YYYY")}</p>
       <p>DEBITUR</p>
       <div class="h-28"></div>
-      <p class="border-b">${record.Debitur.fullname}</p>
+      <p class="border-b font-bold">${record.Debitur.fullname}</p>
       <p>Penerima Pembiayaan</p>
     </div>
     <div class="flex-1 text-center">
       <p>Account Officer</p>
       <div class="h-28"></div>
-      <p class="border-b">${ao?.fullname}</p>
+      <p class="border-b font-bold">${ao?.fullname}</p>
       <p>${ao?.position}</p>
     </div>
   </div>

@@ -1,6 +1,7 @@
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header, ListStyle } from "../utils";
+moment.locale("id");
 
 export const Pemotongan = (record: IDapem) => {
   return `

@@ -6,6 +6,7 @@ import {
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header, ListNonStyle } from "../utils";
+moment.locale("id");
 
 export const BuktiPencairan = (record: IDapem, isFor: string) => {
   const angsuran = GetAngsuran(
@@ -14,6 +15,7 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
     record.c_margin + record.c_margin_sumdan,
     record.margin_type,
     record.rounded,
+    record.c_ned,
   ).angsuran;
   const dapem = GetDapem(record);
   const ao = record.AO || record.AOCabang || record.AOArea;

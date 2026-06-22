@@ -180,6 +180,7 @@ export default function Page() {
           record.c_margin + record.c_margin_sumdan,
           record.margin_type,
           record.rounded,
+          record.c_ned,
         ).angsuran;
         const mitra = GetAngsuran(
           record.plafond,
@@ -568,6 +569,7 @@ export default function Page() {
                 item.c_margin + item.c_margin_sumdan,
                 item.margin_type,
                 item.rounded,
+                item.c_ned,
               ).angsuran,
             0,
           );

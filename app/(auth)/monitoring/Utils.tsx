@@ -176,6 +176,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
       data.c_margin + data.c_margin_sumdan,
       data.margin_type,
       data.rounded,
+      data.c_ned,
     ).angsuran;
     setData((prev) => ({
       ...prev,
@@ -1160,8 +1161,8 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               class: "flex-1",
               required: true,
               options: [
-                { label: "TASPEN", value: "TASPEN" },
-                { label: "ASABRI", value: "ASABRI" },
+                { label: "PT. TASPEN", value: "PT. TASPEN" },
+                { label: "PT. ASABRI", value: "PT. ASABRI" },
                 { label: "BUMN", value: "BUMN" },
                 { label: "LAINNYA", value: "LAINNYA" },
               ],
@@ -1418,6 +1419,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                         c_flagging: find.Sumdan.c_flagging,
                         c_infomation: find.Sumdan.c_information,
                         c_insurance: find.c_insurance,
+                        c_ned: find.Sumdan.c_ned,
                         rounded: find.Sumdan.rounded,
                         rounded_sumdan: find.Sumdan.rounded_sumdan,
                         tbo: find.Sumdan.tbo,
@@ -1806,7 +1808,11 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                   onChange={(e) =>
                     setData({
                       ...data,
-                      c_bop: IDRToNumber(e.target.value || "0"),
+                      c_bop:
+                        IDRToNumber(e.target.value || "0") >
+                        data.ProdukPembiayaan.Sumdan.max_bop
+                          ? data.ProdukPembiayaan.Sumdan.max_bop
+                          : IDRToNumber(e.target.value || "0"),
                     })
                   }
                 />
@@ -2246,7 +2252,8 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               !data.aw_name ||
               !data.f_name ||
               !data.Debitur.address ||
-              !data.Debitur.salary
+              !data.Debitur.salary ||
+              !(data.AO || data.AOCabang || data.AOArea)
             }
           >
             Submit
@@ -2283,6 +2290,7 @@ const defaultData: IDapem = {
   c_fee_area: 0,
   c_fee_bpp: 0,
   c_fee_bpb: 0,
+  c_ned: 0,
   c_bop: 0,
   tbo: 0,
   rounded: 0,

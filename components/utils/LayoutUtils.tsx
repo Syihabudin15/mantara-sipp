@@ -201,6 +201,7 @@ export const DetailDapem = ({
     data.c_margin + data.c_margin_sumdan,
     data.margin_type,
     data.rounded,
+    data.c_ned,
   ).angsuran;
   const angsMitra = GetAngsuran(
     data.plafond,
@@ -1034,7 +1035,13 @@ export const DetailDapem = ({
                 <div className="w-[40%]">Tatalaksana</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.c_gov)}
+                  {IDRFormat(
+                    data.c_gov +
+                      data.c_flagging +
+                      data.c_infomation +
+                      data.c_stamp +
+                      data.c_mutasi,
+                  )}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed">
@@ -1048,7 +1055,7 @@ export const DetailDapem = ({
                 Mitra ({IDRFormat(data.c_account_sumdan)}) | Selisih (
                 {IDRFormat(data.c_account)})
               </div>
-              <div className="my-1 flex border-b border-dashed">
+              {/* <div className="my-1 flex border-b border-dashed">
                 <div className="w-[40%]">Flagging</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
@@ -1075,7 +1082,7 @@ export const DetailDapem = ({
                 <div className="flex-1 justify-end text-right">
                   {IDRFormat(data.c_mutasi)}
                 </div>
-              </div>
+              </div> */}
               <div className="my-1 flex border-b border-dashed text-red-500 font-bold mt-2">
                 <div className="w-[40%]">Total Biaya</div>
                 <div className="w-[5%]">:</div>

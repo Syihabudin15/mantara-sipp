@@ -6,6 +6,7 @@ import {
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header, ListStyle, NumberToWordsID } from "../utils";
+moment.locale("id");
 
 export const PerjanjianKredit = (record: IDapem) => {
   const angsuran = GetAngsuran(
@@ -14,6 +15,7 @@ export const PerjanjianKredit = (record: IDapem) => {
     record.c_margin + record.c_margin_sumdan,
     record.margin_type,
     record.rounded,
+    record.c_ned,
   ).angsuran;
   const angsuranSumdan = GetAngsuran(
     record.plafond,

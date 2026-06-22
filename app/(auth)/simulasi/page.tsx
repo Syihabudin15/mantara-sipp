@@ -96,6 +96,7 @@ export default function Page() {
       data.c_margin + data.c_margin_sumdan,
       data.margin_type,
       data.Sumdan.rounded,
+      data.c_ned,
     ).angsuran;
     if (angs > data.Debitur.salary * (data.Sumdan.dsr / 100)) {
       message.error(
@@ -338,6 +339,7 @@ export default function Page() {
                       c_infomation: findSumdan.c_information,
                       c_insurance: find.c_insurance,
                       rounded: findSumdan.rounded,
+                      c_ned: findSumdan.c_ned,
                     });
                   }
                 }
@@ -1053,6 +1055,7 @@ const defaultData: IDapemSimulasi = {
   angsuran: 0,
   max_plafond: 0,
   max_tenor: 0,
+  c_ned: 0,
   margin_type: "ANUITAS",
   created_at: new Date(),
 } as IDapemSimulasi;

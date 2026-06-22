@@ -1,0 +1,198 @@
+import {
+  GetAngsuran,
+  GetDapem,
+  IDRFormat,
+} from "@/components/utils/PembiayaanUtil";
+import { IDapem } from "@/libs/IInterfaces";
+import moment from "moment";
+import { ListNonStyle, NumberToWordsID } from "../utils";
+moment.locale("id");
+
+export const PersetujuanPencairan = (record: IDapem) => {
+  const angsuran = GetAngsuran(
+    record.plafond,
+    record.tenor,
+    record.c_margin + record.c_margin_sumdan,
+    record.margin_type,
+    record.rounded,
+    record.c_ned,
+  ).angsuran;
+  const dapem = GetDapem(record);
+
+  return `
+  <div class="mb-4">
+    <img src="${record.ProdukPembiayaan.Sumdan.logo}" alt="${record.ProdukPembiayaan.Sumdan.name + ` Logo`}" class="h-16 mr-4"/>
+  </div>
+
+  <ul class="mb-6">
+    <li class="flex gap-4">
+      <p class="w-32">Tanggal</p>
+      <p class="w-4">:</p>
+      <p class="flex-1">${moment(record.date_contract).format("DD-MM-YYYY")}</p>
+    </li>
+    <li class="flex gap-4">
+      <p class="w-32">Nomor</p>
+      <p class="w-4">:</p>
+      <p class="flex-1">${record.no_contract}</p>
+    </li>
+    <li class="flex gap-4">
+      <p class="w-32">Perihal</p>
+      <p class="w-4">:</p>
+      <p class="flex-1">Persetujuan Pemberian Kredit</p>
+    </li>
+  </ul>
+
+  <div class="my-4">
+    <p>Kepada Yth,</p>
+    <p>Bapak/Ibu</p>
+  </div>
+
+  <div class="my-8">
+    <p class="mb-2">Menunjuk Surat Saudara/Saudari tanggal ${moment(record.date_contract).format("DD-MM-YYYY")} perihal permohonan kredit, dengan ini kami beritahukan sebagai berikut :</p>
+    ${ListNonStyle([
+      {
+        key: "Plafond Kredit",
+        value: IDRFormat(record.plafond),
+        currency: true,
+      },
+      {
+        key: "Jangka Waktu",
+        value: `${record.tenor} Bulan`,
+      },
+      {
+        key: "Suku Bunga",
+        value: `${record.c_margin + record.c_margin_sumdan}% Efektif p.a`,
+      },
+      {
+        key: "Biaya Administrasi",
+        value: IDRFormat(
+          record.plafond *
+            ((record.c_adm_sumdan +
+              record.c_adm +
+              record.c_adm_mitra +
+              record.c_adm_ff) /
+              100),
+        ),
+        currency: true,
+      },
+      {
+        key: "Biaya Provisi",
+        value: IDRFormat(
+          record.plafond *
+            ((record.c_provisi_sumdan +
+              record.c_fee_ao +
+              record.c_fee_cabang +
+              record.c_fee_area +
+              record.c_fee_bpp +
+              record.c_fee_bpb) /
+              100),
+        ),
+        currency: true,
+      },
+      {
+        key: "Biaya Tatalaksana",
+        value: IDRFormat(
+          record.c_gov +
+            record.c_flagging +
+            record.c_infomation +
+            record.c_stamp +
+            record.c_mutasi,
+        ),
+        currency: true,
+      },
+      {
+        key: "Biaya Asuransi",
+        value: IDRFormat(record.plafond * (record.c_insurance / 100)),
+        currency: true,
+      },
+      {
+        key: `Angsuran Dimuka (${record.c_blokir}x)`,
+        value: IDRFormat(record.c_blokir * angsuran),
+        currency: true,
+      },
+      {
+        key: "Biaya Buka Rekening",
+        value: IDRFormat(record.c_account + record.c_account_sumdan),
+        currency: true,
+      },
+      {
+        key: `Total Potongan`,
+        value: IDRFormat(
+          record.plafond - (dapem.biaya + record.c_blokir * angsuran),
+        ),
+        currency: true,
+        classStyle: "border-t font-bold",
+      },
+    ])}
+    <div class="mt-4"></div>
+    ${ListNonStyle([
+      {
+        key: "Biaya Pelunasan",
+        value: IDRFormat(record.c_takeover),
+        currency: true,
+      },
+      {
+        key: `Penerimaan Bersih`,
+        value: IDRFormat(dapem.tb),
+        currency: true,
+        classStyle: "border-t font-bold",
+      },
+      {
+        key: ``,
+        value: `( ${NumberToWordsID(dapem.tb)} Rupiah )`,
+        classStyle: "font-bold",
+      },
+    ])}
+    <div class="mt-4"></div>
+    ${ListNonStyle([
+      {
+        key: "Jatuh Tempo",
+        value: moment(record.date_contract || record.created_at)
+          .add(record.tenor, "month")
+          .format("DD-MM-YYYY"),
+      },
+      {
+        key: `Angsuran`,
+        value: IDRFormat(angsuran - record.c_ned),
+        currency: true,
+      },
+      {
+        key: `Biaya Adm Angsuran`,
+        value: IDRFormat(record.c_ned),
+        currency: true,
+      },
+      {
+        key: `Total Angsuran`,
+        value: IDRFormat(angsuran),
+        currency: true,
+        classStyle: "border-t font-bold",
+      },
+      {
+        key: ``,
+        value: `( ${NumberToWordsID(angsuran)} Rupiah )`,
+        classStyle: " font-bold",
+      },
+    ])}
+    <div class="mt-4"></div>
+    ${ListNonStyle([
+      {
+        key: "Jaminan",
+        value: `Nomor SKEP : ${record.Debitur.no_skep}, Tanggal SKEP : ${moment(record.Debitur.date_skep).format("DD-MM/YYYY")}, A.n : ${record.Debitur.name_skep}`,
+        classStyle: "font-bold",
+      },
+    ])}
+  </div>
+
+  <div class="my-5 flex justify-around gap-10 items-end text-center">
+    <div class="flex-1"></div>
+    <div class="flex-1">
+      <p>${record.Debitur.city?.toLocaleLowerCase().replace("kota", "").replace("kabupaten", "").toUpperCase()}, ${moment(record.date_contract).format("DD-MM-YYYY")}</p>
+      <p>Diterima Oleh</p>
+      <div class="h-28"></div>
+      <p class="border-b font-bold">${record.Debitur.fullname}</p>
+      <p>DEBITUR</p>
+    </div>
+  </div>
+
+`;
+};
