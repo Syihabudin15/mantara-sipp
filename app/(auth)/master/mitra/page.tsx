@@ -588,13 +588,24 @@ function UpsertSumdan({
                 <div className="flex-1 flex flex-col gap-1">
                   <FormInput
                     data={{
-                      label: "No PKS",
+                      label: "No PKS Mitra",
                       mode: "horizontal",
                       required: true,
                       type: "text",
                       value: data.contract_no,
                       onChange: (e: string) =>
                         setData({ ...data, contract_no: e }),
+                    }}
+                  />
+                  <FormInput
+                    data={{
+                      label: "No PKS Koperasi",
+                      mode: "horizontal",
+                      required: true,
+                      type: "text",
+                      value: data.contract_no2,
+                      onChange: (e: string) =>
+                        setData({ ...data, contract_no2: e }),
                     }}
                   />
                   <FormInput
@@ -1557,6 +1568,7 @@ const defaultSumdan: ISumdan = {
   pic: null,
   file: "",
   contract_no: "",
+  contract_no2: "",
   contract_date: new Date(),
   sk_no: "",
   sk_date: new Date(),

@@ -17,6 +17,13 @@ export const PersetujuanPencairan = (record: IDapem) => {
     record.rounded,
     record.c_ned,
   ).angsuran;
+  const angsSumdan = GetAngsuran(
+    record.plafond,
+    record.tenor,
+    record.c_margin_sumdan,
+    record.margin_type,
+    record.rounded_sumdan,
+  ).angsuran;
   const dapem = GetDapem(record);
 
   return `
@@ -106,20 +113,13 @@ export const PersetujuanPencairan = (record: IDapem) => {
         currency: true,
       },
       {
-        key: `Angsuran Dimuka (${record.c_blokir}x)`,
-        value: IDRFormat(record.c_blokir * angsuran),
-        currency: true,
-      },
-      {
         key: "Biaya Buka Rekening",
         value: IDRFormat(record.c_account + record.c_account_sumdan),
         currency: true,
       },
       {
         key: `Total Potongan`,
-        value: IDRFormat(
-          record.plafond - (dapem.biaya + record.c_blokir * angsuran),
-        ),
+        value: IDRFormat(dapem.biaya),
         currency: true,
         classStyle: "border-t font-bold",
       },
@@ -127,8 +127,18 @@ export const PersetujuanPencairan = (record: IDapem) => {
     <div class="mt-4"></div>
     ${ListNonStyle([
       {
+        key: `BOP Pembiayaan`,
+        value: IDRFormat(record.c_bop),
+        currency: true,
+      },
+      {
         key: "Biaya Pelunasan",
         value: IDRFormat(record.c_takeover),
+        currency: true,
+      },
+      {
+        key: `Angsuran Dimuka (${record.c_blokir}x)`,
+        value: IDRFormat(record.c_blokir * angsuran),
         currency: true,
       },
       {
@@ -153,12 +163,12 @@ export const PersetujuanPencairan = (record: IDapem) => {
       },
       {
         key: `Angsuran`,
-        value: IDRFormat(angsuran - record.c_ned),
+        value: IDRFormat(angsSumdan),
         currency: true,
       },
       {
         key: `Biaya Adm Angsuran`,
-        value: IDRFormat(record.c_ned),
+        value: IDRFormat(angsuran - angsSumdan),
         currency: true,
       },
       {

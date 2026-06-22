@@ -201,6 +201,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
     data.c_margin_sumdan,
     data.rounded,
     data.rounded_sumdan,
+    data.c_ned,
   ]);
 
   const handleOCR = async () => {
@@ -1778,6 +1779,22 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
             </div>
           </div>
           <div className="flex-1">
+            <div className="flex justify-between border-b border-dashed my-2">
+              <div className="flex-1">NED</div>
+              <div className="flex gap-2 flex-2">
+                <Input
+                  size="small"
+                  value={IDRFormat(data.c_ned)}
+                  style={{ textAlign: "right", color: "black" }}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      c_ned: IDRToNumber(e.target.value || "0"),
+                    })
+                  }
+                />
+              </div>
+            </div>
             <div className="flex justify-between my-2 italic">
               <span>Angsuran</span>
               <span>{IDRFormat(temp.angsuran)}</span>

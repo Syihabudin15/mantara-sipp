@@ -17,6 +17,7 @@ import { PernyataanKuasa } from "./PernyataanKuasa";
 import { TTPJ } from "./TTPJ";
 import { DocChecklist1 } from "./DC1";
 import { DocChecklist2 } from "./DC2";
+import { PK } from "./PK";
 
 moment.locale("id");
 
@@ -87,9 +88,8 @@ const generateContractHtml = (record: IDapem) => {
       <div class="page" style="font-size: 11px;">
         ${JadwalAngsuran(record, record.ProdukPembiayaan.Sumdan.name)}
       </div>
-
       <div class="page text-justify" style="font-size: 12px;">
-        ${PerjanjianKredit(record)}
+        ${PK(record)}
       </div>
       <div class="page text-justify" style="font-size: 12px;">
         ${PersetujuanPencairan(record)}

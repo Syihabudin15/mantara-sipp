@@ -109,6 +109,7 @@ model Sumdan {
   rounded       Int       @default(1)
   dsr           Float
   contract_no   String?
+  contract_no2  String?
   contract_date DateTime?
   sk_no         String?
   sk_date       DateTime?
