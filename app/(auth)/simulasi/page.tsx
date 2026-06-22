@@ -567,16 +567,15 @@ export default function Page() {
           <div className="flex gap-2 flex-2">
             <Input
               size="small"
-              // disabled={!hasAccess}
-              disabled
-              value={IDRFormat(data.c_account + data.c_account_sumdan)}
+              disabled={!hasAccess("prosess")}
+              value={IDRFormat(data.c_account_sumdan)}
               style={{ textAlign: "right", color: "black" }}
-              // onChange={(e) =>
-              //   setData({
-              //     ...data,
-              //     c_account: IDRToNumber(e.target.value || "0"),
-              //   })
-              // }
+              onChange={(e) =>
+                setData({
+                  ...data,
+                  c_account_sumdan: IDRToNumber(e.target.value || "0"),
+                })
+              }
             />
           </div>
         </div>
@@ -926,6 +925,7 @@ const ModalDetailPembiayaan = ({
                       data.c_flagging +
                       data.c_infomation +
                       data.c_mutasi +
+                      data.c_account +
                       data.c_stamp +
                       data.c_bop,
                   )}
@@ -933,7 +933,7 @@ const ModalDetailPembiayaan = ({
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Buka Rekening</span>
-                <span>{IDRFormat(data.c_account + data.c_account_sumdan)}</span>
+                <span>{IDRFormat(data.c_account_sumdan)}</span>
               </div>
               <div className="flex justify-between gap-2 font-bold text-red-500 border-t mt-2">
                 <span>TOTAL BIAYA</span>

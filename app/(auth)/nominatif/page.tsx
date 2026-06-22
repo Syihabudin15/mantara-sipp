@@ -5,14 +5,12 @@ import { useUser } from "@/components/UserContext";
 import {
   ExportToExcel,
   FilterData,
-  GetBerkasStatusTag,
   GetDroppingStatusTag,
   MappingToExcelDapem,
 } from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
 import {
   GetAngsuran,
-  GetDapem,
   IDRFormat,
   IDRToNumber,
 } from "@/components/utils/PembiayaanUtil";
@@ -30,7 +28,6 @@ import {
   ArrowRightOutlined,
   BankOutlined,
   EditOutlined,
-  FileFilled,
   FileProtectOutlined,
   FolderOutlined,
   PayCircleOutlined,
@@ -52,12 +49,10 @@ import {
   TableProps,
   Tag,
   Tooltip,
-  Typography,
 } from "antd";
 import { HookAPI } from "antd/es/modal/useModal";
 import moment from "moment";
 import { useEffect, useState } from "react";
-const { Paragraph } = Typography;
 const { RangePicker } = DatePicker;
 
 export default function Page() {
@@ -238,13 +233,14 @@ export default function Page() {
           record.margin_type,
           record.rounded_sumdan,
         ).angsuran;
+        const admAngsuran = Math.ceil(total - mitra);
         return (
           <div className="text-xs">
             <div className="flex gap-2 items-center">
               <Tag color={"blue"}>
                 <BankOutlined /> {IDRFormat(mitra)}
               </Tag>
-              <Tag color={"blue"}>{IDRFormat(total - mitra)}</Tag>
+              <Tag color={"blue"}>{IDRFormat(admAngsuran)}</Tag>
             </div>
             <div className="flex justify-center">
               <Tag color={"blue"}> {IDRFormat(total)}</Tag>
@@ -478,6 +474,7 @@ export default function Page() {
                   record.c_infomation +
                   record.c_stamp +
                   record.c_bop +
+                  record.c_account +
                   record.c_mutasi,
               )}
             </span>
@@ -486,21 +483,9 @@ export default function Page() {
       },
     },
     {
-      title: "Rek/Anggota",
-      dataIndex: "blokir",
-      key: "blokir",
-      render(value, record, index) {
-        return (
-          <div className="text-xs text-right">
-            <span>{IDRFormat(record.c_takeover)}</span>
-          </div>
-        );
-      },
-    },
-    {
       title: "Takeover",
-      dataIndex: "blokir",
-      key: "blokir",
+      dataIndex: "c_takeover",
+      key: "c_takeover",
       render(value, record, index) {
         return (
           <div className="text-xs text-right">
@@ -523,7 +508,7 @@ export default function Page() {
           record.c_ned,
         ).angsuran;
         return (
-          <div className="text-xs">
+          <div className="text-xs text-right">
             <p>
               {record.c_blokir} x {IDRFormat(angs)}
             </p>
@@ -845,6 +830,7 @@ export default function Page() {
               ).angsuran,
             0,
           );
+          const admAngsuran = Math.ceil(angs - angsSumdan);
           const adm_sumdan = pageData.reduce(
             (acc, curr) => acc + curr.plafond * (curr.c_adm_sumdan / 100),
             0,
@@ -943,7 +929,7 @@ export default function Page() {
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} className="text-center font-bold">
                 <div>
-                  {IDRFormat(angs)} - {IDRFormat(angs - angsSumdan)}
+                  {IDRFormat(angsSumdan)} + {IDRFormat(admAngsuran)}
                 </div>
                 <div className="border-t border-gray-500">
                   {IDRFormat(angs)}
@@ -987,9 +973,6 @@ export default function Page() {
                       bop,
                   )}
                 </div>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={17} className="font-bold">
-                <div className="text-right">{IDRFormat(rek)}</div>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={18} className="font-bold">
                 <div className="text-right">{IDRFormat(takeover)}</div>

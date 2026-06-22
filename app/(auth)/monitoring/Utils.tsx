@@ -51,6 +51,7 @@ import {
   message,
   Select,
   Tag,
+  Tooltip,
 } from "antd";
 import moment from "moment";
 import Link from "next/link";
@@ -1563,22 +1564,9 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
         <div className="flex gap-8 flex-col sm:flex-row items-end">
           <div className="flex-1 flex-col gap-1">
             <div className="flex justify-between border-b border-dashed my-2">
-              <div className="flex-1">Administrasi</div>
+              <div className="flex-1">Adm Sumdan</div>
               <div className="flex gap-2 flex-2">
                 <Input
-                  size="small"
-                  style={{ width: 80 }}
-                  suffix={<span className="text-xs italic opacity-70">%</span>}
-                  value={
-                    data.c_adm + data.c_adm + data.c_adm_mitra + data.c_adm_ff
-                  }
-                  // onChange={(e) =>
-                  //   setData({ ...data, c_adm: Number(e.target.value || 0) })
-                  // }
-                  disabled
-                  type={"number"}
-                />
-                {/* <Input
                   size="small"
                   style={{ width: 80 }}
                   suffix={<span className="text-xs italic opacity-70">%</span>}
@@ -1590,19 +1578,54 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     })
                   }
                   type={"number"}
-                /> */}
+                />
+                <Input
+                  size="small"
+                  disabled
+                  value={IDRFormat((data.plafond * data.c_adm_sumdan) / 100)}
+                  style={{ textAlign: "right", color: "black" }}
+                />
+              </div>
+            </div>
+            <div className="flex justify-between border-b border-dashed my-2">
+              <div className="flex-1">Provisi Sumdan</div>
+              <div className="flex gap-2 flex-2">
+                <Input
+                  size="small"
+                  style={{ width: 80 }}
+                  suffix={<span className="text-xs italic opacity-70">%</span>}
+                  value={data.c_provisi_sumdan}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      c_provisi_sumdan: Number(e.target.value || 0),
+                    })
+                  }
+                  type={"number"}
+                />
                 <Input
                   size="small"
                   disabled
                   value={IDRFormat(
-                    (data.plafond *
-                      (data.c_adm +
-                        data.c_adm_sumdan +
-                        data.c_adm_mitra +
-                        data.c_adm_ff)) /
-                      100,
+                    (data.plafond * data.c_provisi_sumdan) / 100,
                   )}
                   style={{ textAlign: "right", color: "black" }}
+                />
+              </div>
+            </div>
+            <div className="flex justify-between border-b border-dashed my-2">
+              <div className="flex-1">Rekening Sumdan</div>
+              <div className="flex gap-2 flex-2">
+                <Input
+                  size="small"
+                  value={IDRFormat(data.c_account_sumdan)}
+                  style={{ textAlign: "right", color: "black" }}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      c_account_sumdan: IDRToNumber(e.target.value || "0"),
+                    })
+                  }
                 />
               </div>
             </div>
@@ -1631,41 +1654,178 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               </div>
             </div>
             <div className="flex justify-between border-b border-dashed my-2">
-              <div className="flex-1">Provisi</div>
+              <div className="flex-1">Adm Koperasi</div>
               <div className="flex gap-2 flex-2">
+                <Tooltip title="Adm Koperasi">
+                  <Input
+                    size="small"
+                    style={{ width: 80 }}
+                    suffix={
+                      <span className="text-xs italic opacity-70">%</span>
+                    }
+                    value={data.c_adm}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_adm: Number(e.target.value || 0),
+                      })
+                    }
+                    type={"number"}
+                  />
+                </Tooltip>
+                <Tooltip title="Adm Mitra">
+                  <Input
+                    size="small"
+                    style={{ width: 80 }}
+                    suffix={
+                      <span className="text-xs italic opacity-70">%</span>
+                    }
+                    value={data.c_adm_mitra}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_adm_mitra: Number(e.target.value || 0),
+                      })
+                    }
+                    type={"number"}
+                  />
+                </Tooltip>
+                <Tooltip title="Adm FF">
+                  <Input
+                    size="small"
+                    style={{ width: 80 }}
+                    suffix={
+                      <span className="text-xs italic opacity-70">%</span>
+                    }
+                    value={data.c_adm_ff}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_adm_ff: Number(e.target.value || 0),
+                      })
+                    }
+                    type={"number"}
+                  />
+                </Tooltip>
                 <Input
                   size="small"
-                  style={{ width: 80 }}
-                  suffix={<span className="text-xs italic opacity-70">%</span>}
-                  value={
-                    data.c_provisi_sumdan +
-                    data.c_fee_ao +
-                    data.c_fee_cabang +
-                    data.c_fee_area +
-                    data.c_fee_bpp +
-                    data.c_fee_bpb
-                  }
-                  // onChange={(e) =>
-                  //   setData({
-                  //     ...data,
-                  //     c_provisi: Number(e.target.value || 0),
-                  //   })
-                  // }
                   disabled
-                  type={"number"}
+                  value={IDRFormat(
+                    data.plafond *
+                      ((data.c_adm + data.c_adm_mitra + data.c_adm_ff) / 100),
+                  )}
+                  style={{ textAlign: "right", color: "black" }}
                 />
+              </div>
+            </div>
+            <div className="flex justify-between border-b border-dashed my-2">
+              <div className="flex-1">Provisi 1</div>
+              <div className="flex gap-2 flex-2">
+                <Tooltip title="Fee AO">
+                  <Input
+                    size="small"
+                    style={{ width: 80 }}
+                    suffix={
+                      <span className="text-xs italic opacity-70">%</span>
+                    }
+                    value={data.c_fee_ao}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_fee_ao: Number(e.target.value || 0),
+                      })
+                    }
+                    type={"number"}
+                  />
+                </Tooltip>
+                <Tooltip title="Fee Cabang">
+                  <Input
+                    size="small"
+                    style={{ width: 80 }}
+                    suffix={
+                      <span className="text-xs italic opacity-70">%</span>
+                    }
+                    value={data.c_fee_cabang}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_fee_cabang: Number(e.target.value || 0),
+                      })
+                    }
+                    type={"number"}
+                  />
+                </Tooltip>
+                <Tooltip title="Fee Area">
+                  <Input
+                    size="small"
+                    style={{ width: 80 }}
+                    suffix={
+                      <span className="text-xs italic opacity-70">%</span>
+                    }
+                    value={data.c_fee_area}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_fee_area: Number(e.target.value || 0),
+                      })
+                    }
+                    type={"number"}
+                  />
+                </Tooltip>
                 <Input
                   size="small"
                   disabled
                   value={IDRFormat(
                     (data.plafond *
-                      (data.c_provisi_sumdan +
-                        data.c_fee_ao +
-                        data.c_fee_cabang +
-                        data.c_fee_area +
-                        data.c_fee_bpp +
-                        data.c_fee_bpb)) /
+                      (data.c_fee_ao + data.c_fee_cabang + data.c_fee_area)) /
                       100,
+                  )}
+                  style={{ textAlign: "right", color: "black" }}
+                />
+              </div>
+            </div>
+            <div className="flex justify-between border-b border-dashed my-2">
+              <div className="flex-1">Provisi 2</div>
+              <div className="flex gap-2 flex-2">
+                <Tooltip title="Fee BPP">
+                  <Input
+                    size="small"
+                    style={{ width: 80 }}
+                    suffix={
+                      <span className="text-xs italic opacity-70">%</span>
+                    }
+                    value={data.c_fee_bpp}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_fee_bpp: Number(e.target.value || 0),
+                      })
+                    }
+                    type={"number"}
+                  />
+                </Tooltip>
+                <Tooltip title="Fee BPB">
+                  <Input
+                    size="small"
+                    style={{ width: 80 }}
+                    suffix={
+                      <span className="text-xs italic opacity-70">%</span>
+                    }
+                    value={data.c_fee_bpb}
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_fee_bpb: Number(e.target.value || 0),
+                      })
+                    }
+                    type={"number"}
+                  />
+                </Tooltip>
+                <Input
+                  size="small"
+                  disabled
+                  value={IDRFormat(
+                    (data.plafond * (data.c_fee_bpp + data.c_fee_bpb)) / 100,
                   )}
                   style={{ textAlign: "right", color: "black" }}
                 />
@@ -1688,19 +1848,18 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               </div>
             </div>
             <div className="flex justify-between border-b border-dashed my-2">
-              <div className="flex-1">Buka Rekening</div>
+              <div className="flex-1">Rekening Koperasi</div>
               <div className="flex gap-2 flex-2">
                 <Input
                   size="small"
-                  value={IDRFormat(data.c_account + data.c_account_sumdan)}
+                  value={IDRFormat(data.c_account)}
                   style={{ textAlign: "right", color: "black" }}
-                  // onChange={(e) =>
-                  //   setData({
-                  //     ...data,
-                  //     c_account: IDRToNumber(e.target.value || "0"),
-                  //   })
-                  // }
-                  disabled
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      c_account: IDRToNumber(e.target.value || "0"),
+                    })
+                  }
                 />
               </div>
             </div>
@@ -1741,7 +1900,6 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               <div className="flex gap-2 flex-2">
                 <Input
                   size="small"
-                  disabled
                   value={IDRFormat(data.c_stamp)}
                   style={{ textAlign: "right", color: "black" }}
                   onChange={(e) =>
@@ -1765,6 +1923,26 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     setData({
                       ...data,
                       c_mutasi: IDRToNumber(e.target.value || "0"),
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-between items-center my-2">
+              <div className="flex-1">BOP Pembiayaan</div>
+              <div className="flex gap-2 flex-2">
+                <Input
+                  size="small"
+                  value={IDRFormat(data.c_bop || 0)}
+                  style={{ textAlign: "right", color: "red" }}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      c_bop:
+                        IDRToNumber(e.target.value || "0") >
+                        data.ProdukPembiayaan.Sumdan.max_bop
+                          ? data.ProdukPembiayaan.Sumdan.max_bop
+                          : IDRToNumber(e.target.value || "0"),
                     })
                   }
                 />
@@ -1813,26 +1991,6 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
             <div className="flex justify-between border-b border-dashed my-2 font-bold text-blue-600">
               <span>Terima Kotor</span>
               <span>{IDRFormat(data.plafond - GetDapem(data).biaya)}</span>
-            </div>
-            <div className="flex gap-2 justify-between items-center my-2">
-              <div className="flex-1">BOP Pembiayaan</div>
-              <div className="flex gap-2 flex-2">
-                <Input
-                  size="small"
-                  value={IDRFormat(data.c_bop || 0)}
-                  style={{ textAlign: "right", color: "red" }}
-                  onChange={(e) =>
-                    setData({
-                      ...data,
-                      c_bop:
-                        IDRToNumber(e.target.value || "0") >
-                        data.ProdukPembiayaan.Sumdan.max_bop
-                          ? data.ProdukPembiayaan.Sumdan.max_bop
-                          : IDRToNumber(e.target.value || "0"),
-                    })
-                  }
-                />
-              </div>
             </div>
             <div className="flex gap-2 justify-between items-center my-2">
               <div className="flex-1">Nominal Takeover</div>

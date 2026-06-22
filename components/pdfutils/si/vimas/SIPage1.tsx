@@ -39,8 +39,9 @@ export const SIPage1Vima = (record: IDropping) => {
     dapem.c_infomation +
     dapem.c_stamp +
     dapem.c_bop +
+    dapem.c_account +
     dapem.c_mutasi;
-  const biaya = adm + provisi + asuransi + tatalaksana + dapem.c_account;
+  const biaya = adm + provisi + asuransi + tatalaksana;
   return `
   <div>
      <div class="page-header flex items-center mb-6 border-b pb-4">
@@ -92,8 +93,11 @@ export const SIPage1Vima = (record: IDropping) => {
             value: dapem.ProdukPembiayaan.name,
           },
           {
-            key: `Provisi ${dapem.c_provisi_sumdan}%`,
-            value: IDRFormat((dapem.plafond * dapem.c_provisi_sumdan) / 100),
+            key: `Provisi ${dapem.c_provisi_sumdan + dapem.c_adm_sumdan}%`,
+            value: IDRFormat(
+              dapem.plafond *
+                ((dapem.c_provisi_sumdan + dapem.c_adm_sumdan) / 100),
+            ),
             currency: true,
             classStyle: "font-bold",
           },
@@ -164,15 +168,6 @@ export const SIPage1Vima = (record: IDropping) => {
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
               <p class="w-4 flex-1 text-right">${IDRFormat(provisi)}</p>
-            </div>
-          </div>
-          <div class="flex gap-2 ml-2">
-            <p class="w-4">E. </p>
-            <p class="w-36">Buka Rekening/Anggota</p>
-            <p class="w-4">:</p>
-            <div class="w-28 flex justify-between gap-2">
-              <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(dapem.c_account)}</p>
             </div>
           </div>
         </div>

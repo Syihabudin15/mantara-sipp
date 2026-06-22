@@ -94,6 +94,11 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
             currency: true,
           },
           {
+            key: "Biaya Buka Rekening",
+            value: IDRFormat(record.c_account_sumdan),
+            currency: true,
+          },
+          {
             key: "Biaya Asuransi",
             value: IDRFormat(record.plafond * (record.c_insurance / 100)),
             currency: true,
@@ -114,34 +119,18 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
           },
           {
             key: "Biaya Tatalaksana",
-            value: IDRFormat(record.c_gov),
+            value: IDRFormat(
+              record.c_gov +
+                record.c_flagging +
+                record.c_infomation +
+                record.c_account +
+                record.c_stamp +
+                record.c_bop +
+                record.c_mutasi,
+            ),
             currency: true,
           },
-          {
-            key: "Biaya Buka Rekening",
-            value: IDRFormat(record.c_account + record.c_account_sumdan),
-            currency: true,
-          },
-          {
-            key: "Biaya Flagging",
-            value: IDRFormat(record.c_flagging),
-            currency: true,
-          },
-          {
-            key: "Biaya Sistem Informasi",
-            value: IDRFormat(record.c_infomation),
-            currency: true,
-          },
-          {
-            key: "Biaya Materai",
-            value: IDRFormat(record.c_stamp),
-            currency: true,
-          },
-          {
-            key: "Biaya Mutasi",
-            value: IDRFormat(record.c_mutasi),
-            currency: true,
-          },
+
           {
             key: "TOTAL BIAYA",
             value: IDRFormat(dapem.biaya),
@@ -156,11 +145,6 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
           key: "Terima Kotor",
           value: IDRFormat(record.plafond - dapem.biaya),
           classStyle: "font-bold",
-          currency: true,
-        },
-        {
-          key: `BOP Pembiayaan`,
-          value: IDRFormat(record.c_bop),
           currency: true,
         },
         {

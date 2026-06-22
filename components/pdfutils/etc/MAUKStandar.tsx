@@ -346,12 +346,15 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                         currency: true,
                       },
                       {
-                        key: "Biaya Adm Koperasi",
+                        key: "Biaya Provisi Mitra",
                         value: IDRFormat(
-                          data.plafond *
-                            ((data.c_adm + data.c_adm_mitra + data.c_adm_ff) /
-                              100),
+                          data.plafond * (data.c_provisi_sumdan / 100),
                         ),
+                        currency: true,
+                      },
+                      {
+                        key: "Biaya Buka Rekening Mitra",
+                        value: IDRFormat(data.c_account_sumdan),
                         currency: true,
                       },
                       {
@@ -362,9 +365,11 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                         currency: true,
                       },
                       {
-                        key: "Biaya Provisi Mitra",
+                        key: "Biaya Adm Koperasi",
                         value: IDRFormat(
-                          data.plafond * (data.c_provisi_sumdan / 100),
+                          data.plafond *
+                            ((data.c_adm + data.c_adm_mitra + data.c_adm_ff) /
+                              100),
                         ),
                         currency: true,
                       },
@@ -383,44 +388,19 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                       },
                       {
                         key: "Biaya Tatalaksana",
-                        value: IDRFormat(data.c_gov),
+                        value: IDRFormat(
+                          data.c_gov +
+                            data.c_flagging +
+                            data.c_infomation +
+                            data.c_account +
+                            data.c_stamp +
+                            data.c_account +
+                            data.c_bop +
+                            data.c_mutasi,
+                        ),
                         currency: true,
                       },
-                      {
-                        key: "Biaya Buka Rekening Mitra",
-                        value: IDRFormat(data.c_account_sumdan),
-                        currency: true,
-                      },
-                      {
-                        key: "Biaya Anggota Koperasi",
-                        value: IDRFormat(data.c_account),
-                        currency: true,
-                      },
-                      {
-                        key: "Biaya Flagging",
-                        value: IDRFormat(data.c_flagging),
-                        currency: true,
-                      },
-                      {
-                        key: "Biaya Sistem Informasi",
-                        value: IDRFormat(data.c_infomation),
-                        currency: true,
-                      },
-                      {
-                        key: "Biaya Materai",
-                        value: IDRFormat(data.c_stamp),
-                        currency: true,
-                      },
-                      {
-                        key: "Biaya Mutasi",
-                        value: IDRFormat(data.c_mutasi),
-                        currency: true,
-                      },
-                      {
-                        key: `BOP Pembiayaan`,
-                        value: `${IDRFormat(data.c_bop)}`,
-                        currency: true,
-                      },
+
                       {
                         key: "TOTAL BIAYA",
                         value: IDRFormat(dapem.biaya),
@@ -447,12 +427,6 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                           borderStyle: "dashed",
                         },
                       },
-                      // {
-                      //   key: `Retensi Angsuran (${data.c_retensi}x)`,
-                      //   value: IDRFormat(retensi),
-                      //   currency: true,
-                      // },
-
                       {
                         key: "Nominal Takeover",
                         value: `${IDRFormat(data.c_takeover)}`,

@@ -30,6 +30,7 @@ import { useAccess } from "@/libs/Permission";
 
 import {
   ArrowRightOutlined,
+  BankOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -213,13 +214,17 @@ export default function Page() {
           record.margin_type,
           record.rounded_sumdan,
         ).angsuran;
+        const admAngsuran = Math.ceil(total - mitra);
         return (
           <div className="text-xs">
-            <div>
-              Total : <Tag color={"blue"}>{IDRFormat(total)}</Tag>
+            <div className="flex gap-2 items-center">
+              <Tag color={"blue"}>
+                <BankOutlined /> {IDRFormat(mitra)}
+              </Tag>
+              <Tag color={"blue"}>{IDRFormat(admAngsuran)}</Tag>
             </div>
-            <div>
-              Mitra : <Tag color={"blue"}> {IDRFormat(mitra)}</Tag>
+            <div className="flex justify-center">
+              <Tag color={"blue"}> {IDRFormat(total)}</Tag>
             </div>
           </div>
         );
@@ -703,6 +708,7 @@ export default function Page() {
               ).angsuran,
             0,
           );
+          const admAngsuran = Math.ceil(angsuran - angssudan);
 
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
@@ -718,10 +724,10 @@ export default function Page() {
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} className="text-center font-bold">
                 <div>
-                  {IDRFormat(angsuran)} - {IDRFormat(angssudan)}
+                  {IDRFormat(angssudan)} + {IDRFormat(admAngsuran)}
                 </div>
                 <div className="border-t border-gray-500">
-                  {IDRFormat(angsuran - angssudan)}
+                  {IDRFormat(angsuran)}
                 </div>
               </Table.Summary.Cell>
             </Table.Summary.Row>

@@ -174,6 +174,11 @@ export const AnalisaPerhitungan = (record: IDapem) => {
             currency: true,
           },
           {
+            key: "Biaya Buka Rekening",
+            value: IDRFormat(record.c_account_sumdan),
+            currency: true,
+          },
+          {
             key: "Biaya Asuransi",
             value: IDRFormat(record.plafond * (record.c_insurance / 100)),
             currency: true,
@@ -200,13 +205,9 @@ export const AnalisaPerhitungan = (record: IDapem) => {
                 record.c_infomation +
                 record.c_stamp +
                 record.c_mutasi +
+                record.c_account +
                 record.c_bop,
             ),
-            currency: true,
-          },
-          {
-            key: "Biaya Buka Rekening",
-            value: IDRFormat(record.c_account + record.c_account_sumdan),
             currency: true,
           },
           {

@@ -238,13 +238,14 @@ export default function Page() {
           record.margin_type,
           record.rounded_sumdan,
         ).angsuran;
+        const admAngsuran = Math.ceil(total - mitra);
         return (
           <div className="text-xs">
             <div className="flex gap-2 items-center">
               <Tag color={"blue"}>
                 <BankOutlined /> {IDRFormat(mitra)}
               </Tag>
-              <Tag color={"blue"}>{IDRFormat(total - mitra)}</Tag>
+              <Tag color={"blue"}>{IDRFormat(admAngsuran)}</Tag>
             </div>
             <div className="flex justify-center">
               <Tag color={"blue"}> {IDRFormat(total)}</Tag>
@@ -1018,6 +1019,7 @@ export default function Page() {
               ).angsuran,
             0,
           );
+          const admAngsuran = Math.ceil(angs - angsSumdan);
 
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
@@ -1033,7 +1035,7 @@ export default function Page() {
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} className="text-center font-bold">
                 <div>
-                  {IDRFormat(angs)} - {IDRFormat(angs - angsSumdan)}
+                  {IDRFormat(angsSumdan)} + {IDRFormat(admAngsuran)}
                 </div>
                 <div className="border-t border-gray-500">
                   {IDRFormat(angs)}

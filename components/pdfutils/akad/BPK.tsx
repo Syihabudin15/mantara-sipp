@@ -85,6 +85,11 @@ export const BPK = (record: IDapem) => {
         currency: true,
       },
       {
+        key: "Biaya Buka Rekening",
+        value: IDRFormat(record.c_account_sumdan),
+        currency: true,
+      },
+      {
         key: "Biaya Provisi",
         value: IDRFormat(
           record.plafond *
@@ -106,6 +111,7 @@ export const BPK = (record: IDapem) => {
             record.c_infomation +
             record.c_stamp +
             record.c_mutasi +
+            record.c_account +
             record.c_bop,
         ),
         currency: true,
@@ -116,15 +122,8 @@ export const BPK = (record: IDapem) => {
         currency: true,
       },
       {
-        key: "Biaya Buka Rekening",
-        value: IDRFormat(record.c_account + record.c_account_sumdan),
-        currency: true,
-      },
-      {
         key: `Total Potongan`,
-        value: IDRFormat(
-          record.plafond - (dapem.biaya + record.c_blokir * angsuran),
-        ),
+        value: IDRFormat(record.plafond - dapem.biaya),
         currency: true,
         classStyle: "border-t font-bold",
       },
