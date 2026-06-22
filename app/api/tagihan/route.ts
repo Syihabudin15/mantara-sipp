@@ -2,7 +2,7 @@ import { serializeForApi } from "@/components/utils/PembiayaanUtil";
 import { getSession } from "@/libs/Auth";
 import { IAngsuran } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
-import { Angsuran } from "@prisma/client";
+import { Angsuran, Prisma } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -22,123 +22,106 @@ export const GET = async (req: NextRequest) => {
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
-  const data = await prisma.dapem.findMany({
-    where: {
-      status: true,
-      dropping_status: "DISETUJUI",
-      ...(search && {
-        OR: [
-          { id: { contains: search } },
-          { no_contract: { contains: search } },
-          {
-            Debitur: {
-              OR: [
-                { fullname: { contains: search } },
-                { nopen: { contains: search } },
-                { no_skep: { contains: search } },
-                { name_skep: { contains: search } },
-              ],
-            },
-          },
-        ],
-      }),
-      ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
-      ...(!user.sumdanId &&
-        sumdanId && { ProdukPembiayaan: { sumdanId: sumdanId } }),
-      Angsuran: {
-        some: {
-          date_pay: {
-            gte: moment(backdate || new Date())
-              .startOf("month")
-              .toDate(),
-            lte: moment(backdate || new Date())
-              .endOf("month")
-              .toDate(),
-          },
-          ...(paid_status
-            ? paid_status === "paid"
-              ? { date_paid: { not: null } }
-              : { date_paid: null }
-            : {}),
-        },
-      },
-    },
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      created_at: "desc",
-    },
-    include: {
-      Debitur: true,
-      ProdukPembiayaan: { include: { Sumdan: true } },
-      JenisPembiayaan: true,
-      CreatedBy: {
-        include: {
-          Cabang: {
-            include: {
-              Area: true,
-            },
+  const where: Prisma.DapemWhereInput = {
+    status: true,
+    dropping_status: "DISETUJUI",
+    ...(search && {
+      OR: [
+        { id: { contains: search } },
+        { no_contract: { contains: search } },
+        {
+          Debitur: {
+            OR: [
+              { fullname: { contains: search } },
+              { nopen: { contains: search } },
+              { no_skep: { contains: search } },
+              { name_skep: { contains: search } },
+            ],
           },
         },
+      ],
+    }),
+    ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
+    ...(!user.sumdanId &&
+      sumdanId && { ProdukPembiayaan: { sumdanId: sumdanId } }),
+    Angsurans: {
+      some: {
+        date_pay: {
+          gte: moment(backdate || new Date())
+            .startOf("month")
+            .toDate(),
+          lte: moment(backdate || new Date())
+            .endOf("month")
+            .toDate(),
+        },
+        ...(paid_status
+          ? paid_status === "paid"
+            ? { date_paid: { not: null } }
+            : { date_paid: null }
+          : {}),
       },
-      AO: {
-        include: {
-          Cabang: {
-            include: {
-              Area: true,
+    },
+  };
+
+  const [data, total] = await Promise.all([
+    prisma.dapem.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: {
+        created_at: "desc",
+      },
+      include: {
+        Debitur: true,
+        ProdukPembiayaan: { include: { Sumdan: true } },
+        JenisPembiayaan: true,
+        User: {
+          include: {
+            Cabang: {
+              include: {
+                Area: true,
+              },
             },
           },
         },
-      },
-      Berkas: true,
-      Jaminan: true,
-      Angsuran: true,
-      Dropping: true,
-      Pelunasan: true,
-    },
-  });
-  const total = await prisma.dapem.count({
-    where: {
-      status: true,
-      dropping_status: "DISETUJUI",
-      ...(search && {
-        OR: [
-          { id: { contains: search } },
-          { no_contract: { contains: search } },
-          {
-            Debitur: {
-              OR: [
-                { fullname: { contains: search } },
-                { nopen: { contains: search } },
-                { no_skep: { contains: search } },
-                { name_skep: { contains: search } },
-              ],
+        AO: {
+          include: {
+            Cabang: {
+              include: {
+                Area: true,
+              },
             },
           },
-        ],
-      }),
-      ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
-      ...(!user.sumdanId &&
-        sumdanId && { ProdukPembiayaan: { sumdanId: sumdanId } }),
-      Angsuran: {
-        some: {
-          date_pay: {
-            gte: moment(backdate || new Date())
-              .startOf("month")
-              .toDate(),
-            lte: moment(backdate || new Date())
-              .endOf("month")
-              .toDate(),
-          },
-          ...(paid_status
-            ? paid_status === "paid"
-              ? { date_paid: { not: null } }
-              : { date_paid: null }
-            : {}),
         },
+        AOCabang: {
+          include: {
+            Cabang: {
+              include: {
+                Area: true,
+              },
+            },
+          },
+        },
+        AOArea: {
+          include: {
+            Cabang: {
+              include: {
+                Area: true,
+              },
+            },
+          },
+        },
+        Berkas: true,
+        Jaminan: true,
+        Angsurans: true,
+        Dropping: true,
+        Pelunasan: true,
+        PayOffice: true,
+        Insurance: true,
       },
-    },
-  });
+    }),
+    prisma.dapem.count({ where }),
+  ]);
 
   return NextResponse.json(
     { data: serializeForApi(data), total, status: 200 },
@@ -206,6 +189,8 @@ export const PATCH = async (req: NextRequest) => {
         include: {
           ProdukPembiayaan: { include: { Sumdan: true } },
           AO: true,
+          AOCabang: true,
+          AOArea: true,
           Debitur: true,
         },
       },

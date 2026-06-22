@@ -2,7 +2,7 @@ import { serializeForApi } from "@/components/utils/PembiayaanUtil";
 import { getSession } from "@/libs/Auth";
 import { IPelunasan } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
-import { ESettleStatus, ESubmissionStatus } from "@prisma/client";
+import { ESettleStatus, ESubmissionStatus, Prisma } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -29,120 +29,106 @@ export const GET = async (req: NextRequest) => {
       { status: 200 },
     );
 
-  const data = await prisma.pelunasan.findMany({
-    where: {
-      ...(search && {
-        Dapem: {
-          OR: [
-            { no_contract: { contains: search } },
-            {
-              Debitur: {
-                OR: [
-                  { fullname: { contains: search } },
-                  { nopen: { contains: search } },
-                  { no_skep: { contains: search } },
-                  { name_skep: { contains: search } },
-                  { account_number: { contains: search } },
-                ],
-              },
-            },
-          ],
-        },
-      }),
-      ...(type && { type: type as ESettleStatus }),
-      ...(status_paid && { status_paid: status_paid as ESubmissionStatus }),
-      ...(sumdanId && { Dapem: { ProdukPembiayaan: { sumdanId } } }),
-      ...(backdate && {
-        created_at: {
-          gte: moment(backdate.split(",")[0]).toDate(),
-          lte: moment(backdate.split(",")[1]).toDate(),
-        },
-      }),
-      ...(user.sumdanId && {
-        Dapem: {
-          ProdukPembiayaan: {
-            sumdanId: user.sumdanId,
-          },
-        },
-      }),
-    },
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      created_at: "desc",
-    },
-    include: {
+  const where: Prisma.PelunasanWhereInput = {
+    ...(search && {
       Dapem: {
-        include: {
-          Debitur: true,
-          ProdukPembiayaan: { include: { Sumdan: true } },
-          JenisPembiayaan: true,
-          CreatedBy: {
-            include: {
-              Cabang: {
-                include: {
-                  Area: true,
-                },
-              },
+        OR: [
+          { no_contract: { contains: search } },
+          {
+            Debitur: {
+              OR: [
+                { fullname: { contains: search } },
+                { nopen: { contains: search } },
+                { no_skep: { contains: search } },
+                { name_skep: { contains: search } },
+                { account_number: { contains: search } },
+              ],
             },
           },
-          AO: {
-            include: {
-              Cabang: {
-                include: {
-                  Area: true,
-                },
-              },
-            },
-          },
-          Berkas: true,
-          Jaminan: true,
-          Angsuran: true,
-          Dropping: true,
-          Pelunasan: true,
+        ],
+      },
+    }),
+    ...(type && { type: type as ESettleStatus }),
+    ...(status_paid && { status_paid: status_paid as ESubmissionStatus }),
+    ...(sumdanId && { Dapem: { ProdukPembiayaan: { sumdanId } } }),
+    ...(backdate && {
+      created_at: {
+        gte: moment(backdate.split(",")[0]).toDate(),
+        lte: moment(backdate.split(",")[1]).toDate(),
+      },
+    }),
+    ...(user.sumdanId && {
+      Dapem: {
+        ProdukPembiayaan: {
+          sumdanId: user.sumdanId,
         },
       },
-    },
-  });
+    }),
+  };
 
-  const total = await prisma.pelunasan.count({
-    where: {
-      ...(search && {
+  const [data, total] = await Promise.all([
+    await prisma.pelunasan.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: {
+        created_at: "desc",
+      },
+      include: {
         Dapem: {
-          OR: [
-            { no_contract: { contains: search } },
-            {
-              Debitur: {
-                OR: [
-                  { fullname: { contains: search } },
-                  { nopen: { contains: search } },
-                  { no_skep: { contains: search } },
-                  { name_skep: { contains: search } },
-                  { account_number: { contains: search } },
-                ],
+          include: {
+            Debitur: true,
+            ProdukPembiayaan: { include: { Sumdan: true } },
+            JenisPembiayaan: true,
+            User: {
+              include: {
+                Cabang: {
+                  include: {
+                    Area: true,
+                  },
+                },
               },
             },
-          ],
-        },
-      }),
-      ...(type && { type: type as ESettleStatus }),
-      ...(status_paid && { status_paid: status_paid as ESubmissionStatus }),
-      ...(sumdanId && { Dapem: { ProdukPembiayaan: { sumdanId } } }),
-      ...(backdate && {
-        created_at: {
-          gte: moment(backdate.split(",")[0]).toDate(),
-          lte: moment(backdate.split(",")[1]).toDate(),
-        },
-      }),
-      ...(user.sumdanId && {
-        Dapem: {
-          ProdukPembiayaan: {
-            sumdanId: user.sumdanId,
+            AO: {
+              include: {
+                Cabang: {
+                  include: {
+                    Area: true,
+                  },
+                },
+              },
+            },
+            AOCabang: {
+              include: {
+                Cabang: {
+                  include: {
+                    Area: true,
+                  },
+                },
+              },
+            },
+            AOArea: {
+              include: {
+                Cabang: {
+                  include: {
+                    Area: true,
+                  },
+                },
+              },
+            },
+            Berkas: true,
+            Jaminan: true,
+            Angsurans: true,
+            Dropping: true,
+            Pelunasan: true,
+            PayOffice: true,
+            Insurance: true,
           },
         },
-      }),
-    },
-  });
+      },
+    }),
+    prisma.pelunasan.count({ where }),
+  ]);
 
   return NextResponse.json(
     { msg: "OK", status: 200, data: serializeForApi(data), total },
@@ -227,7 +213,7 @@ export const PATCH = async (req: NextRequest) => {
       Debitur: true,
       ProdukPembiayaan: { include: { Sumdan: true } },
       JenisPembiayaan: true,
-      CreatedBy: {
+      User: {
         include: {
           Cabang: {
             include: {
@@ -245,11 +231,31 @@ export const PATCH = async (req: NextRequest) => {
           },
         },
       },
+      AOCabang: {
+        include: {
+          Cabang: {
+            include: {
+              Area: true,
+            },
+          },
+        },
+      },
+      AOArea: {
+        include: {
+          Cabang: {
+            include: {
+              Area: true,
+            },
+          },
+        },
+      },
       Berkas: true,
       Jaminan: true,
-      Angsuran: true,
+      Angsurans: true,
       Dropping: true,
       Pelunasan: true,
+      PayOffice: true,
+      Insurance: true,
     },
   });
 
@@ -260,7 +266,7 @@ export const PATCH = async (req: NextRequest) => {
 };
 
 async function generatePelunasanId() {
-  const prefix = `PAID`;
+  const prefix = `PAIDOFF`;
   const padLength = 4;
   const lastRecord = await prisma.pelunasan.count({});
   return `${prefix}${String(lastRecord + 1).padStart(padLength, "0")}`;

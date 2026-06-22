@@ -8,6 +8,7 @@ async function main() {
     create: {
       id: "RL001",
       name: "Developer",
+      data_status: "SEMUA",
       permission: JSON.stringify([
         {
           path: "/master/roles",
@@ -23,7 +24,7 @@ async function main() {
   const area = await prisma.area.upsert({
     where: { id: "KW01" },
     create: {
-      id: "KW01",
+      id: "KW001",
       name: "JAWA BARAT",
       status: true,
       created_at: new Date(),
@@ -34,7 +35,7 @@ async function main() {
   const unit = await prisma.cabang.upsert({
     where: { id: "UP001" },
     create: {
-      id: "UP001",
+      id: "UP0001",
       name: "PUSAT",
       address: "",
       phone: "",

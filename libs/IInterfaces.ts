@@ -8,10 +8,14 @@ import {
   Dapem,
   Debitur,
   Dropping,
+  HeadArea,
+  HeadCabang,
+  Insurance,
   Jaminan,
   JenisPembiayaan,
   JournalDetail,
   JournalEntry,
+  PayOffice,
   Pelunasan,
   ProdukPembiayaan,
   Role,
@@ -64,65 +68,88 @@ export interface ICashDesc {
   desc: string;
   file: string;
 }
+
 // Models
 export interface ISumdan extends Sumdan {
-  ProdukPembiayaan: ProdukPembiayaan[];
+  ProdukPembiayaans: IProdukPembiayaan[];
 }
-
+export interface IHeadArea extends HeadArea {
+  Area: IArea;
+  User: IUserDapem;
+}
 export interface IArea extends Area {
-  Cabang: Cabang[];
+  Cabangs: ICabang[];
+  HeadAreas: IHeadArea[];
 }
 export interface IProdukPembiayaan extends ProdukPembiayaan {
   Sumdan: Sumdan;
+  Dapems: IDapem[];
 }
-export interface ISumdanDapem extends Sumdan {
-  ProdukPembiayaan: IProdukPembiayaan[];
+export interface IJenisPembiayaan extends JenisPembiayaan {
+  Dapems: IDapem[];
+}
+export interface IHeadCabang extends HeadCabang {
+  Cabang: ICabang;
+  User: IUserDapem;
 }
 export interface ICabang extends Cabang {
-  Area: Area;
+  Area: IArea;
+  HeadCabangs: IHeadCabang[];
+  Users: IUserDapem[];
 }
 export interface IUserDapem extends User {
+  Sumdan: ISumdan;
+  AgentFronting: IAgentFronting;
   Cabang: ICabang;
+  Dapems: IDapem[];
+  AOs: IDapem[];
+  AOCabangs: IDapem[];
+  AOAreas: IDapem[];
 }
 export interface ISumdanAgentFronting extends SumdanAgentFronting {
   Sumdan: Sumdan;
   AgentFronting: AgentFronting;
 }
 export interface IAgentFronting extends AgentFronting {
-  User: IUserDapem[];
-  Dapem: IDapem[];
-  SumdanAgentFronting: ISumdanAgentFronting[];
+  Users: IUserDapem[];
+  Dapems: IDapem[];
+  SumdanAgentFrontings: ISumdanAgentFronting[];
 }
+
 export interface IDapem extends Dapem {
   Debitur: Debitur;
   ProdukPembiayaan: IProdukPembiayaan;
-  CreatedBy: IUserDapem;
-  AO: IUserDapem;
-  AORelate: IUserDapem | null;
+  User: IUserDapem;
+  AO: IUserDapem | null;
+  AOCabang: IUserDapem | null;
+  AOArea: IUserDapem | null;
   Dropping: Dropping | null;
   Berkas: Berkas | null;
   Jaminan: Jaminan | null;
   JenisPembiayaan: JenisPembiayaan;
-  Angsuran: Angsuran[];
-  Pelunasan: Pelunasan;
+  Angsurans: Angsuran[];
+  Pelunasan: Pelunasan | null;
   AgentFronting: IAgentFronting | null;
+  PayOffice: PayOffice;
+  Insurance: Insurance;
 }
 
 export interface IDropping extends Dropping {
   Sumdan: Sumdan;
-  Dapem: IDapem[];
+  Dapems: IDapem[];
 }
 export interface IDocument extends Berkas {
   Sumdan: Sumdan;
-  Dapem: IDapem[];
+  Dapems: IDapem[];
 }
 
 export interface ISumdanDropping extends Sumdan {
-  Dapem: IDapem[];
+  Dapems: IDapem[];
 }
 
 export interface IDebitur extends Debitur {
-  Dapem: IDapem[];
+  Dapems: IDapem[];
+  PayOffice: IPayOffice;
 }
 
 export interface IPelunasan extends Pelunasan {
@@ -140,13 +167,20 @@ export interface IJournalDetail extends JournalDetail {
 }
 
 export interface IJournalEntry extends JournalEntry {
-  JournalDetail: IJournalDetail[];
+  JournalDetails: IJournalDetail[];
 }
 
 export interface ICategoryOfAccount extends CategoryOfAccount {
-  Children: ICategoryOfAccount[];
+  Childrens: ICategoryOfAccount[];
   Parent: ICategoryOfAccount | null;
-  JournalDetail: IJournalDetail[];
+  JournalDetails: IJournalDetail[];
+}
+
+export interface IPayOffice extends PayOffice {
+  Dapems: IDapem[];
+}
+export interface IInsurance extends Insurance {
+  Dapems: IDapem[];
 }
 // End Models
 
@@ -156,7 +190,13 @@ export interface IExportData {
 }
 
 export interface UserType extends User {
-  Cabang: Cabang;
+  Cabang: ICabang;
   Sumdan: Sumdan;
   Role: Role;
+  AgentFronting: AgentFronting;
+}
+
+export interface IFiles {
+  name: string;
+  url: string;
 }

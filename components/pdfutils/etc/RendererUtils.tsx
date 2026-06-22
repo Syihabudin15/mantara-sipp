@@ -30,7 +30,7 @@ export const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#ffffff",
     fontSize: 9,
-    lineHeight: 1.6,
+    lineHeight: 1.5,
     fontFamily: "Caladea",
   },
   section: { padding: 10 },
@@ -70,18 +70,15 @@ export const ListKeyValue = ({
         {d.currency ? (
           <View
             style={{
+              flex: 1,
               display: "flex",
               flexDirection: "row",
               justifyContent: "space-between",
               gap: 4,
             }}
           >
-            <Text>Rp. </Text>
-            <Text
-              style={{ flex: 1, ...(rightvalue && { textAlign: "right" }) }}
-            >
-              {d.value}
-            </Text>
+            <Text style={{ width: 20 }}>Rp. </Text>
+            <Text style={{ textAlign: "right" }}>{d.value}</Text>
           </View>
         ) : (
           <Text style={{ flex: 1, ...(rightvalue && { textAlign: "right" }) }}>

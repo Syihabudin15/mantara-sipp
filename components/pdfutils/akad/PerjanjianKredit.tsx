@@ -42,7 +42,7 @@ export const PerjanjianKredit = (record: IDapem) => {
         <div class="w-4">:</div>
         <div class="flex-1">${process.env.NEXT_PUBLIC_APP_AKAD_POSITION}</div>
       </div>
-      <p>Berkedudukan di ${process.env.NEXT_PUBLIC_APP_COMPANY_ADDRESS_SK} Dalam hal ini bertindak untuk dan atas nama Pemberi Kuasa ${record.ProdukPembiayaan.Sumdan.name}, berdasarkan Surat Kuasa No ${record.ProdukPembiayaan.Sumdan.sk_no} tertanggal ${moment(record.ProdukPembiayaan.Sumdan.sk_date).format("DD MMMM YYYY")}, oleh karenanya berhak dan sah mewakilkan ${record.ProdukPembiayaan.Sumdan.name} yang berkedudukan di ${record.ProdukPembiayaan.Sumdan.address}, yang selanjutnya disebut <span class="font-bold">“BANK”</span></p>
+      <p>Berkedudukan di ${process.env.NEXT_PUBLIC_APP_COMPANY_ADDRESS_SK} Dalam hal ini bertindak untuk dan atas nama Pemberi Kuasa ${record.ProdukPembiayaan.Sumdan.name}, berdasarkan Surat Kuasa No ${record.ProdukPembiayaan.Sumdan.sk_no} tertanggal ${moment(record.ProdukPembiayaan.Sumdan.sk_date).format("DD MMMM YYYY")}, oleh karenanya berhak dan sah mewakilkan ${record.ProdukPembiayaan.Sumdan.name} yang berkedudukan di ${record.ProdukPembiayaan.Sumdan.address} berdasarkan Perjanjian Kerjasama Penerusan Pinjaman Nomor ${record.ProdukPembiayaan.Sumdan.contract_no} tangal ${moment(record.ProdukPembiayaan.Sumdan.contract_date).format("DD MMMM YYYY")} yang selanjutnya disebut <span class="font-bold">“BANK”</span></p>
     </div>
   </div>
   <div class="my-2 ml-2 flex gap-2">
@@ -100,7 +100,8 @@ export const PerjanjianKredit = (record: IDapem) => {
         <div class="flex-1">${record.aw_address}</div>
       </div>
       <div>
-        selanjutnya disebut <span class="font-bold">"DEBITUR”</span>. Selanjutnya BANK dan DEBITUR terlebih dahulu menerangkan dengan ini telah sepakat untuk mengadakan Perjanjian Kredit (selanjutnya disebut <span class="font-bold">“Perjanjian”</span>) dengan syarat-syarat dan ketentuan-ketentuan sebagai berikut:
+        selanjutnya disebut <span class="font-bold">"DEBITUR”</span>.
+        <p>Selanjutnya BANK dan DEBITUR terlebih dahulu menerangkan dengan ini telah sepakat untuk mengadakan Perjanjian Kredit (selanjutnya disebut <span class="font-bold">“Perjanjian”</span>) dengan syarat-syarat dan ketentuan-ketentuan sebagai berikut:</p>
       </div>
     </div>
   </div>
@@ -147,12 +148,6 @@ export const PerjanjianKredit = (record: IDapem) => {
     </div>
     <div class="flex gap-2">
       <p class="w-4">5.</p>
-      <p class="w-44">Tanggal Pembayaran</p>
-      <p class="w-4">:</p>
-      <p class="flex-1">25</p>
-    </div>
-    <div class="flex gap-2">
-      <p class="w-4">5.</p>
       <p class="w-44">Suku Bunga Anuitas</p>
       <p class="w-4">:</p>
       <p class="flex-1">${(record.c_margin + record.c_margin_sumdan).toFixed(2)}% /tahun</p>
@@ -186,7 +181,7 @@ export const PerjanjianKredit = (record: IDapem) => {
           <p class="w-4">:</p>
           <div class="w-28 flex justify-between gap-2">
             <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.plafond * ((record.c_adm + record.c_adm_sumdan) / 100))}</p>
+            <p class="flex-1 text-right">${IDRFormat(record.plafond * ((record.c_adm + record.c_adm_sumdan + record.c_adm_mitra + record.c_adm_ff) / 100))}</p>
           </div>
         </div>
         <div class="flex gap-2 ml-10">
@@ -200,16 +195,43 @@ export const PerjanjianKredit = (record: IDapem) => {
         </div>
         <div class="flex gap-2 ml-10">
           <p class="w-4">c.</p>
-          <p class="w-44">Pembukaan Tabungan</p>
+          <p class="w-44">Provisi</p>
           <p class="w-4">:</p>
           <div class="w-28 flex justify-between gap-2">
             <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.c_account)}</p>
+            <p class="flex-1 text-right">${IDRFormat(record.plafond * ((record.c_provisi_sumdan + record.c_fee_ao + record.c_fee_cabang + record.c_fee_area + record.c_fee_bpp + record.c_fee_bpb) / 100))}</p>
           </div>
         </div>
         <div class="flex gap-2 ml-10">
           <p class="w-4">d.</p>
-          <p class="w-44">Data Flagging</p>
+          <p class="w-44">Tatalaksana</p>
+          <p class="w-4">:</p>
+          <div class="w-28 flex justify-between gap-2">
+            <p class="w-4">Rp. </p>
+            <p class="flex-1 text-right">${IDRFormat(record.c_gov)}</p>
+          </div>
+        </div>
+        <div class="flex gap-2 ml-10">
+          <p class="w-4">e.</p>
+          <p class="w-44">Buka Rekening</p>
+          <p class="w-4">:</p>
+          <div class="w-28 flex justify-between gap-2">
+            <p class="w-4">Rp. </p>
+            <p class="flex-1 text-right">${IDRFormat(record.c_account + record.c_account_sumdan)}</p>
+          </div>
+        </div>
+        <div class="flex gap-2 ml-10">
+          <p class="w-4">f.</p>
+          <p class="w-44">Flagging</p>
+          <p class="w-4">:</p>
+          <div class="w-28 flex justify-between gap-2">
+            <p class="w-4">Rp. </p>
+            <p class="flex-1 text-right">${IDRFormat(record.c_flagging)}</p>
+          </div>
+        </div>
+        <div class="flex gap-2 ml-10">
+          <p class="w-4">g.</p>
+          <p class="w-44">Sistem Informasi</p>
           <p class="w-4">:</p>
           <div class="w-28 flex justify-between gap-2">
             <p class="w-4">Rp. </p>
@@ -217,7 +239,7 @@ export const PerjanjianKredit = (record: IDapem) => {
           </div>
         </div>
         <div class="flex gap-2 ml-10">
-          <p class="w-4">d.</p>
+          <p class="w-4">h.</p>
           <p class="w-44">Materai</p>
           <p class="w-4">:</p>
           <div class="w-28 flex justify-between gap-2">
@@ -226,12 +248,12 @@ export const PerjanjianKredit = (record: IDapem) => {
           </div>
         </div>
         <div class="flex gap-2 ml-10">
-          <p class="w-4">e.</p>
-          <p class="w-44">Biaya Lain-lain</p>
+          <p class="w-4">i.</p>
+          <p class="w-44">Mutasi</p>
           <p class="w-4">:</p>
           <div class="w-28 flex justify-between gap-2">
             <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.c_gov + record.c_mutasi + record.plafond * ((record.c_provisi + record.c_provisi_sumdan) / 100))}</p>
+            <p class="flex-1 text-right">${IDRFormat(record.c_mutasi)}</p>
           </div>
         </div>
         <div class="flex gap-2 ml-10 font-bold">
@@ -240,7 +262,49 @@ export const PerjanjianKredit = (record: IDapem) => {
           <p class="w-4">:</p>
           <div class="w-28 border-t border-dashed flex justify-between gap-2">
             <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(dapem.biaya - angsuran * record.c_blokir)}</p>
+            <p class="flex-1 text-right">${IDRFormat(dapem.biaya)}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <p class="w-4">3.</p>
+      <div class="flex-1">
+        <p>Selain biaya-biaya sebagaimana dimaksud pada point 2 di atas, DEBITUR menyetujui bahwa dari fasilitas kredit yang dicairkan, BANK berwenang untuk melakukan pemotongan dan/atau pemindahbukuan dana guna keperluan sebagai berikut:</p>
+        <div class="flex gap-2 ml-10">
+          <p class="w-4">a.</p>
+          <p class="w-44">BOP Pembiayaan</p>
+          <p class="w-4">:</p>
+          <div class="w-28 flex justify-between gap-2">
+            <p class="w-4">Rp. </p>
+            <p class="flex-1 text-right">${IDRFormat(record.c_bop)}</p>
+          </div>
+        </div>
+        <div class="flex gap-2 ml-10">
+          <p class="w-4">b.</p>
+          <p class="w-44">Nominal Takeover/Pelunasan</p>
+          <p class="w-4">:</p>
+          <div class="w-28 flex justify-between gap-2">
+            <p class="w-4">Rp. </p>
+            <p class="flex-1 text-right">${IDRFormat(record.c_takeover)}</p>
+          </div>
+        </div>
+        <div class="flex gap-2 ml-10">
+          <p class="w-4">c.</p>
+          <p class="w-44">Blokir Angsuran (${record.c_blokir}x)</p>
+          <p class="w-4">:</p>
+          <div class="w-28 flex justify-between gap-2">
+            <p class="w-4">Rp. </p>
+            <p class="flex-1 text-right">${IDRFormat(record.c_blokir * angsuran)}</p>
+          </div>
+        </div>
+        <div class="flex gap-2 ml-10 font-bold">
+          <p class="w-4"></p>
+          <p class="w-44">Total</p>
+          <p class="w-4">:</p>
+          <div class="w-28 border-t border-dashed flex justify-between gap-2">
+            <p class="w-4">Rp. </p>
+            <p class="flex-1 text-right">${IDRFormat(record.c_bop + record.c_takeover + record.c_blokir * angsuran)}</p>
           </div>
         </div>
       </div>
@@ -434,16 +498,13 @@ export const PerjanjianKredit = (record: IDapem) => {
     </div>
 
    ${
-     record.ProdukPembiayaan.Sumdan.code !== "KOP MAS" &&
+     record.ProdukPembiayaan.Sumdan.code !== "BANK" &&
      `<div class="ml-4 my-3">
       <p class="font-bold">${record.ProdukPembiayaan.Sumdan.name}</p>
       <div class="flex gap-2">
         <p class="w-44">Up</p>
         <p class="w-4">:</p>
-        <div class="flex-1">
-          <p>${record.ProdukPembiayaan.Sumdan.pic1}</p>
-          <p>${record.ProdukPembiayaan.Sumdan.pic2}</p>
-        </div>
+        <p class="flex-1">${record.ProdukPembiayaan.Sumdan.pic}</p>
       </div>
       <div class="flex gap-2">
         <p class="w-44">Alamat</p>

@@ -11,6 +11,9 @@ export const FormCeklist1 = (record: IDapem) => {
     record.margin_type,
     record.rounded,
   ).angsuran;
+
+  const ao = record.AO || record.AOCabang || record.AOArea;
+
   return `
   ${Header("CHECKLIST KELENGKAPAN BERKAS KREDIT", record.no_contract, undefined, process.env.NEXT_PUBLIC_APP_LOGO, record.ProdukPembiayaan.Sumdan.logo)}
   
@@ -71,12 +74,12 @@ export const FormCeklist1 = (record: IDapem) => {
       <div class="flex gap-2">
         <p class="w-40">Petugas</p>
         <p class="w-4">:</p>
-        <p class="flex-1">${record.AO.fullname} <span class="text-xs opacity-80">(${record.AO.Cabang.name} - ${record.AO.Cabang.Area.name})</span></p>
+        <p class="flex-1">${ao?.fullname} <span class="text-xs opacity-80">(${ao?.Cabang.name} - ${ao?.Cabang.Area.name})</span></p>
       </div>
       <div class="flex gap-2">
         <p class="w-40">Admin</p>
         <p class="w-4">:</p>
-        <p class="flex-1">${record.CreatedBy.fullname}</p>
+        <p class="flex-1">${record.User.fullname}</p>
       </div>
     </div>
   </div>

@@ -1,15 +1,23 @@
 import { serializeForApi } from "@/components/utils/PembiayaanUtil";
+import { getSession } from "@/libs/Auth";
 import prisma from "@/libs/Prisma";
 import { Prisma, SumdanAgentFronting } from "@prisma/client";
-import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
-  const page = request.nextUrl.searchParams.get("page") || "1";
-  const limit = request.nextUrl.searchParams.get("limit") || "50";
-  const search = request.nextUrl.searchParams.get("search");
-  const backdate = request.nextUrl.searchParams.get("backdate");
+  const params = Object.fromEntries(request.nextUrl.searchParams);
+  const { page = "1", limit = "50", search } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const session = await getSession();
+  if (!session)
+    return NextResponse.json({ data: [], status: 200 }, { status: 200 });
+  const user = await prisma.user.findFirst({
+    where: { id: session.user.id },
+    include: { Role: true, Cabang: true },
+  });
+  if (!user)
+    return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
   const where: Prisma.AgentFrontingWhereInput = {
     ...(search && {
@@ -19,32 +27,26 @@ export const GET = async (request: NextRequest) => {
         { code: { contains: search } },
       ],
     }),
+    ...(user.agentFrontingId && { id: user.agentFrontingId }),
   };
-  const find = await prisma.agentFronting.findMany({
-    where: where,
-    skip: skip,
-    take: parseInt(limit),
-    include: {
-      SumdanAgentFronting: {
-        include: { Sumdan: { include: { ProdukPembiayaan: true } } },
-      },
-      User: { include: { Cabang: { include: { Area: true } } } },
-      Dapem: {
-        where: {
-          ...(backdate && {
-            created_at: {
-              gte: moment(backdate.split(",")[0]).toDate(),
-              lte: moment(backdate.split(",")[1]).toDate(),
-            },
-          }),
+  const [data, total] = await Promise.all([
+    prisma.agentFronting.findMany({
+      where: where,
+      skip: skip,
+      take: parseInt(limit),
+      include: {
+        SumdanAgentFrontings: {
+          include: { Sumdan: { include: { ProdukPembiayaans: true } } },
         },
+        Users: { include: { Cabang: { include: { Area: true } } } },
+        Dapems: true,
       },
-    },
-  });
-  const total = await prisma.agentFronting.count({ where });
+    }),
+    prisma.agentFronting.count({ where }),
+  ]);
 
   return NextResponse.json(
-    { data: serializeForApi(find), total, status: 200 },
+    { data: serializeForApi(data), total, status: 200 },
     { status: 200 },
   );
 };
@@ -60,14 +62,14 @@ export const POST = async (req: NextRequest) => {
       { status: 400 },
     );
   try {
-    const genId = await generateId();
-    const { id, SumdanAgentFronting, User, Dapem, ...saved } = data;
+    const { id, SumdanAgentFrontings, Users, Dapems, ...saved } = data;
+    const genId = await generateID();
     await prisma.$transaction(async (tx) => {
       const agent = await tx.agentFronting.create({
         data: { id: genId, ...saved },
       });
       await tx.sumdanAgentFronting.createMany({
-        data: SumdanAgentFronting.map((s: SumdanAgentFronting) => ({
+        data: SumdanAgentFrontings.map((s: SumdanAgentFronting) => ({
           sumdanId: s.sumdanId,
           agentFrontingId: agent.id,
         })),
@@ -97,7 +99,7 @@ export const PUT = async (req: NextRequest) => {
     );
 
   try {
-    const { id, SumdanAgentFronting, User, Dapem, ...saved } = data;
+    const { id, SumdanAgentFrontings, Users, Dapems, ...saved } = data;
     await prisma.$transaction(async (tx) => {
       const agent = await tx.agentFronting.update({
         where: { id: id },
@@ -107,7 +109,7 @@ export const PUT = async (req: NextRequest) => {
         where: { agentFrontingId: data.id },
       });
       await tx.sumdanAgentFronting.createMany({
-        data: SumdanAgentFronting.map((s: SumdanAgentFronting) => ({
+        data: SumdanAgentFrontings.map((s: SumdanAgentFronting) => ({
           sumdanId: s.sumdanId,
           agentFrontingId: agent.id,
         })),
@@ -147,9 +149,9 @@ export const DELETE = async (req: NextRequest) => {
   }
 };
 
-export async function generateId() {
+export async function generateID() {
   const prefix = `AGENT`;
-  const padLength = 2;
-  const lastRecord = await prisma.agentFronting.count({});
-  return `${prefix}${String(lastRecord + 1).padStart(padLength, "0")}`;
+  const padLength = 4;
+  const lastRecord = await prisma.agentFronting.count();
+  return `${prefix}${String(lastRecord).padStart(padLength, "0")}`;
 }

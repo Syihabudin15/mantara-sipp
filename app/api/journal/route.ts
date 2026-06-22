@@ -15,14 +15,14 @@ export const GET = async (request: NextRequest) => {
   const find = await prisma.journalEntry.findMany({
     where: {
       ...(search && {
-        JournalDetail: {
+        JournalDetails: {
           some: {
             desciption: { contains: search },
           },
         },
       }),
       ...(coaId && {
-        JournalDetail: { some: { categoryOfAccountId: coaId } },
+        JournalDetails: { some: { categoryOfAccountId: coaId } },
       }),
       ...(backdate && {
         date: {
@@ -35,7 +35,7 @@ export const GET = async (request: NextRequest) => {
     take: parseInt(limit),
     orderBy: { id: "desc" },
     include: {
-      JournalDetail: {
+      JournalDetails: {
         include: { CategoryOfAccount: true },
       },
     },
@@ -44,14 +44,14 @@ export const GET = async (request: NextRequest) => {
   const total = await prisma.journalEntry.count({
     where: {
       ...(search && {
-        JournalDetail: {
+        JournalDetails: {
           some: {
             desciption: { contains: search },
           },
         },
       }),
       ...(coaId && {
-        JournalDetail: { some: { categoryOfAccountId: coaId } },
+        JournalDetails: { some: { categoryOfAccountId: coaId } },
       }),
       ...(backdate && {
         date: {
@@ -71,7 +71,7 @@ export const GET = async (request: NextRequest) => {
 export const POST = async (req: NextRequest) => {
   const data: IJournalEntry = await req.json();
 
-  const { id, JournalDetail, ...saved } = data;
+  const { id, JournalDetails, ...saved } = data;
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -79,7 +79,7 @@ export const POST = async (req: NextRequest) => {
       const jurnal = await tx.journalEntry.create({
         data: { id: genId, ...saved },
       });
-      const newList = JournalDetail.map((d, i) => {
+      const newList = JournalDetails.map((d, i) => {
         const { JournalEntry, CategoryOfAccount, User, ...entry } = d;
         return {
           ...entry,
@@ -104,7 +104,7 @@ export const POST = async (req: NextRequest) => {
 export const PUT = async (req: NextRequest) => {
   const data: IJournalEntry = await req.json();
 
-  const { id, JournalDetail, ...saved } = data;
+  const { id, JournalDetails, ...saved } = data;
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -115,7 +115,7 @@ export const PUT = async (req: NextRequest) => {
 
       await tx.journalDetail.deleteMany({ where: { journalEntryId: data.id } });
 
-      const newList = JournalDetail.map((d, i) => {
+      const newList = JournalDetails.map((d, i) => {
         const { JournalEntry, CategoryOfAccount, User, ...entry } = d;
         return {
           ...entry,

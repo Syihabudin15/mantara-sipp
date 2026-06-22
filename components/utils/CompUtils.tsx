@@ -1,20 +1,34 @@
 "use client";
 
-import { IDapem, IDesc, IExportData, IUser } from "@/libs/IInterfaces";
+import { IDapem, IDesc, IExportData, IFiles, IUser } from "@/libs/IInterfaces";
 import {
   CategoryOfAccount,
   EDapemStatus,
   EDocStatus,
   ESubmissionStatus,
 } from "@prisma/client";
-import { Button, Divider, Drawer, Modal, Tag } from "antd";
+import {
+  Button,
+  Divider,
+  Drawer,
+  Input,
+  message,
+  Modal,
+  Tag,
+  Upload,
+  UploadProps,
+} from "antd";
 import { HookAPI } from "antd/es/modal/useModal";
 import { useState } from "react";
 import { FormInput } from "./FormUtils";
 import { GetAngsuran, IDRFormat } from "./PembiayaanUtil";
 import * as XLSX from "xlsx";
 import moment from "moment";
-import { FilterOutlined } from "@ant-design/icons";
+import {
+  ClearOutlined,
+  CloudUploadOutlined,
+  FilterOutlined,
+} from "@ant-design/icons";
 
 export const GetStatusTag = (status: ESubmissionStatus | undefined | null) => {
   if (status) {
@@ -212,7 +226,7 @@ export const ProsesPembiayaan = ({
             type: "select",
             options: [
               { label: "PENDING", value: "PENDING" },
-              { label: "SETJU", value: "DISETUJUI" },
+              { label: "SETUJU", value: "DISETUJUI" },
               { label: "TOLAK", value: "DITOLAK" },
             ],
             value: temp[(name + "_status") as keyof IDapem],
@@ -253,7 +267,13 @@ export const ProsesPembiayaan = ({
   );
 };
 
-export const FilterData = ({ children }: { children: React.ReactNode }) => {
+export const FilterData = ({
+  children,
+  clearfilter,
+}: {
+  children: React.ReactNode;
+  clearfilter?: Function;
+}) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -274,6 +294,16 @@ export const FilterData = ({ children }: { children: React.ReactNode }) => {
         size={window && window.innerWidth > 600 ? "30%" : "60%"}
       >
         {children}
+        <div className="flex justify-end mt-3">
+          <Button
+            size="small"
+            danger
+            icon={<ClearOutlined />}
+            onClick={() => clearfilter && clearfilter()}
+          >
+            Clear Filter
+          </Button>
+        </div>
       </Drawer>
     </div>
   );
@@ -295,142 +325,141 @@ export const ExportToExcel = (data: IExportData[], filename: string) => {
 };
 
 export const MappingToExcelDapem = (data: IDapem[]) => {
-  return data.map((d, i) => ({
-    no: i + 1,
-    pemohon: d.Debitur.fullname,
-    nopen: d.nopen,
-    jenis_pembiayaan: d.JenisPembiayaan.name,
-    produk_pembiayaan: d.ProdukPembiayaan.name,
-    mitra_pembiayaan: d.ProdukPembiayaan.Sumdan.code,
-    plafond: d.plafond,
-    tenor: d.tenor,
-    created_at: d.created_at,
-    tgl_akad: d.date_contract,
-    no_akad: d.no_contract,
-    no_skep: d.Debitur.no_skep,
-    dropping_status: d.dropping_status,
-    dropping_date: d.Dropping ? d.Dropping.process_at : null,
-    ao: d.AO.fullname,
-    cabang: d.AO.Cabang.name,
-    area: d.AO.Cabang.Area.name,
-    admin: d.CreatedBy.fullname,
-    by_admin: d.c_adm,
-    by_admin_rp: d.plafond * (d.c_adm / 100),
-    adm_mitra: d.c_adm_sumdan,
-    adm_mitra_rp: d.plafond * (d.c_adm_sumdan / 100),
-    by_asuransi: d.c_insurance,
-    by_asuransi_rp: d.plafond * (d.c_insurance / 100),
-    by_tatalaksana: d.c_gov,
-    by_tabungan: d.c_account,
-    by_materai: d.c_stamp,
-    by_provisi: d.c_provisi,
-    by_infomasi: d.c_infomation,
-    by_mutasi: d.c_mutasi,
-    blokir: d.c_blokir,
-    blokir_rp:
-      GetAngsuran(
-        d.plafond,
-        d.tenor,
-        d.c_margin + d.c_margin_sumdan,
-        d.margin_type,
-        d.rounded,
-      ).angsuran * d.c_blokir,
-    by_takeover: d.c_takeover,
-    by_bpp: d.c_bpp,
-    angs: GetAngsuran(
+  return data.map((d, i) => {
+    const angs = GetAngsuran(
       d.plafond,
       d.tenor,
       d.c_margin + d.c_margin_sumdan,
       d.margin_type,
       d.rounded,
-    ).angsuran,
-    angs_mitra: GetAngsuran(
+    ).angsuran;
+    const angsSumdan = GetAngsuran(
       d.plafond,
       d.tenor,
       d.c_margin_sumdan,
       d.margin_type,
       d.rounded_sumdan,
-    ).angsuran,
-  }));
+    ).angsuran;
+    return {
+      NO: i + 1,
+      PEMOHON: d.Debitur.fullname,
+      NOPEN: d.nopen,
+      "JENIS PEMBIAYAAN": d.JenisPembiayaan.name,
+      "PRODUK PEMBIAYAAN": d.ProdukPembiayaan.name,
+      "SUMBER DANA": d.ProdukPembiayaan.Sumdan.code,
+      PLAFOND: d.plafond,
+      TENOR: d.tenor,
+      "TANGGAL PERMOHONAN": d.created_at,
+      "TANGGAL AKAD": d.date_contract,
+      "NO AKAD": d.no_contract,
+      "NO SKEP": d.Debitur.no_skep,
+      "STATUS DROPPING": d.dropping_status,
+      "TANGGAL DROPPING": d.Dropping ? d.Dropping.process_at : null,
+      AO: d.AO?.fullname,
+      "AO CABANG": d.AOCabang?.fullname,
+      "AO AREA": d.AOArea?.fullname,
+      CABANG: (d.AO || d.AOCabang || d.AOArea)?.Cabang.name,
+      AREA: (d.AO || d.AOCabang || d.AOArea)?.Cabang.Area.name,
+      "ADMIN INPUT": d.User.fullname,
+      "": "",
+      B_ADM_SUMDAN: d.plafond * (d.c_adm_sumdan / 100),
+      B_ADM_KOPERASI: d.plafond * (d.c_adm / 100),
+      B_ADM_MITRA: d.plafond * (d.c_adm_mitra / 100),
+      B_ADM_FF: d.plafond * (d.c_adm_ff / 100),
+      B_ASURANSI: d.plafond * (d.c_insurance / 100),
+      B_PROV_SUMDAN: d.plafond * (d.c_provisi_sumdan / 100),
+      B_FEE_AO: d.plafond * (d.c_fee_ao / 100),
+      B_FEE_CABANG: d.plafond * (d.c_fee_cabang / 100),
+      B_FEE_AREA: d.plafond * (d.c_fee_area / 100),
+      B_FEE_BPP: d.plafond * (d.c_fee_bpp / 100),
+      B_FEE_BPB: d.plafond * (d.c_fee_bpb / 100),
+      B_REKENING_SUMDAN: d.c_account_sumdan,
+      B_REKENING_KOPERASI: d.c_account,
+      B_TATALAKSANA: d.c_gov,
+      B_MATERAI: d.c_stamp,
+      B_FLAGGING: d.c_flagging,
+      B_SISTEM_INFORMASI: d.c_infomation,
+      B_MUTASI: d.c_mutasi,
+      B_BOP_PEMBIAYAAN: d.c_bop,
+      BLOKIR_ANGSURAN: d.c_blokir,
+      NOMINAL_TAKEOVER: d.c_takeover,
+      X_BLOKIR_ANGSURAN: d.c_blokir,
+      B_BLOKIR_ANGSURAN: angs * d.c_blokir,
+      NOMINAL_ANGSURAN: angs,
+      ANGSURAN_SUMDAN: angsSumdan,
+      ANGSURAN_KOPERASI: angs - angsSumdan,
+    };
+  });
 };
 
 export const MappingToProsesDapem = (data: IDapem[]) => {
   return data.map((d, i) => ({
-    no: i + 1,
-    pemohon: d.Debitur.fullname,
-    nopen: d.nopen,
-    jenis_pembiayaan: d.JenisPembiayaan.name,
-    produk_pembiayaan: d.ProdukPembiayaan.name,
-    mitra_pembiayaan: d.ProdukPembiayaan.Sumdan.code,
-    plafond: d.plafond,
-    tenor: d.tenor,
-    created_at: d.created_at,
-    verif_status: d.verif_status,
-    slik_status: d.slik_status,
-    approval_status: d.approv_status,
-    verif_desc: d.verif_desc,
-    slik_desc: d.slik_desc,
-    approval_desc: d.approv_desc,
-    ao: d.AO.fullname,
-    cabang: d.AO.Cabang.name,
-    area: d.AO.Cabang.Area.name,
-    admin: d.CreatedBy.fullname,
+    NO: i + 1,
+    PEMOHON: d.Debitur.fullname,
+    NOPEN: d.nopen,
+    "JENIS PEMBIAYAAN": d.JenisPembiayaan.name,
+    "PRODUK PEMBIAYAAN": d.ProdukPembiayaan.name,
+    "SUMBER DANA": d.ProdukPembiayaan.Sumdan.code,
+    PLAFOND: d.plafond,
+    TENOR: d.tenor,
+    "TANGGAL PERMOHONAN": d.created_at,
+    "TANGGAL SLIK": d.slik_status,
+    "TANGGAL VERIFIKASI": d.verif_status,
+    "TANGGAL APPROVAL": d.approv_status,
+    "KETERANGAN SLIK": d.slik_desc,
+    "KETERANGAN VERIFIKASI": d.verif_desc,
+    "KETERANGAN APPROVAL": d.approv_desc,
+    AO: (d.AO || d.AOCabang || d.AOArea)?.fullname,
+    CABANG: (d.AO || d.AOCabang || d.AOArea)?.Cabang.name,
+    AREA: (d.AO || d.AOCabang || d.AOArea)?.Cabang.Area.name,
+    ADMIN: d.User.fullname,
   }));
 };
 
 export const MappingToTagihan = (data: IDapem[], periode?: string) => {
-  return data.map((d, i) => ({
-    no: i + 1,
-    pemohon: d.Debitur.fullname,
-    nopen: d.nopen,
-    no_pk: d.no_contract,
-    date_pk: d.date_contract,
-    plafond: d.plafond,
-    tenor: d.tenor,
-    angs: GetAngsuran(
+  return data.map((d, i) => {
+    const angs = GetAngsuran(
       d.plafond,
       d.tenor,
       d.c_margin + d.c_margin_sumdan,
       d.margin_type,
       d.rounded,
-    ).angsuran,
-    angs_mitra: GetAngsuran(
+    ).angsuran;
+    const angsSumdan = GetAngsuran(
       d.plafond,
       d.tenor,
       d.c_margin_sumdan,
       d.margin_type,
       d.rounded_sumdan,
-    ).angsuran,
-    selisih_angs:
-      GetAngsuran(
-        d.plafond,
-        d.tenor,
-        d.c_margin + d.c_margin_sumdan,
-        d.margin_type,
-        d.rounded,
-      ).angsuran -
-      GetAngsuran(
-        d.plafond,
-        d.tenor,
-        d.c_margin_sumdan,
-        d.margin_type,
-        d.rounded_sumdan,
-      ).angsuran,
-    angs_ke: d.Angsuran.find((a) =>
-      moment(a.date_pay).isSame(periode || new Date(), "month"),
-    )?.counter,
-    pokok: d.Angsuran.find((a) =>
-      moment(a.date_pay).isSame(periode || new Date(), "month"),
-    )?.principal,
-    margin: d.Angsuran.find((a) =>
-      moment(a.date_pay).isSame(periode || new Date(), "month"),
-    )?.margin,
-    status: d.Angsuran.find((a) =>
-      moment(a.date_pay).isSame(periode || new Date(), "month"),
-    )?.date_paid
-      ? "PAID"
-      : "UNPAID",
-  }));
+    ).angsuran;
+
+    return {
+      NO: i + 1,
+      PEMOHON: d.Debitur.fullname,
+      NOPEN: d.nopen,
+      "NOMOR AKAD": d.no_contract,
+      "TANGGAL AKAD": d.date_contract,
+      PLAFOND: d.plafond,
+      TENOR: d.tenor,
+      ANGSURAN_SUMDAN: angsSumdan,
+      ANGSURAN_KOPERASI: angs - angsSumdan,
+      NOMINAL_ANGSURAN: angs,
+      ANGSURAN_KE: d.Angsurans.find((a) =>
+        moment(a.date_pay).isSame(periode || new Date(), "month"),
+      )?.counter,
+      POKOK: d.Angsurans.find((a) =>
+        moment(a.date_pay).isSame(periode || new Date(), "month"),
+      )?.principal,
+      MARGIN: d.Angsurans.find((a) =>
+        moment(a.date_pay).isSame(periode || new Date(), "month"),
+      )?.margin,
+      STATUS: d.Angsurans.find((a) =>
+        moment(a.date_pay).isSame(periode || new Date(), "month"),
+      )?.date_paid
+        ? "DIBAYAR"
+        : "BELUMBAYAR",
+    };
+  });
 };
 
 export const TypeAccount = (account: CategoryOfAccount) => {
@@ -448,4 +477,110 @@ export const TypeAccount = (account: CategoryOfAccount) => {
     default:
       return "D";
   }
+};
+
+export const ParseStrToFiles = (str: string | null) => {
+  if (!str) return;
+  return JSON.parse(str) as IFiles[];
+};
+
+export const UpsertFiles = ({
+  record,
+  setRecord,
+}: {
+  record: IFiles;
+  setRecord: Function;
+}) => {
+  // const [data, setData] = useState<IFiles>(record);
+  const [loading, setLoading] = useState(false);
+
+  const handleUpload = async (file: any) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const resData = await res.json();
+      if (resData.secure_url) {
+        alert("Uploaded");
+        setRecord((prev: IFiles) => ({ ...prev, url: resData.secure_url }));
+      } else {
+        message.error(resData.error.message);
+      }
+    } catch (err) {
+      console.log(err);
+      message.error("Internal Server Error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteFiles = async () => {
+    setLoading(true);
+    await fetch("/api/upload", {
+      method: "DELETE",
+      body: JSON.stringify({ publicId: record.url }),
+    })
+      .then(() => {
+        setRecord((prev: IFiles) => ({ ...prev, url: "" }));
+      })
+      .catch((err) => {
+        console.log(err);
+        message.error("Gagal hapus file!.");
+      });
+    setLoading(false);
+  };
+
+  const props: UploadProps = {
+    beforeUpload: async (file) => {
+      setLoading(true);
+      await handleUpload(file);
+      setLoading(false);
+      return false; // prevent automatic upload
+    },
+    showUploadList: false, // sembunyikan default list
+    accept: "application/pdf",
+  };
+
+  return (
+    <div className="flex justify-between gap-2">
+      <div className="flex-1">
+        <Input
+          value={record.name}
+          onChange={(e) =>
+            setRecord((prev: IFiles) => ({ ...prev, name: e.target.value }))
+          }
+          size="small"
+        />
+      </div>
+      <div className="flex-1">
+        {record.url ? (
+          <Button
+            icon={<CloudUploadOutlined />}
+            size="small"
+            type="primary"
+            onClick={() => handleDeleteFiles()}
+          >
+            Browse
+          </Button>
+        ) : (
+          <Upload {...props}>
+            <Button
+              icon={<CloudUploadOutlined />}
+              size="small"
+              type="primary"
+              loading={loading}
+              disabled={loading}
+            >
+              Browse
+            </Button>
+          </Upload>
+        )}
+      </div>
+    </div>
+  );
 };

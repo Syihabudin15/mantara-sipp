@@ -1,15 +1,8 @@
 "use client";
 
 import { IDRFormat } from "@/components/utils/PembiayaanUtil";
-import { IPageProps } from "@/libs/IInterfaces";
-import {
-  Area,
-  Cabang,
-  Dapem,
-  ProdukPembiayaan,
-  Sumdan,
-  User,
-} from "@prisma/client";
+import { IArea, IPageProps, ISumdan, IUserDapem } from "@/libs/IInterfaces";
+
 import {
   DatePicker,
   Spin,
@@ -30,23 +23,6 @@ import {
 } from "lucide-react";
 
 const { RangePicker } = DatePicker;
-
-// ... (Interfaces tetap sama)
-interface UserDapem extends User {
-  AODapem: Dapem[];
-}
-interface ICabang extends Cabang {
-  User: UserDapem[];
-}
-interface IArea extends Area {
-  Cabang: ICabang[];
-}
-interface IProduk extends ProdukPembiayaan {
-  Dapem: Dapem[];
-}
-interface ISumdan extends Sumdan {
-  ProdukPembiayaan: IProduk[];
-}
 
 export default function Page() {
   const [loading, setLoading] = useState(false);
@@ -73,25 +49,28 @@ export default function Page() {
     );
   };
 
+  const getActiveAOData = (user: IUserDapem) => {
+    if (user?.AOs?.length) return user.AOs;
+    if (user?.AOCabangs?.length) return user.AOCabangs;
+    if (user?.AOAreas?.length) return user.AOAreas;
+
+    return [];
+  };
+
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("ao", "ao");
-    params.append("include", "true");
-    params.append("limit", String(pageProps.limit));
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
+    const params = new URLSearchParams({
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+    });
 
     try {
-      const [resArea, resSumdan] = await Promise.all([
-        fetch(`/api/area?${params.toString()}`).then((r) => r.json()),
-        fetch(`/api/sumdan?${params.toString()}`).then((r) => r.json()),
-      ]);
-      setPageProps((prev) => ({
-        ...prev,
-        data: resArea.data,
-        total: resArea.total,
-      }));
-      setSumdan(resSumdan.data);
+      await fetch(`/api?${params.toString()}`, { method: "POST" })
+        .then((res) => res.json())
+        .then((res) => {
+          console.log(res);
+          setPageProps((prev) => ({ ...prev, data: res.area }));
+          setSumdan(res.sumdan);
+        });
     } catch (err) {
       console.error(err);
     } finally {
@@ -121,20 +100,20 @@ export default function Page() {
       key: "achievement",
       sorter: (a, b) => {
         const getPlafond = (item: ISumdan) =>
-          item.ProdukPembiayaan.flatMap((p) => p.Dapem).reduce(
+          item.ProdukPembiayaans.flatMap((p) => p.Dapems).reduce(
             (acc, c) => acc + c.plafond,
             0,
           );
         return getPlafond(a) - getPlafond(b);
       },
       render: (_, record) => {
-        const total = record.ProdukPembiayaan.flatMap((d) => d.Dapem).reduce(
+        const total = record.ProdukPembiayaans.flatMap((d) => d.Dapems).reduce(
           (acc, curr) => acc + curr.plafond,
           0,
         );
         const allTotal = sumdan
-          .flatMap((s) => s.ProdukPembiayaan)
-          .flatMap((s) => s.Dapem)
+          .flatMap((s) => s.ProdukPembiayaans)
+          .flatMap((s) => s.Dapems)
           .reduce((acc, curr) => acc + curr.plafond, 0);
         const percent = (total / allTotal) * 100 || 0;
         return (
@@ -142,7 +121,7 @@ export default function Page() {
             <div className="flex justify-between font-medium">
               <span>{IDRFormat(total)}</span>
               <span className="text-gray-400 text-xs">
-                {record.ProdukPembiayaan.flatMap((r) => r.Dapem).length} NOA
+                {record.ProdukPembiayaans.flatMap((r) => r.Dapems).length} NOA
               </span>
             </div>
             <Progress
@@ -183,16 +162,16 @@ export default function Page() {
 
         {/* Areas Section */}
         <div className="space-y-6 mb-8">
-          {pageProps.data?.map((area) => {
+          {pageProps.data?.map((area: IArea) => {
             const isAreaExpanded = expandedAreas.includes(area.id);
-            const areaNoa = area.Cabang.flatMap((c) =>
-              c.User.flatMap((u) => u.AODapem),
+            const areaNoa = area.Cabangs.flatMap((c) =>
+              c.Users.flatMap((u) => getActiveAOData(u)),
             );
             const areaPencapaian = areaNoa.reduce(
               (acc, curr) => acc + curr.plafond,
               0,
             );
-            const areaTarget = area.Cabang.flatMap((c) => c.User).reduce(
+            const areaTarget = area.Cabangs.flatMap((c) => c.Users).reduce(
               (acc, curr) => acc + (curr.target || 0),
               0,
             );
@@ -245,12 +224,12 @@ export default function Page() {
                 {/* Cabang List (Show/Hide) */}
                 {isAreaExpanded && (
                   <div className="p-4 bg-slate-50 space-y-4 animate-in fade-in duration-300">
-                    {area.Cabang.map((cabang) => {
+                    {area.Cabangs.map((cabang) => {
                       const isCabangExpanded = expandedCabangs.includes(
                         cabang.id,
                       );
-                      const cabPencapaian = cabang.User.flatMap(
-                        (u) => u.AODapem,
+                      const cabPencapaian = cabang.Users.flatMap((u) =>
+                        getActiveAOData(u),
                       ).reduce((a, b) => a + b.plafond, 0);
 
                       return (
@@ -280,8 +259,8 @@ export default function Page() {
                           {/* User/AO List (Show/Hide) */}
                           {isCabangExpanded && (
                             <div className="divide-y divide-gray-100 animate-in slide-in-from-top-1 duration-200">
-                              {cabang.User.map((u) => {
-                                const userAch = u.AODapem.reduce(
+                              {cabang.Users.map((u) => {
+                                const userAch = getActiveAOData(u).reduce(
                                   (a, b) => a + b.plafond,
                                   0,
                                 );

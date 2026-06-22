@@ -143,7 +143,7 @@ const generatePelunasan = (records: IPelunasan) => {
           {
             key: "Angsuran Ke",
             value: `${
-              records.Dapem.Angsuran.filter((d) => d.date_paid !== null).sort(
+              records.Dapem.Angsurans.filter((d) => d.date_paid !== null).sort(
                 (a, b) => b.counter - a.counter,
               )[0].counter
             } / ${records.Dapem.tenor} Bulan`,
@@ -191,7 +191,7 @@ const generatePelunasan = (records: IPelunasan) => {
 export const printPelunasan = (record: IPelunasan) => {
   const htmlContent = generatePelunasan(record);
 
-  const w = window.open("", "_blank", "width=900,height=1000");
+  const w = window.open("", "_blank");
   if (!w) {
     alert("Popup diblokir. Mohon izinkan popup dari situs ini.");
     return;

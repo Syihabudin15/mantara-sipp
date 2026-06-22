@@ -136,6 +136,7 @@ export const TabsFiles = ({
       </div>
     ),
   }));
+
   return (
     <Tabs
       items={[
@@ -194,13 +195,6 @@ export const DetailDapem = ({
   data: IDapem;
   allowprogres?: boolean;
 }) => {
-  const angsReal = GetAngsuran(
-    data.plafond,
-    data.tenor,
-    data.c_margin + data.c_margin_sumdan,
-    data.margin_type,
-    1,
-  ).angsuran;
   const angsRound = GetAngsuran(
     data.plafond,
     data.tenor,
@@ -225,8 +219,8 @@ export const DetailDapem = ({
       width={1300}
       style={{ top: 10 }}
     >
-      <div className="flex gap-4 h-[80vh]">
-        <div className="w-[42%] h-full overflow-auto">
+      <div className="flex flex-col sm:flex-row gap-4 h-[80vh]">
+        <div className="w-full sm:w-[42%] h-full overflow-auto">
           <div className="p-2 rounded bg-gray-800 text-gray-50 font-bold my-2">
             Data Debitur
           </div>
@@ -497,11 +491,12 @@ export const DetailDapem = ({
                 type: "text",
                 class: "flex-1",
                 disabled: true,
-                value:
+                value: `${
                   new Date(data.created_at).getFullYear() -
                   new Date(
                     data.house_year ? `${data.house_year}-11-11` : new Date(),
-                  ).getFullYear(),
+                  ).getFullYear()
+                } Tahun`,
               }}
             />
             <FormInput
@@ -842,7 +837,7 @@ export const DetailDapem = ({
                 type: "textarea",
                 class: "flex-1",
                 disabled: true,
-                // value: `${data.mutasi_from} ${data.JenisPembiayaan.status_mutasi ? "-> " + data.mutasi_to : ""}`,
+                value: `${data.prev_payoffice} ${data.JenisPembiayaan.status_mutasi ? "-> " + (data.PayOffice.code || data.PayOffice.name) : ""}`,
               }}
             />
             <FormInput
@@ -863,7 +858,7 @@ export const DetailDapem = ({
                 type: "text",
                 class: "flex-1",
                 disabled: true,
-                value: data.takeover_from,
+                value: `${data.takeover_from} (${data.takeover_date ? moment(data.takeover_date).format("DD/MM/YYYY") : ""})`,
               }}
             />
             <FormInput
@@ -914,15 +909,8 @@ export const DetailDapem = ({
               <div className="my-1 flex italic text-xs text-blue-500 opacity-70">
                 <div className="w-[40%]"></div>
                 <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-xs">
+                <div className="flex-1 justify-end text-xs text-right">
                   Mitra: {data.c_margin_sumdan}% |: Selisih {data.c_margin}%
-                </div>
-              </div>
-              <div className="my-1 flex">
-                <div className="w-[40%]">Angsuran Asli</div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(angsReal)}
                 </div>
               </div>
               <div className="my-1 flex">
@@ -933,17 +921,31 @@ export const DetailDapem = ({
                 </div>
               </div>
               <div className="my-1 flex">
+                <div className="w-[40%]">Pembulatan Mitra</div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(data.rounded_sumdan)}
+                </div>
+              </div>
+              <div className="my-1 flex">
                 <div className="w-[40%]">Angsuran</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
                   {IDRFormat(angsRound)}
                 </div>
               </div>
+              <div className="my-1 flex">
+                <div className="w-[40%]">Angsuran Mitra</div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(angsMitra)}
+                </div>
+              </div>
               <div className="my-1 flex italic text-xs text-blue-500 opacity-70">
                 <div className="w-[40%]"></div>
                 <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-xs">
-                  Mitra {IDRFormat(angsMitra)}
+                <div className="flex-1 justify-end text-xs text-right">
+                  Selisih {IDRFormat(angsRound - angsMitra)}
                 </div>
               </div>
               <div className="my-1 flex">
@@ -965,14 +967,24 @@ export const DetailDapem = ({
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
                   {IDRFormat(
-                    data.plafond * ((data.c_adm + data.c_adm_sumdan) / 100),
+                    data.plafond *
+                      ((data.c_adm +
+                        data.c_adm_sumdan +
+                        data.c_adm_mitra +
+                        data.c_adm_ff) /
+                        100),
                   )}
                 </div>
               </div>
-              <div className="my-1 border-b border-dashed italic text-xs opacity-70">
+              <div className="my-1 border-b border-dashed italic text-xs opacity-70 text-right text-blue-500">
                 Mitra {data.c_adm_sumdan}% (
                 {IDRFormat(data.plafond * (data.c_adm_sumdan / 100))}) | Selisih{" "}
-                {data.c_adm}% ({IDRFormat(data.plafond * (data.c_adm / 100))})
+                {data.c_adm + data.c_adm_mitra + data.c_adm_ff}% (
+                {IDRFormat(
+                  data.plafond *
+                    ((data.c_adm + data.c_adm_mitra + data.c_adm_ff) / 100),
+                )}
+                )
               </div>
               <div className="my-1 flex border-b border-dashed">
                 <div className="w-[40%]">Asuransi</div>
@@ -985,14 +997,38 @@ export const DetailDapem = ({
                 <div className="w-[40%]">Provisi</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_provisi / 100))}
+                  {IDRFormat(
+                    data.plafond *
+                      ((data.c_provisi_sumdan +
+                        data.c_fee_ao +
+                        data.c_fee_cabang +
+                        data.c_fee_area +
+                        data.c_fee_bpp +
+                        data.c_fee_bpb) /
+                        100),
+                  )}
                 </div>
               </div>
-              <div className="my-1 border-b border-dashed italic text-xs opacity-70">
+              <div className="my-1 border-b border-dashed italic text-xs opacity-70 text-right text-blue-500">
                 Mitra {data.c_provisi_sumdan}% (
                 {IDRFormat(data.plafond * (data.c_provisi_sumdan / 100))}) |
-                Selisih {data.c_provisi}% (
-                {IDRFormat(data.plafond * (data.c_provisi / 100))})
+                Selisih{" "}
+                {data.c_fee_ao +
+                  data.c_fee_cabang +
+                  data.c_fee_area +
+                  data.c_fee_bpp +
+                  data.c_fee_bpb}
+                % (
+                {IDRFormat(
+                  data.plafond *
+                    ((data.c_fee_ao +
+                      data.c_fee_cabang +
+                      data.c_fee_area +
+                      data.c_fee_bpp +
+                      data.c_fee_bpb) /
+                      100),
+                )}
+                )
               </div>
               <div className="my-1 flex border-b border-dashed">
                 <div className="w-[40%]">Tatalaksana</div>
@@ -1005,11 +1041,22 @@ export const DetailDapem = ({
                 <div className="w-[40%]">Buka Rekening</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.c_account)}
+                  {IDRFormat(data.c_account + data.c_account_sumdan)}
                 </div>
+              </div>
+              <div className="my-1 border-b border-dashed italic text-xs opacity-70 text-right text-blue-500">
+                Mitra ({IDRFormat(data.c_account_sumdan)}) | Selisih (
+                {IDRFormat(data.c_account)})
               </div>
               <div className="my-1 flex border-b border-dashed">
                 <div className="w-[40%]">Flagging</div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(data.c_flagging)}
+                </div>
+              </div>
+              <div className="my-1 flex border-b border-dashed">
+                <div className="w-[40%]">Sistem Informasi</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
                   {IDRFormat(data.c_infomation)}
@@ -1044,28 +1091,10 @@ export const DetailDapem = ({
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed">
-                <div className="w-[40%]">
-                  Blokir Angsuran ({data.c_blokir}x)
-                </div>
+                <div className="w-[40%]">BOP Pembiayaan</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(angsRound * data.c_blokir)}
-                </div>
-              </div>
-              {/* <div className="my-1 flex border-b border-dashed">
-                <div className="w-[40%]">
-                  Retensi Angsuran ({data.c_retensi}x)
-                </div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(angsRound * data.c_retensi)}
-                </div>
-              </div> */}
-              <div className="my-1 flex border-b border-dashed">
-                <div className="w-[40%]">Bpp</div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.c_bpp)}
+                  {IDRFormat(data.c_bop)}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed">
@@ -1073,6 +1102,15 @@ export const DetailDapem = ({
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
                   {IDRFormat(data.c_takeover)}
+                </div>
+              </div>
+              <div className="my-1 flex border-b border-dashed">
+                <div className="w-[40%]">
+                  Blokir Angsuran ({data.c_blokir}x)
+                </div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(angsRound * data.c_blokir)}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed text-green-500 font-bold">
@@ -1086,8 +1124,15 @@ export const DetailDapem = ({
           </div>
 
           <div className="p-2 rounded bg-gray-800 text-gray-50 font-bold my-2">
-            Data Account Officer
+            Data Account Officer & Agent Fronting
           </div>
+          <Divider
+            size="small"
+            style={{ opacity: 50, fontSize: 12 }}
+            titlePlacement="left"
+          >
+            Agent Fronting
+          </Divider>
           <div className="flex gap-2 flex-wrap">
             <FormInput
               data={{
@@ -1101,12 +1146,31 @@ export const DetailDapem = ({
             />
             <FormInput
               data={{
+                label: "Penanggun Jawab",
+                mode: "vertical",
+                type: "text",
+                class: "flex-1",
+                disabled: true,
+                value: data.AgentFronting?.pic,
+              }}
+            />
+          </div>
+          <Divider
+            size="small"
+            style={{ opacity: 50, fontSize: 12 }}
+            titlePlacement="left"
+          >
+            AO
+          </Divider>
+          <div className="flex gap-2 flex-wrap">
+            <FormInput
+              data={{
                 label: "Nama Lengkap",
                 mode: "vertical",
                 type: "text",
                 class: "flex-1",
                 disabled: true,
-                value: data.AO.fullname,
+                value: `${data.AO?.fullname || ""} (${data.AO?.Cabang.name || ""})`,
               }}
             />
             <FormInput
@@ -1116,27 +1180,65 @@ export const DetailDapem = ({
                 type: "text",
                 class: "flex-1",
                 disabled: true,
-                value: data.AO.phone,
+                value: data.AO?.phone,
               }}
             />
+          </div>
+          <Divider
+            size="small"
+            style={{ opacity: 50, fontSize: 12 }}
+            titlePlacement="left"
+          >
+            AO Cabang
+          </Divider>
+          <div className="flex gap-2 flex-wrap">
             <FormInput
               data={{
-                label: "Posisi",
+                label: "Nama Lengkap",
                 mode: "vertical",
                 type: "text",
                 class: "flex-1",
                 disabled: true,
-                value: data.AO.position,
+                value: `${data.AOCabang?.fullname || ""} (${data.AOCabang?.Cabang.name || ""})`,
               }}
             />
             <FormInput
               data={{
-                label: "Unit Pelayanan",
+                label: "Nomor Telepon",
                 mode: "vertical",
                 type: "text",
                 class: "flex-1",
                 disabled: true,
-                value: `${data.AO.Cabang.name} | ${data.AO.Cabang.Area.name}`,
+                value: data.AOCabang?.phone,
+              }}
+            />
+          </div>
+          <Divider
+            size="small"
+            style={{ opacity: 50, fontSize: 12 }}
+            titlePlacement="left"
+          >
+            AO Area
+          </Divider>
+          <div className="flex gap-2 flex-wrap">
+            <FormInput
+              data={{
+                label: "Nama Lengkap",
+                mode: "vertical",
+                type: "text",
+                class: "flex-1",
+                disabled: true,
+                value: `${data.AOArea?.fullname || ""} (${data.AOArea?.Cabang.name || ""})`,
+              }}
+            />
+            <FormInput
+              data={{
+                label: "Nomor Telepon",
+                mode: "vertical",
+                type: "text",
+                class: "flex-1",
+                disabled: true,
+                value: data.AOArea?.phone,
               }}
             />
           </div>
@@ -1151,7 +1253,8 @@ export const DetailDapem = ({
                 { name: "WAWANCARA", url: data.video_interview || "" },
                 { name: "ASURANSI", url: data.video_insurance || "" },
                 { name: "AKAD", url: data.file_contract || "" },
-                { name: "PROSES", url: data.file_proses || "" },
+                { name: "VIDEO AKAD", url: data.video_contract || "" },
+                { name: "BANK", url: data.file_proses || "" },
               ],
             }}
             allowprogres={allowprogres}

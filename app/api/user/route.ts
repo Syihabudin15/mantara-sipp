@@ -1,92 +1,108 @@
 import prisma from "@/libs/Prisma";
 import moment from "moment";
 
-import { User } from "@prisma/client";
+import { Prisma, User } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { getSession } from "@/libs/Auth";
 import { serializeForApi } from "@/components/utils/PembiayaanUtil";
 
 export const GET = async (request: NextRequest) => {
-  const page = request.nextUrl.searchParams.get("page") || "1";
-  const limit = request.nextUrl.searchParams.get("limit") || "50";
-  const search = request.nextUrl.searchParams.get("search") || "";
-  const roleId = request.nextUrl.searchParams.get("roleId") || "";
-  const pkwt_status = request.nextUrl.searchParams.get("pkwt_status") || "";
-  const position = request.nextUrl.searchParams.get("position") || "";
+  const params = Object.fromEntries(request.nextUrl.searchParams);
+  const {
+    page = "1",
+    limit = "50",
+    search,
+    areaId,
+    cabangId,
+    roleId,
+    pkwt_status,
+    agentFrontingId,
+    sumdanId,
+  } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const session = await getSession();
   if (!session)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-  const user = await prisma.user.findFirst({ where: { id: session.user.id } });
+  const user = await prisma.user.findFirst({
+    where: { id: session.user.id },
+    include: { Role: true, Cabang: true },
+  });
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
-  const find = await prisma.user.findMany({
-    where: {
-      ...(search && {
-        OR: [
-          { fullname: { contains: search } },
-          { username: { contains: search } },
-          { email: { contains: search } },
-          { phone: { contains: search } },
-          { nip: { contains: search } },
-          { nik: { contains: search } },
-          { id: { contains: search } },
-        ],
+  const where: Prisma.UserWhereInput = {
+    ...(search && {
+      OR: [
+        { fullname: { contains: search } },
+        { username: { contains: search } },
+        { email: { contains: search } },
+        { phone: { contains: search } },
+        { nip: { contains: search } },
+        { nik: { contains: search } },
+        { id: { contains: search } },
+      ],
+    }),
+    ...(roleId && { roleId: roleId }),
+    ...(user.sumdanId && { sumdanId: user.sumdanId }),
+    ...(pkwt_status &&
+      !["EXPIRED", "NOT SET"].includes(pkwt_status) && {
+        pkwt_status: pkwt_status,
       }),
-      ...(roleId && { roleId: roleId }),
-      ...(user.sumdanId && { sumdanId: user.sumdanId }),
-      ...(pkwt_status && { pkwt_status: pkwt_status }),
-      ...(position && { position: position }),
-      status: true,
-    },
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      updated_at: "desc",
-    },
-    include: {
-      Cabang: {
-        include: { Area: true },
+    ...(pkwt_status === "NOT SET" && { end_pkwt: null }),
+    ...(pkwt_status === "EXPIRED" && {
+      end_pkwt: {
+        lte: new Date(),
       },
-      Sumdan: true,
-      Role: true,
-    },
-  });
+    }),
+    ...(areaId && { Cabang: { areaId: areaId } }),
+    ...(cabangId && { cabangId: cabangId }),
+    ...(agentFrontingId && { agentFrontingId: agentFrontingId }),
+    ...(sumdanId && { sumdanId: sumdanId }),
+    ...(user.Role.data_status === "AREA" && {
+      Cabang: { areaId: user.Cabang.areaId },
+    }),
+    ...(user.Role.data_status === "CABANG" && { cabangId: user.cabangId }),
+    ...(user.Role.data_status === "USER" && { id: user.id }),
+    ...(user.agentFrontingId && { agentFrontingId: { not: null } }),
+    status: true,
+  };
 
-  const total = await prisma.user.count({
-    where: {
-      ...(search && {
-        OR: [
-          { fullname: { contains: search } },
-          { username: { contains: search } },
-          { email: { contains: search } },
-          { phone: { contains: search } },
-          { nip: { contains: search } },
-          { nik: { contains: search } },
-          { id: { contains: search } },
-        ],
-      }),
-      ...(roleId && { roleId: roleId }),
-      ...(user.sumdanId && { sumdanId: user.sumdanId }),
-      ...(pkwt_status && { pkwt_status: pkwt_status }),
-      ...(position && { position: position }),
-      status: true,
-    },
-  });
+  const [data, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: {
+        updated_at: "desc",
+      },
+      include: {
+        Cabang: {
+          include: {
+            Area: { include: { HeadAreas: { include: { User: true } } } },
+            HeadCabangs: { include: { User: true } },
+          },
+        },
+        Sumdan: true,
+        Role: true,
+        AgentFronting: true,
+      },
+    }),
+    prisma.user.count({ where }),
+  ]);
 
   return NextResponse.json({
     status: 200,
-    data: serializeForApi(find),
+    data: serializeForApi(data),
     total: total,
   });
 };
 
 export const POST = async (request: NextRequest) => {
-  const body: User = await request.json();
-  const { id, nip, password, ...saved } = body;
+  const body = await request.json();
+  const { id, nip, password, AgentFronting, Sumdan, Role, Cabang, ...saved } =
+    body;
   try {
     const find = await prisma.user.findFirst({
       where: { username: saved.username },
@@ -97,11 +113,11 @@ export const POST = async (request: NextRequest) => {
         { status: 400 },
       );
     }
-    const generateId = await generateUserId();
     const generateNIP = await generateUserNIP(saved.cabangId);
+    const genID = await generateID();
     const pass = await bcrypt.hash(password, 10);
     await prisma.user.create({
-      data: { id: generateId, nip: generateNIP, password: pass, ...saved },
+      data: { id: genID, nip: generateNIP, password: pass, ...saved },
     });
     return NextResponse.json({
       status: 201,
@@ -117,8 +133,8 @@ export const POST = async (request: NextRequest) => {
 };
 
 export const PUT = async (request: NextRequest) => {
-  const body: User = await request.json();
-  const { id, ...updated } = body;
+  const body = await request.json();
+  const { id, AgentFronting, Role, Sumdan, Cabang, ...updated } = body;
   try {
     const find = await prisma.user.findFirst({ where: { id } });
 
@@ -218,19 +234,18 @@ export const PATCH = async (request: NextRequest) => {
   }
 };
 
-export async function generateUserId() {
-  const prefix = "U";
-  const padLength = 3;
-  const lastRecord = await prisma.user.count({});
-  return `${prefix}${String(lastRecord + 1).padStart(padLength, "0")}`;
-}
-
 export async function generateUserNIP(cabangId: string) {
   const prefix = `${moment().year()}${moment().month()}`;
-  const padLength = 2;
+  const padLength = 4;
   const lastRecord = await prisma.user.count({});
   const cabang = await prisma.cabang.findFirst({ where: { id: cabangId } });
-  return `${prefix}${cabang ? cabang.id.replace("UP", "") : "001"}${String(
+  return `${prefix}${cabang ? cabang.areaId.replace("KW", "") : "001"}${cabang ? cabang.id.replace("UP", "") : "0001"}${String(
     lastRecord,
   ).padStart(padLength, "0")}`;
+}
+export async function generateID() {
+  const prefix = `USR`;
+  const padLength = 6;
+  const lastRecord = await prisma.user.count();
+  return `${prefix}${String(lastRecord).padStart(padLength, "0")}`;
 }

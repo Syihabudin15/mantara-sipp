@@ -204,13 +204,13 @@ export default function Page() {
             <Tag color={"blue"} style={{ marginLeft: 2 }}>
               Ke{" "}
               {
-                record.Dapem.Angsuran.filter((d) => d.date_paid !== null).sort(
+                record.Dapem.Angsurans.filter((d) => d.date_paid !== null).sort(
                   (a, b) => b.counter - a.counter,
                 )[0].counter
               }{" "}
               |
               {IDRFormat(
-                record.Dapem.Angsuran.filter((a) => a.date_paid !== null).sort(
+                record.Dapem.Angsurans.filter((a) => a.date_paid !== null).sort(
                   (a, b) => b.counter - a.counter,
                 )[0].remaining,
               )}
@@ -962,8 +962,8 @@ const ProsesData = ({
   };
 
   useEffect(() => {
-    if (data.Dapem && data.Dapem.Angsuran) {
-      const sisaangsuran = data.Dapem.Angsuran.filter(
+    if (data.Dapem && data.Dapem.Angsurans) {
+      const sisaangsuran = data.Dapem.Angsurans.filter(
         (d) => d.date_paid === null,
       );
       const nom = sisaangsuran.reduce((acc, curr) => acc + curr.principal, 0);

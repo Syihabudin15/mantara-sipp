@@ -20,21 +20,21 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("ao", "ao");
-    params.append("include", "true");
-    params.append("limit", String(pageProps.limit));
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
+    const params = new URLSearchParams({
+      limit: pageProps.limit.toString(),
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+    });
 
     try {
-      const [resArea] = await Promise.all([
-        fetch(`/api/agent?${params.toString()}`).then((r) => r.json()),
-      ]);
-      setPageProps((prev) => ({
-        ...prev,
-        data: resArea.data,
-        total: resArea.total,
-      }));
+      fetch(`/api/agent?${params.toString()}`)
+        .then((r) => r.json())
+        .then((res) =>
+          setPageProps((prev) => ({
+            ...prev,
+            data: res.data,
+            total: res.total,
+          })),
+        );
     } catch (err) {
       console.error(err);
     } finally {
@@ -76,7 +76,7 @@ export default function Page() {
         {/* Areas Section */}
         <div className="grid grid-cols-1 gap-8 mb-8">
           {pageProps.data?.map((area) => {
-            const areaNoa = area.Dapem;
+            const areaNoa = area.Dapems;
             const areaPencapaian = areaNoa.reduce(
               (acc, curr) => acc + curr.plafond,
               0,

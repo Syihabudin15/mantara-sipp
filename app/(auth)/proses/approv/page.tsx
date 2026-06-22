@@ -219,28 +219,31 @@ export default function Page() {
       dataIndex: "aoup",
       key: "aoup",
       render(value, record, index) {
+        const ao = record.AO || record.AOCabang || record.AOArea;
         return (
           <div>
-            <div>{record.AO.fullname}</div>
+            <div>
+              {ao?.fullname} ({ao?.position})
+            </div>
             <div className="text-xs opacity-80">
-              {record.AO.Cabang.name} | {record.AO.Cabang.Area.name}
+              {ao?.Cabang.name} | {ao?.Cabang.Area.name}
             </div>
           </div>
         );
       },
     },
     {
-      title: "Status VERIFIKASI",
-      dataIndex: "verif_status",
-      key: "verif_status",
+      title: "Status SLIK",
+      dataIndex: "slik_status",
+      key: "slik_status",
       width: 250,
       render: (_, record, i) => {
-        const temp = record.verif_desc
-          ? (JSON.parse(record.verif_desc) as IDesc)
+        const temp = record.slik_desc
+          ? (JSON.parse(record.slik_desc) as IDesc)
           : null;
         return (
           <div className="flex gap-1">
-            {GetStatusTag(record.verif_status)}
+            {GetStatusTag(record.slik_status)}
             {temp && (
               <Paragraph
                 ellipsis={{
@@ -260,17 +263,17 @@ export default function Page() {
       },
     },
     {
-      title: "Status SLIK",
-      dataIndex: "slik_status",
-      key: "slik_status",
+      title: "Status VERIFIKASI",
+      dataIndex: "verif_status",
+      key: "verif_status",
       width: 250,
       render: (_, record, i) => {
-        const temp = record.slik_desc
-          ? (JSON.parse(record.slik_desc) as IDesc)
+        const temp = record.verif_desc
+          ? (JSON.parse(record.verif_desc) as IDesc)
           : null;
         return (
           <div className="flex gap-1">
-            {GetStatusTag(record.slik_status)}
+            {GetStatusTag(record.verif_status)}
             {temp && (
               <Paragraph
                 ellipsis={{
@@ -319,39 +322,38 @@ export default function Page() {
         );
       },
     },
-    // {
-    //   title: "Mutasi & Takeover",
-    //   dataIndex: "produk",
-    //   key: "produk",
-    //   width: 350,
-    //   render(value, record, index) {
-    //     return (
-    //       <div>
-    //         {record.JenisPembiayaan.status_mutasi && (
-    //           <div style={{ fontSize: 9 }}>
-    //             <SwapOutlined />{" "}
-    //             <Tag style={{ fontSize: 9 }} color={"red"}>
-    //               {record.mutasi_from}
-    //             </Tag>{" "}
-    //             <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
-    //             <Tag style={{ fontSize: 9 }} color={"blue"}>
-    //               {record.mutasi_to}
-    //             </Tag>
-    //           </div>
-    //         )}
-    //         {record.JenisPembiayaan.status_takeover && (
-    //           <div style={{ fontSize: 9 }}>
-    //             <PayCircleOutlined />{" "}
-    //             <Tag color={"blue"} style={{ fontSize: 9 }}>
-    //               {record.takeover_from} (
-    //               {moment(record.takeover_date).format("DD/MM/YYYY")})
-    //             </Tag>
-    //           </div>
-    //         )}
-    //       </div>
-    //     );
-    //   },
-    // },
+    {
+      title: "Mutasi & Takeover",
+      dataIndex: "produk",
+      key: "produk",
+      render(value, record, index) {
+        return (
+          <div>
+            {record.JenisPembiayaan.status_mutasi && (
+              <div style={{ fontSize: 9 }}>
+                <SwapOutlined />{" "}
+                <Tag style={{ fontSize: 9 }} color={"red"}>
+                  {record.prev_payoffice}
+                </Tag>{" "}
+                <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
+                <Tag style={{ fontSize: 9 }} color={"blue"}>
+                  {record.PayOffice.code || record.PayOffice.name}
+                </Tag>
+              </div>
+            )}
+            {record.JenisPembiayaan.status_takeover && (
+              <div style={{ fontSize: 9 }}>
+                <PayCircleOutlined />{" "}
+                <Tag color={"blue"} style={{ fontSize: 9 }}>
+                  {record.takeover_from} (
+                  {moment(record.takeover_date).format("DD/MM/YYYY")})
+                </Tag>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
     {
       title: "Created",
       dataIndex: "created_at",
@@ -359,7 +361,7 @@ export default function Page() {
       render(value, record, index) {
         return (
           <div>
-            <div>{record.CreatedBy.fullname}</div>
+            <div>{record.User.fullname}</div>
             <div className="opacity-80 text-xs">
               {moment(record.created_at).format("DD/MM/YYYY")}
             </div>
@@ -594,10 +596,10 @@ export default function Page() {
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} className="text-center font-bold">
                 <div>
-                  {IDRFormat(angsuran)} - {IDRFormat(angssudan)}
+                  {IDRFormat(angsuran)} + {IDRFormat(angsuran - angssudan)}
                 </div>
                 <div className="border-t border-gray-500">
-                  {IDRFormat(angsuran - angssudan)}
+                  {IDRFormat(angsuran)}
                 </div>
               </Table.Summary.Cell>
             </Table.Summary.Row>

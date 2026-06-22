@@ -1,5 +1,5 @@
 import prisma from "@/libs/Prisma";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
@@ -8,28 +8,26 @@ export const GET = async (request: NextRequest) => {
   const search = request.nextUrl.searchParams.get("search") || "";
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const find = await prisma.role.findMany({
-    where: {
-      ...(search && { name: { contains: search } }),
-      status: true,
-    },
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      updated_at: "desc",
-    },
-  });
+  const where: Prisma.RoleWhereInput = {
+    ...(search && { name: { contains: search } }),
+    status: true,
+  };
 
-  const total = await prisma.role.count({
-    where: {
-      ...(search && { name: { contains: search } }),
-      status: true,
-    },
-  });
+  const [data, total] = await Promise.all([
+    prisma.role.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: {
+        updated_at: "desc",
+      },
+    }),
+    prisma.role.count({ where }),
+  ]);
 
   return NextResponse.json({
     status: 200,
-    data: find,
+    data: data,
     total: total,
   });
 };
@@ -38,18 +36,18 @@ export const POST = async (request: NextRequest) => {
   const body: Role = await request.json();
   const { id, ...saved } = body;
   try {
-    const generateId = await generateRoleId();
+    const genId = await generateID();
     await prisma.role.create({
-      data: { id: generateId, ...saved },
+      data: { id: genId, ...saved },
     });
     return NextResponse.json({
       status: 201,
-      message: "Berhasil menyimpan data role.",
+      message: "Berhasil menyimpan data.",
     });
   } catch (err) {
     return NextResponse.json({
       status: 500,
-      message: "Gagal menyimpan data role. internal server error.",
+      message: "Gagal menyimpan data. internal server error.",
     });
   }
 };
@@ -64,12 +62,12 @@ export const PUT = async (request: NextRequest) => {
     });
     return NextResponse.json({
       status: 200,
-      message: "Berhasil memperbarui data role.",
+      message: "Berhasil memperbarui data.",
     });
   } catch (err) {
     return NextResponse.json({
       status: 500,
-      message: "Gagal memperbarui data role. internal server error.",
+      message: "Gagal memperbarui data. internal server error.",
     });
   }
 };
@@ -83,19 +81,19 @@ export const DELETE = async (request: NextRequest) => {
     });
     return NextResponse.json({
       status: 200,
-      message: "Berhasil menghapus data role.",
+      message: "Berhasil menghapus data.",
     });
   } catch (err) {
     return NextResponse.json({
       status: 500,
-      message: "Gagal menghapus data role. internal server error.",
+      message: "Gagal menghapus data. internal server error.",
     });
   }
 };
 
-export async function generateRoleId() {
-  const prefix = "RL";
-  const padLength = 2;
-  const lastRecord = await prisma.role.count({});
-  return `${prefix}${String(lastRecord + 1).padStart(padLength, "0")}`;
+export async function generateID() {
+  const prefix = `ROLE`;
+  const padLength = 6;
+  const lastRecord = await prisma.role.count();
+  return `${prefix}${String(lastRecord).padStart(padLength, "0")}`;
 }

@@ -3,10 +3,11 @@
 import { FormInput } from "@/components";
 import { FilterData } from "@/components/utils/CompUtils";
 import { IDRFormat, IDRToNumber } from "@/components/utils/PembiayaanUtil";
-import { IActionTable, IPageProps, UserType } from "@/libs/IInterfaces";
+import { IActionTable, IArea, IPageProps, UserType } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
   BankOutlined,
+  BranchesOutlined,
   DeleteOutlined,
   DollarCircleOutlined,
   EditOutlined,
@@ -14,7 +15,6 @@ import {
   MailOutlined,
   PhoneOutlined,
   PlusCircleFilled,
-  PrinterOutlined,
   SaveOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -31,6 +31,7 @@ import {
   Tag,
 } from "antd";
 import { HookAPI } from "antd/es/modal/useModal";
+import { CalendarArrowDown, CalendarArrowUp } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
@@ -47,12 +48,16 @@ export default function Page() {
     total: 0,
     data: [],
     search: "",
-    roleId: "",
-    pkwt_status: "",
-    position: "",
+    roleId: null,
+    areaId: null,
+    cabangId: null,
+    agentFrontingId: null,
+    sumdanId: null,
+    pkwt_status: null,
   });
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [areas, setAreas] = useState<IArea[]>([]);
   const [cabangs, setCabangs] = useState<Cabang[]>([]);
   const [sumdans, setSumdans] = useState<Sumdan[]>([]);
   const [agents, setAgents] = useState<AgentFronting[]>([]);
@@ -61,15 +66,19 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.roleId) params.append("roleId", pageProps.roleId);
-    if (pageProps.pkwt_status)
-      params.append("pkwt_status", pageProps.pkwt_status);
-    if (pageProps.position) params.append("position", pageProps.position);
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.roleId && { roleId: pageProps.roleId }),
+      ...(pageProps.areaId && { areaId: pageProps.areaId }),
+      ...(pageProps.cabangId && { cabangId: pageProps.cabangId }),
+      ...(pageProps.agentFrontingId && {
+        agentFrontingId: pageProps.agentFrontingId,
+      }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.pkwt_status && { pkwt_status: pageProps.pkwt_status }),
+      ...(pageProps.search && { search: pageProps.search }),
+    });
 
     const res = await fetch(`/api/user?${params.toString()}`);
     const json = await res.json();
@@ -91,24 +100,32 @@ export default function Page() {
     pageProps.limit,
     pageProps.search,
     pageProps.roleId,
+    pageProps.areaId,
+    pageProps.cabangId,
+    pageProps.agentFrontingId,
+    pageProps.sumdanId,
     pageProps.pkwt_status,
-    pageProps.position,
   ]);
 
   useEffect(() => {
     (async () => {
-      const res = await fetch("/api/roles");
-      const resJson = await res.json();
-      setRoles(resJson.data);
-      const resC = await fetch("/api/unit");
-      const resCJson = await resC.json();
-      setCabangs(resCJson.data);
-      const resS = await fetch("/api/sumdan");
-      const resSJson = await resS.json();
-      setSumdans(resSJson.data);
-      const resagent = await fetch("/api/agent");
-      const resagents = await resagent.json();
-      setAgents(resagents.data);
+      await Promise.all([
+        fetch("/api/roles")
+          .then((res) => res.json())
+          .then((res) => setRoles(res.data)),
+        fetch("/api/cabang")
+          .then((res) => res.json())
+          .then((res) => setCabangs(res.data)),
+        fetch("/api/area")
+          .then((res) => res.json())
+          .then((res) => setAreas(res.data)),
+        fetch("/api/sumdan")
+          .then((res) => res.json())
+          .then((res) => setSumdans(res.data)),
+        fetch("/api/agent")
+          .then((res) => res.json())
+          .then((res) => setAgents(res.data)),
+      ]);
     })();
   }, []);
 
@@ -130,7 +147,7 @@ export default function Page() {
       title: "Nama Lengkap",
       dataIndex: "fullname",
       key: "fullname",
-      sorter: (a, b) => a.fullname.localeCompare(b.fullname),
+      // sorter: (a, b) => a.fullname.localeCompare(b.fullname),
       render(value, record, index) {
         return (
           <div>
@@ -144,17 +161,15 @@ export default function Page() {
       title: "Kontak",
       dataIndex: "kontak",
       key: "kontak",
+      className: "text-xs",
       render(value, record, index) {
         return (
-          <div className="text-xs text-blue-400">
+          <div>
             <div>
               <MailOutlined /> {record.email}
             </div>
             <div>
               <PhoneOutlined /> {record.phone}
-            </div>
-            <div>
-              <Tag color={"blue"}>{record.Role.name}</Tag>
             </div>
           </div>
         );
@@ -164,25 +179,35 @@ export default function Page() {
       title: "Unit Pelayanan",
       dataIndex: "tambahan",
       key: "tambahan",
-      sorter: (a, b) => a.fullname.localeCompare(b.fullname),
+      className: "text-xs",
+      // sorter: (a, b) => a.fullname.localeCompare(b.fullname),
       render(value, record, index) {
         return (
           <div>
-            <Tag color={"blue"}>{record.position}</Tag>
-            <div className="text-xs text-blue-400">
-              <div>
-                <EnvironmentOutlined /> {record.Cabang.name}
-              </div>
-              {record.Sumdan && (
-                <div>
-                  <BankOutlined /> {record.Sumdan.name}
-                </div>
-              )}
-              {record.target && (
-                <div>
-                  <DollarCircleOutlined /> Target: {IDRFormat(record.target)}
-                </div>
-              )}
+            <div>
+              <EnvironmentOutlined /> {record.Cabang.name}
+            </div>
+            <div>
+              <EnvironmentOutlined /> {record.Cabang.Area.name}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Posisi & Target",
+      dataIndex: "position",
+      key: "position",
+      className: "text-xs",
+      render(value, record, index) {
+        return (
+          <div>
+            <div className="flex gap-2">
+              <Tag color={"blue"}>{record.position}</Tag>
+              <Tag color={"blue"}>{record.Role.name}</Tag>
+            </div>
+            <div className="text-blue-500">
+              <DollarCircleOutlined /> {IDRFormat(record.target)}
             </div>
           </div>
         );
@@ -191,39 +216,41 @@ export default function Page() {
     {
       title: "PKWT Status",
       dataIndex: "expiredAt",
+      key: "pkwt",
       render: (_, record) => (
         <div className="flex gap-2">
           <div>
-            <div className="font-bold">{record.pkwt_status}</div>
-            <div className="text-xs opacity-80">
-              {moment(record.start_pkwt).format("DD/MM/YYYY")}
+            <Tag color={"blue"}>{record.pkwt_status || "NOT SET"}</Tag>
+            <div className="text-xs opacity-80 flex gap-1">
+              <CalendarArrowUp size={14} />{" "}
+              {record.start_pkwt
+                ? moment(record.start_pkwt).format("DD/MM/YYYY")
+                : "-"}
             </div>
-            <div className="text-xs opacity-80">
-              {moment(record.end_pkwt).format("DD/MM/YYYY")}
+            <div className="text-xs opacity-80 flex gap-1">
+              <CalendarArrowDown size={14} />{" "}
+              {record.end_pkwt
+                ? moment(record.end_pkwt).format("DD/MM/YYYY")
+                : "-"}
             </div>
           </div>
         </div>
       ),
-      shouldCellUpdate: () => false,
     },
     {
-      title: "Posisi & NIP",
-      dataIndex: "salary",
-      key: "salary",
-      render(value, record, index) {
-        return (
-          <div className="text-xs">
-            <div>{record.position}</div>
-            <div>@{record.nip}</div>
+      title: "Data Mitra",
+      dataIndex: "mitra",
+      key: "mitra",
+      render: (_, record) => (
+        <div className="">
+          <div className="text-xs opacity-80 flex gap-1">
+            <BankOutlined size={14} /> {record.Sumdan?.code || "-"}
           </div>
-        );
-      },
-    },
-    {
-      title: "Updated",
-      dataIndex: "updated_at",
-      key: "updated_at",
-      render: (date) => moment(date).format("DD-MM-YYYY"),
+          <div className="text-xs opacity-80 flex gap-1">
+            <BranchesOutlined size={14} /> {record.AgentFronting?.code || "-"}
+          </div>
+        </div>
+      ),
     },
     {
       title: "Aksi",
@@ -279,83 +306,6 @@ export default function Page() {
               Add User
             </Button>
           )}
-          <FilterData
-            children={
-              <>
-                <div className="my-2">
-                  <p>Role User :</p>
-                  <Select
-                    style={{ width: "100%" }}
-                    options={roles.map((r) => ({ label: r.name, value: r.id }))}
-                    onChange={(e) => setPageProps({ ...pageProps, roleId: e })}
-                    placeholder="role..."
-                    size="small"
-                    allowClear
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status PKWT :</p>
-                  <Select
-                    style={{ width: "100%" }}
-                    options={[
-                      { label: "TIERING", value: "TIERING" },
-                      { label: "BARU", value: "BARU" },
-                      { label: "LANJUT", value: "LANJUT" },
-                      { label: "TETAP", value: "TETAP" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, pkwt_status: e })
-                    }
-                    placeholder="status pkwt..."
-                    size="small"
-                    allowClear
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Posisi :</p>
-
-                  <Select
-                    style={{ width: "100%" }}
-                    options={[
-                      { label: "MOC", value: "MOC" },
-                      { label: "SPV", value: "SPV" },
-                      { label: "KORWIL", value: "KORWIL" },
-                      { label: "ADMIN", value: "ADMIN" },
-                      {
-                        label: "KEPALA OPERASIONAL",
-                        value: "KEPALA OPERASIONAL",
-                      },
-                      {
-                        label: "STAFF OPERASIONAL",
-                        value: "STAFF OPERASIONAL",
-                      },
-                      { label: "KEPALA BISNIS", value: "KEPALA BISNIS" },
-                      { label: "STAFF BISNIS", value: "STAFF BISNIS" },
-                      { label: "MANAJER KEUANGAN", value: "MANAJER KEUANGAN" },
-                      { label: "STAFF KEUANGAN", value: "STAFF KEUANGAN" },
-                      {
-                        label: "KEPALA VERIFIKASI",
-                        value: "KEPALA VERIFIKASI",
-                      },
-                      { label: "STAFF VERIFIKASI", value: "STAFF VERIFIKASI" },
-                      { label: "KEPALA DOKUMEN", value: "KEPALA DOKUMEN" },
-                      { label: "STAFF DOKUMEN", value: "STAFF DOKUMEN" },
-                      { label: "KEPALA IT", value: "KEPALA IT" },
-                      { label: "STAFF IT", value: "STAFF IT" },
-                      { label: "FUNDING", value: "FUNDING" },
-                      { label: "GENERAL AFFAIRS", value: "GENERAL AFFAIRS" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, position: e })
-                    }
-                    placeholder="status jabatan..."
-                    size="small"
-                    allowClear
-                  />
-                </div>
-              </>
-            }
-          />
         </div>
         <div className="flex gap-2 justify-end">
           <Input.Search
@@ -363,7 +313,128 @@ export default function Page() {
             style={{ width: 170 }}
             placeholder="Cari user..."
             onChange={(e) =>
-              setPageProps({ ...pageProps, search: e.target.value })
+              setPageProps((prev) => ({ ...prev, search: e.target.value }))
+            }
+          />
+          <FilterData
+            clearfilter={() =>
+              setPageProps((prev) => ({
+                ...prev,
+                roleId: "",
+                areaId: "",
+                cabangId: "",
+                sumdanId: "",
+                agentFrontingId: "",
+                pkwt_status: "",
+              }))
+            }
+            children={
+              <>
+                <div className="my-2 flex gap-2 items-center">
+                  <p className="w-42">Role User </p>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={pageProps.roleId}
+                    options={roles.map((r) => ({ label: r.name, value: r.id }))}
+                    onChange={(e) =>
+                      setPageProps((prev) => ({ ...prev, roleId: e }))
+                    }
+                    placeholder="role..."
+                    size="small"
+                    allowClear
+                  />
+                </div>
+                <div className="my-2 flex gap-2 items-center">
+                  <p className="w-42">Status PKWT </p>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={pageProps.pkwt_status}
+                    options={[
+                      { label: "TIERING", value: "TIERING" },
+                      { label: "BARU", value: "BARU" },
+                      { label: "LANJUT", value: "LANJUT" },
+                      { label: "TETAP", value: "TETAP" },
+                      { label: "EXPIRED", value: "EXPIRED" },
+                      { label: "NOT SET", value: "NOT SET" },
+                    ]}
+                    onChange={(e) =>
+                      setPageProps((prev) => ({ ...prev, pkwt_status: e }))
+                    }
+                    placeholder="status pkwt..."
+                    size="small"
+                    allowClear
+                  />
+                </div>
+                <div className="my-2 flex gap-2 items-center">
+                  <p className="w-42">Area </p>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={pageProps.areaId}
+                    options={areas.map((a) => ({ label: a.name, value: a.id }))}
+                    onChange={(e) =>
+                      setPageProps((prev) => ({ ...prev, areaId: e }))
+                    }
+                    placeholder="Area..."
+                    size="small"
+                    allowClear
+                  />
+                </div>
+                <div className="my-2 flex gap-2 items-center">
+                  <p className="w-42">Cabang </p>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={pageProps.cabangId}
+                    options={
+                      pageProps.areaId
+                        ? areas
+                            .filter((a) => a.id === pageProps.areaId)
+                            .flatMap((a) => a.Cabangs)
+                            .map((a) => ({ label: a.name, value: a.id }))
+                        : cabangs.map((c) => ({ label: c.name, value: c.id }))
+                    }
+                    onChange={(e) =>
+                      setPageProps((prev) => ({ ...prev, cabangId: e }))
+                    }
+                    placeholder="Cabang ..."
+                    size="small"
+                    allowClear
+                  />
+                </div>
+                <div className="my-2 flex gap-2 items-center">
+                  <p className="w-42">Agent Fronting </p>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={pageProps.agentFrontingId}
+                    options={agents.map((a) => ({
+                      label: a.code || a.name,
+                      value: a.id,
+                    }))}
+                    onChange={(e) =>
+                      setPageProps((prev) => ({ ...prev, agentFrontingId: e }))
+                    }
+                    placeholder="Agent Fronting..."
+                    size="small"
+                    allowClear
+                  />
+                </div>
+                <div className="my-2 flex gap-2 items-center">
+                  <p className="w-42">Sumdan </p>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={pageProps.sumdanId}
+                    options={sumdans.map((a) => ({
+                      label: a.code || a.name,
+                      value: a.id,
+                    }))}
+                    onChange={(e) =>
+                      setPageProps((prev) => ({ ...prev, sumdanId: e }))
+                    }
+                    placeholder="Mitra Pembiayaan..."
+                    size="small"
+                    allowClear
+                  />
+                </div>
+              </>
             }
           />
         </div>
@@ -489,6 +560,7 @@ function UpsertUser({
       loading={loading}
       style={{ top: 20 }}
       width={1200}
+      destroyOnHidden
     >
       <div className="flex gap-4 flex-wrap">
         <div className="flex-1 flex flex-col gap-3">
@@ -559,7 +631,6 @@ function UpsertUser({
             data={{
               label: "Nomor NIK",
               mode: "horizontal",
-              required: true,
               type: "text",
               value: data.nik,
               onChange: (e: string) => setData({ ...data, nik: e }),
@@ -609,29 +680,29 @@ function UpsertUser({
             data={{
               label: "Posisi",
               mode: "horizontal",
-              type: "select",
+              type: "text",
               value: data.position,
               onChange: (e: string) => setData({ ...data, position: e }),
-              options: [
-                { label: "MOC", value: "MOC" },
-                { label: "SPV", value: "SPV" },
-                { label: "KORWIL", value: "KORWIL" },
-                { label: "ADMIN", value: "ADMIN" },
-                { label: "KEPALA OPERASIONAL", value: "KEPALA OPERASIONAL" },
-                { label: "STAFF OPERASIONAL", value: "STAFF OPERASIONAL" },
-                { label: "KEPALA BISNIS", value: "KEPALA BISNIS" },
-                { label: "STAFF BISNIS", value: "STAFF BISNIS" },
-                { label: "MANAJER KEUANGAN", value: "MANAJER KEUANGAN" },
-                { label: "STAFF KEUANGAN", value: "STAFF KEUANGAN" },
-                { label: "KEPALA VERIFIKASI", value: "KEPALA VERIFIKASI" },
-                { label: "STAFF VERIFIKASI", value: "STAFF VERIFIKASI" },
-                { label: "KEPALA DOKUMEN", value: "KEPALA DOKUMEN" },
-                { label: "STAFF DOKUMEN", value: "STAFF DOKUMEN" },
-                { label: "KEPALA IT", value: "KEPALA IT" },
-                { label: "STAFF IT", value: "STAFF IT" },
-                { label: "FUNDING", value: "FUNDING" },
-                { label: "GENERAL AFFAIRS", value: "GENERAL AFFAIRS" },
-              ],
+              // options: [
+              //   { label: "MOC", value: "MOC" },
+              //   { label: "SPV", value: "SPV" },
+              //   { label: "KORWIL", value: "KORWIL" },
+              //   { label: "ADMIN", value: "ADMIN" },
+              //   { label: "KEPALA OPERASIONAL", value: "KEPALA OPERASIONAL" },
+              //   { label: "STAFF OPERASIONAL", value: "STAFF OPERASIONAL" },
+              //   { label: "KEPALA BISNIS", value: "KEPALA BISNIS" },
+              //   { label: "STAFF BISNIS", value: "STAFF BISNIS" },
+              //   { label: "MANAJER KEUANGAN", value: "MANAJER KEUANGAN" },
+              //   { label: "STAFF KEUANGAN", value: "STAFF KEUANGAN" },
+              //   { label: "KEPALA VERIFIKASI", value: "KEPALA VERIFIKASI" },
+              //   { label: "STAFF VERIFIKASI", value: "STAFF VERIFIKASI" },
+              //   { label: "KEPALA DOKUMEN", value: "KEPALA DOKUMEN" },
+              //   { label: "STAFF DOKUMEN", value: "STAFF DOKUMEN" },
+              //   { label: "KEPALA IT", value: "KEPALA IT" },
+              //   { label: "STAFF IT", value: "STAFF IT" },
+              //   { label: "FUNDING", value: "FUNDING" },
+              //   { label: "GENERAL AFFAIRS", value: "GENERAL AFFAIRS" },
+              // ],
             }}
           />
           <FormInput
@@ -751,6 +822,7 @@ export function DeleteUser({
       width={400}
       style={{ top: 20 }}
       title={"Delete User " + record?.fullname}
+      destroyOnHidden
     >
       <p>Are you sure you want to delete this user?</p>
       <div className="flex justify-end gap-4">

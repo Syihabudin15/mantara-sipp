@@ -101,40 +101,50 @@ export const GetAngsuran = (
   }
 };
 
-export const GetDapem = (data: IDapem, birtdate?: Date, startdate?: Date) => {
-  const adm = data.plafond * ((data.c_adm + (data.c_adm_sumdan ?? 0)) / 100);
+export const GetDapem = (data: IDapem) => {
+  const adm =
+    data.plafond *
+    ((data.c_adm_sumdan + data.c_adm + data.c_adm_mitra + data.c_adm_ff) / 100);
   const provisi =
-    data.plafond * ((data.c_provisi + (data.c_provisi_sumdan ?? 0)) / 100);
+    data.plafond *
+    ((data.c_provisi_sumdan +
+      data.c_fee_ao +
+      data.c_fee_cabang +
+      data.c_fee_area +
+      data.c_fee_bpp +
+      data.c_fee_bpb) /
+      100);
   const asuransi = data.plafond * (data.c_insurance / 100);
   const angs = GetAngsuran(
     data.plafond,
     data.tenor,
-    data.c_margin + (data.c_margin_sumdan ?? 0),
-    data.margin_type,
+    data.c_margin + data.c_margin_sumdan,
+    data.margin_type || "ANUITAS",
     data.rounded,
   ).angsuran;
   const blok = data.c_blokir * angs;
-  const retensi = data.c_retensi * angs;
   const biaya =
     adm +
     asuransi +
     data.c_gov +
     data.c_account +
+    data.c_account_sumdan +
     data.c_stamp +
     data.c_mutasi +
+    data.c_flagging +
     data.c_infomation +
     provisi;
 
-  const lastbiaya = biaya + blok + retensi + data.c_takeover + data.c_bpp;
+  const lastbiaya = biaya + blok + data.c_takeover + data.c_bop;
   const tb = data.plafond - lastbiaya;
   return { biaya, blok, lastbiaya, tb };
 };
 
 export const GetSisaPokokMargin = (data: IDapem) => {
-  const periode = data.Angsuran.find((d) =>
+  const periode = data.Angsurans.find((d) =>
     moment(d.date_pay).isSame(moment().toDate(), "month"),
   );
-  const prev = data.Angsuran.filter(
+  const prev = data.Angsurans.filter(
     (d) =>
       moment(d.date_pay).isBefore(moment().toDate(), "month") &&
       d.date_paid === null,

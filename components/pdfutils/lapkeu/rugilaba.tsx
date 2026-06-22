@@ -11,10 +11,10 @@ const generate = (
   periode?: string,
 ) => {
   const pend = pendapatan
-    .flatMap((f) => f.JournalDetail)
+    .flatMap((f) => f.JournalDetails)
     .reduce((acc, curr) => acc + curr.credit - curr.debit, 0);
   const beb = beban
-    .flatMap((f) => f.JournalDetail)
+    .flatMap((f) => f.JournalDetails)
     .reduce((acc, curr) => acc + curr.debit - curr.credit, 0);
   const html = `
   <!doctype html>
@@ -87,7 +87,7 @@ const generate = (
                 (d) =>
                   `<div class="flex justify-between border-b border-dashed">
                     <p>${d.name}</p>
-                    <p class="text-right">${IDRFormat(d.JournalDetail.reduce((acc, curr) => acc + curr.credit - curr.debit, 0))}</p>
+                    <p class="text-right">${IDRFormat(d.JournalDetails.reduce((acc, curr) => acc + curr.credit - curr.debit, 0))}</p>
                   </div>`,
               )
               .join("")}
@@ -108,7 +108,7 @@ const generate = (
                   (d) =>
                     `<div class="flex justify-between border-b border-dashed">
                     <p>${d.name}</p>
-                    <p class="text-right">${IDRFormat(d.JournalDetail.reduce((acc, curr) => acc + curr.debit - curr.credit, 0))}</p>
+                    <p class="text-right">${IDRFormat(d.JournalDetails.reduce((acc, curr) => acc + curr.debit - curr.credit, 0))}</p>
                   </div>`,
                 )
                 .join("")}

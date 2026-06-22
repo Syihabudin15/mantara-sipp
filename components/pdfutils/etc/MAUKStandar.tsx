@@ -16,9 +16,16 @@ import {
   PDFViewer,
 } from "@react-pdf/renderer";
 import moment from "moment";
-import { ListKeyValue, ListUnorderMin, styles } from "./RendererUtils";
+import { ListKeyValue, styles } from "./RendererUtils";
 
 export const MAUKStandar = ({ data }: { data: IDapem }) => {
+  const angsasli = GetAngsuran(
+    data.plafond,
+    data.tenor,
+    data.c_margin + data.c_margin_sumdan,
+    data.margin_type,
+    1,
+  ).angsuran;
   const angs = GetAngsuran(
     data.plafond,
     data.tenor,
@@ -55,7 +62,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
           >
             <Image
               src={process.env.NEXT_PUBLIC_APP_LOGO}
-              style={{ width: 60 }}
+              style={{ width: 50 }}
             />
             <View style={{ flex: 1 }}>
               <Text style={{ marginBottom: 5 }}>
@@ -76,7 +83,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                 data.ProdukPembiayaan.Sumdan.logo ||
                 process.env.NEXT_PUBLIC_APP_LOGO
               }
-              style={{ width: 60 }}
+              style={{ width: 50 }}
             />
           </View>
           <View style={styles.section}>
@@ -145,19 +152,66 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
               >
                 DATA PENSIUN & JAMINAN
               </Text>
-              <ListKeyValue
-                data={[
-                  { key: "Kelompok Pensiun", value: data.Debitur.group_skep },
-                  { key: "Nama SKEP", value: data.Debitur.name_skep },
-                  { key: "Nomor SKEP", value: data.Debitur.no_skep },
-                  {
-                    key: "Tanggal SKEP",
-                    value: moment(data.Debitur.date_skep).format("DD-MM-YYYY"),
-                  },
-                  { key: "Penerbit SKEP", value: data.Debitur.publisher_skep },
-                  { key: "Nomor Pensiun", value: data.nopen },
-                ]}
-              />
+              <View style={{ display: "flex", flexDirection: "row", gap: 50 }}>
+                <View style={{ flex: 1 }}>
+                  <ListKeyValue
+                    data={[
+                      {
+                        key: "Kelompok Pensiun",
+                        value: data.Debitur.group_skep,
+                      },
+                      {
+                        key: "Nama Sesuai SKEP",
+                        value: data.Debitur.name_skep,
+                      },
+                      { key: "Nomor SKEP", value: data.Debitur.no_skep },
+                      {
+                        key: "Tanggal SKEP",
+                        value: moment(data.Debitur.date_skep).format(
+                          "DD-MM-YYYY",
+                        ),
+                      },
+                      {
+                        key: "TMT Pensiun",
+                        value: moment(data.Debitur.tmt_skep).format(
+                          "DD-MM-YYYY",
+                        ),
+                      },
+                      {
+                        key: "Penerbit SKEP",
+                        value: data.Debitur.publisher_skep,
+                      },
+                      { key: "Nomor Pensiun", value: data.nopen },
+                    ]}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <ListKeyValue
+                    data={[
+                      {
+                        key: "Kantor Bayar Asal",
+                        value: data.prev_payoffice,
+                      },
+                      {
+                        key: "Kantor Bayar Tujuan",
+                        value: data.PayOffice.name,
+                      },
+                      { key: "Instansi Takeover", value: data.takeover_from },
+                      {
+                        key: "Nominal Takeover",
+                        value: IDRFormat(data.c_takeover),
+                        currency: true,
+                      },
+                      {
+                        key: "Rencana Tgl Takeover",
+                        value: data.takeover_date
+                          ? moment(data.takeover_date).format("DD-MM-YYYY")
+                          : "",
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
             </View>
             <View style={{ marginTop: 5 }}>
               <Text
@@ -241,8 +295,18 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                         currency: true,
                       },
                       {
-                        key: "Debt Service Ratio",
+                        key: "DBR/DSR",
                         value: `${((angs / data.Debitur.salary) * 100).toFixed(2)}%`,
+                      },
+                      {
+                        key: "Angsuran Asli",
+                        value: `${IDRFormat(angsasli)}`,
+                        currency: true,
+                      },
+                      {
+                        key: "Pembulatan",
+                        value: `${IDRFormat(data.rounded)}`,
+                        currency: true,
                       },
                     ]}
                   />
@@ -276,7 +340,11 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                       },
                       {
                         key: "Biaya Adm Koperasi",
-                        value: IDRFormat(data.plafond * (data.c_adm / 100)),
+                        value: IDRFormat(
+                          data.plafond *
+                            ((data.c_adm + data.c_adm_mitra + data.c_adm_ff) /
+                              100),
+                        ),
                         currency: true,
                       },
                       {
@@ -295,7 +363,15 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                       },
                       {
                         key: "Biaya Provisi Koperasi",
-                        value: IDRFormat(data.plafond * (data.c_provisi / 100)),
+                        value: IDRFormat(
+                          data.plafond *
+                            ((data.c_fee_ao +
+                              data.c_fee_cabang +
+                              data.c_fee_area +
+                              data.c_fee_bpp +
+                              data.c_fee_bpb) /
+                              100),
+                        ),
                         currency: true,
                       },
                       {
@@ -304,13 +380,22 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                         currency: true,
                       },
                       {
-                        key: "Biaya Buka Rekening",
+                        key: "Biaya Buka Rekening Mitra",
+                        value: IDRFormat(data.c_account_sumdan),
+                        currency: true,
+                      },
+                      {
+                        key: "Biaya Anggota Koperasi",
                         value: IDRFormat(data.c_account),
                         currency: true,
                       },
-
                       {
                         key: "Biaya Flagging",
+                        value: IDRFormat(data.c_flagging),
+                        currency: true,
+                      },
+                      {
+                        key: "Biaya Sistem Informasi",
                         value: IDRFormat(data.c_infomation),
                         currency: true,
                       },
@@ -350,19 +435,14 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                           borderStyle: "dashed",
                         },
                       },
-                      {
-                        key: `Blokir Angsuran (${data.c_blokir}x)`,
-                        value: IDRFormat(data.c_blokir * angsSumdan),
-                        currency: true,
-                      },
                       // {
                       //   key: `Retensi Angsuran (${data.c_retensi}x)`,
                       //   value: IDRFormat(retensi),
                       //   currency: true,
                       // },
                       {
-                        key: `Bpp`,
-                        value: `${IDRFormat(data.c_bpp)}`,
+                        key: `BOP Pembiayaan`,
+                        value: `${IDRFormat(data.c_bop)}`,
                         currency: true,
                       },
                       {
@@ -372,6 +452,11 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                           borderBottom: "1px solid #aaa",
                           borderStyle: "dashed",
                         },
+                        currency: true,
+                      },
+                      {
+                        key: `Blokir Angsuran (${data.c_blokir}x)`,
+                        value: IDRFormat(data.c_blokir * angsSumdan),
                         currency: true,
                       },
                       {
@@ -387,7 +472,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
             </View>
             <View
               style={{
-                marginTop: 10,
+                marginTop: 20,
                 display: "flex",
                 flexDirection: "row",
                 gap: 20,
@@ -415,7 +500,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                 </Text>
               </View>
             </View>
-            <View
+            {/* <View
               style={{
                 marginTop: 10,
                 fontStyle: "italic",
@@ -446,7 +531,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                   ]}
                 />
               </View>
-            </View>
+            </View> */}
           </View>
         </Page>
       </Document>

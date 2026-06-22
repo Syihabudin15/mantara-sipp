@@ -87,7 +87,7 @@ export default function Page() {
           id: res.data,
           sumdanId: sumdan.id,
           Sumdan: sumdan,
-          Dapem: selecteds,
+          Dapems: selecteds,
         });
       });
     setLoading(false);
@@ -146,9 +146,9 @@ export default function Page() {
           loading={loading}
           expandable={{
             expandedRowRender: (record) => (
-              <TableDapem data={record.Dapem} setSelecteds={setSelecteds} />
+              <TableDapem data={record.Dapems} setSelecteds={setSelecteds} />
             ),
-            rowExpandable: (record) => record.Dapem.length !== 0,
+            rowExpandable: (record) => record.Dapems.length !== 0,
           }}
         />
       </Card>
@@ -280,7 +280,7 @@ const columnSumdan: TableProps<ISumdanDropping>["columns"] = [
     dataIndex: "enduser",
     className: "text-center",
     render(value, record, index) {
-      return <>{record.Dapem.length}</>;
+      return <>{record.Dapems.length}</>;
     },
   },
   {
@@ -288,7 +288,7 @@ const columnSumdan: TableProps<ISumdanDropping>["columns"] = [
     key: "plafond",
     dataIndex: "plafond",
     render(value, record, index) {
-      const total = record.Dapem.reduce((acc, curr) => acc + curr.plafond, 0);
+      const total = record.Dapems.reduce((acc, curr) => acc + curr.plafond, 0);
       return <>{IDRFormat(total)}</>;
     },
   },
@@ -358,5 +358,5 @@ const defaultData: IDocument = {
   created_at: new Date(),
   sumdanId: "",
   Sumdan: {} as Sumdan,
-  Dapem: [],
+  Dapems: [],
 };

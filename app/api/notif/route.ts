@@ -1,16 +1,48 @@
 import { getSession } from "@/libs/Auth";
 import prisma from "@/libs/Prisma";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
   const session = await getSession();
   if (!session)
     return NextResponse.json({ data: null, status: 400 }, { status: 400 });
-  const user = await prisma.user.findFirst({ where: { id: session.user.id } });
+  const user = await prisma.user.findFirst({
+    where: { id: session.user.id },
+    include: { Role: true, Cabang: true },
+  });
   if (!user)
     return NextResponse.json({ data: null, status: 400 }, { status: 400 });
 
   try {
+    const where: Prisma.DapemWhereInput = {
+      status: true,
+      ...(user.sumdanId && {
+        ProdukPembiayaan: { sumdanId: user.sumdanId },
+      }),
+      ...(user.agentFrontingId && { agentFrontingId: user.agentFrontingId }),
+      ...(user.Role.data_status === "AREA" && {
+        OR: [
+          { AO: { Cabang: { areaId: user.Cabang.areaId } } },
+          { AOCabang: { Cabang: { areaId: user.Cabang.areaId } } },
+          { AOArea: { Cabang: { areaId: user.Cabang.areaId } } },
+        ],
+      }),
+      ...(user.Role.data_status === "CABANG" && {
+        OR: [
+          { AO: { cabangId: user.cabangId } },
+          { AOCabang: { cabangId: user.cabangId } },
+          { AOArea: { cabangId: user.cabangId } },
+        ],
+      }),
+      ...(user.Role.data_status === "USER" && {
+        OR: [
+          { AO: { id: user.id } },
+          { AOCabang: { id: user.id } },
+          { AOArea: { id: user.id } },
+        ],
+      }),
+    };
     const [
       draft,
       verif,
@@ -24,67 +56,50 @@ export const GET = async (req: NextRequest) => {
       printTTPJ,
       TTPJ,
       pelunasan,
-    ] = await prisma.$transaction([
+    ] = await Promise.all([
       prisma.dapem.count({
         where: {
-          status: true,
           dropping_status: "DRAFT",
-          ...(user.sumdanId && {
-            ProdukPembiayaan: { sumdanId: user.sumdanId },
-          }),
+          ...where,
         },
       }),
       prisma.dapem.count({
         where: {
-          status: true,
           dropping_status: "PENDING",
           verif_status: "PENDING",
-          ...(user.sumdanId && {
-            ProdukPembiayaan: { sumdanId: user.sumdanId },
-          }),
+          ...where,
         },
       }),
       prisma.dapem.count({
         where: {
-          status: true,
           dropping_status: "PENDING",
           slik_status: "PENDING",
-          ...(user.sumdanId && {
-            ProdukPembiayaan: { sumdanId: user.sumdanId },
-          }),
+          ...where,
         },
       }),
       prisma.dapem.count({
         where: {
-          status: true,
           dropping_status: "PENDING",
           approv_status: "PENDING",
-          ...(user.sumdanId && {
-            ProdukPembiayaan: { sumdanId: user.sumdanId },
-          }),
+          ...where,
         },
       }),
       prisma.dapem.count({
         where: {
-          status: true,
           dropping_status: "PROSES",
           approv_status: "DISETUJUI",
           file_contract: null,
-          ...(user.sumdanId && {
-            ProdukPembiayaan: { sumdanId: user.sumdanId },
-          }),
+          ...where,
         },
       }),
       prisma.dapem.count({
         where: {
-          status: true,
           dropping_status: "PROSES",
           approv_status: "DISETUJUI",
           file_contract: { not: null },
+          video_contract: { not: null },
           droppingId: null,
-          ...(user.sumdanId && {
-            ProdukPembiayaan: { sumdanId: user.sumdanId },
-          }),
+          ...where,
         },
       }),
       prisma.dropping.count({
@@ -97,12 +112,9 @@ export const GET = async (req: NextRequest) => {
       }),
       prisma.dapem.count({
         where: {
-          status: true,
           dropping_status: "DISETUJUI",
           berkasId: null,
-          ...(user.sumdanId && {
-            ProdukPembiayaan: { sumdanId: user.sumdanId },
-          }),
+          ...where,
         },
       }),
       prisma.berkas.count({
@@ -111,16 +123,18 @@ export const GET = async (req: NextRequest) => {
           ...(user.sumdanId && {
             sumdanId: user.sumdanId,
           }),
+          Dapems: {
+            some: {
+              ...where,
+            },
+          },
         },
       }),
       prisma.dapem.count({
         where: {
-          status: true,
           dropping_status: "DISETUJUI",
           jaminanId: null,
-          ...(user.sumdanId && {
-            ProdukPembiayaan: { sumdanId: user.sumdanId },
-          }),
+          ...where,
         },
       }),
       prisma.jaminan.count({
@@ -129,13 +143,18 @@ export const GET = async (req: NextRequest) => {
           ...(user.sumdanId && {
             sumdanId: user.sumdanId,
           }),
+          Dapems: {
+            some: {
+              ...where,
+            },
+          },
         },
       }),
       prisma.pelunasan.count({
         where: {
-          ...(user.sumdanId && {
-            Dapem: { ProdukPembiayaan: { sumdanId: user.sumdanId } },
-          }),
+          Dapem: {
+            ...where,
+          },
           OR: [
             { status_paid: "PENDING" },
             { guarantee_status: { not: { in: ["PUSAT", "UNIT"] } } },

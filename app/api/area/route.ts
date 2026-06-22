@@ -1,103 +1,90 @@
 import { getSession } from "@/libs/Auth";
+import { IArea } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
 
-import { Area } from "@prisma/client";
-import moment from "moment";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
-  const page = request.nextUrl.searchParams.get("page") || "1";
-  const ao = request.nextUrl.searchParams.get("ao");
-  const limit = request.nextUrl.searchParams.get("limit") || "50";
-  const search = request.nextUrl.searchParams.get("search") || "";
-  const backdate = request.nextUrl.searchParams.get("backdate");
+  const params = Object.fromEntries(request.nextUrl.searchParams);
+  const { page = "1", limit = "50", search } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const session = await getSession();
   if (!session)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-  const user = await prisma.user.findFirst({ where: { id: session.user.id } });
+  const user = await prisma.user.findFirst({
+    where: { id: session.user.id },
+    include: { Role: true, Cabang: true },
+  });
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
-  const find = await prisma.area.findMany({
-    where: {
-      ...(search && {
-        OR: [
-          { name: { contains: search } },
-          { Cabang: { some: { name: { contains: search } } } },
-        ],
+  const where: Prisma.AreaWhereInput = {
+    ...(search && {
+      OR: [
+        { name: { contains: search } },
+        { Cabangs: { some: { name: { contains: search } } } },
+        { HeadAreas: { some: { User: { fullname: { contains: search } } } } },
+      ],
+    }),
+    ...(user.Role.data_status === "AREA" &&
+      !user.sumdanId && { id: user.Cabang.areaId }),
+    ...(user.Role.data_status === "CABANG" &&
+      !user.sumdanId && { Cabangs: { some: { id: user.cabangId } } }),
+    ...(user.Role.data_status === "USER" &&
+      !user.sumdanId && {
+        Cabangs: { some: { Users: { some: { id: user.id } } } },
       }),
-      status: true,
-    },
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      updated_at: "desc",
-    },
-    include: {
-      Cabang: {
-        where: {
-          status: true,
-          ...(search && { name: { contains: search } }),
-        },
-        ...(ao && {
-          include: {
-            User: {
-              where: { status: true },
-              include: {
-                AODapem: {
-                  where: {
-                    status: true,
-                    ...(user.sumdanId && {
-                      ProdukPembiayaan: { sumdanId: user.sumdanId },
-                    }),
-                    dropping_status: { in: ["DISETUJUI", "LUNAS"] },
-                    ...(backdate && {
-                      Dropping: {
-                        process_at: {
-                          gte: moment(backdate.split(",")[0]).toDate(),
-                          lte: moment(backdate.split(",")[1]).toDate(),
-                        },
-                      },
-                    }),
-                  },
-                },
-              },
-            },
-          },
-        }),
+    status: true,
+  };
+  const [data, total] = await Promise.all([
+    prisma.area.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: {
+        created_at: "desc",
       },
-    },
-  });
-
-  const total = await prisma.area.count({
-    where: {
-      ...(search && {
-        OR: [
-          { name: { contains: search } },
-          { Cabang: { some: { name: { contains: search } } } },
-        ],
-      }),
-      status: true,
-    },
-  });
+      include: {
+        Cabangs: {
+          where: {
+            ...(user.Role.data_status === "CABANG" && { id: user.cabangId }),
+            ...(user.Role.data_status === "USER" && {
+              Users: { some: { id: user.id } },
+            }),
+            status: true,
+          },
+        },
+        HeadAreas: true,
+      },
+    }),
+    prisma.area.count({ where }),
+  ]);
 
   return NextResponse.json({
     status: 200,
-    data: find,
+    data: data,
     total: total,
   });
 };
 
 export const POST = async (request: NextRequest) => {
-  const body: Area = await request.json();
-  const { id, ...saved } = body;
+  const body: IArea = await request.json();
+  const { id, HeadAreas, Cabangs, ...saved } = body;
   try {
     const generateId = await generateAreaId();
-    await prisma.area.create({
-      data: { id: generateId, ...saved },
-    });
+    await Promise.all([
+      prisma.area.create({
+        data: { id: generateId, ...saved },
+      }),
+      // HeadAreas.map((h) => {
+      //   const { id: hId, ...headarea } = h;
+      //   return prisma.headArea.create({
+      //     data: { ...headarea, areaId: generateId },
+      //   });
+      // }),
+    ]);
     return NextResponse.json({
       status: 201,
       msg: "Berhasil menyimpan data area.",
@@ -111,13 +98,23 @@ export const POST = async (request: NextRequest) => {
 };
 
 export const PUT = async (request: NextRequest) => {
-  const body: Area = await request.json();
-  const { id, ...updated } = body;
+  const body: IArea = await request.json();
+  const { id, Cabangs, HeadAreas, ...updated } = body;
   try {
-    await prisma.area.update({
-      where: { id: id },
-      data: { ...updated, updated_at: new Date() },
-    });
+    await Promise.all([
+      prisma.area.update({
+        where: { id: id },
+        data: { ...updated, updated_at: new Date() },
+      }),
+      // HeadAreas.map((h) => {
+      //   const { id: hId, ...headarea } = h;
+      //   return prisma.headArea.upsert({
+      //     where: { id: hId },
+      //     create: headarea,
+      //     update: { ...headarea, updated_at: new Date() },
+      //   });
+      // }),
+    ]);
     return NextResponse.json({
       status: 200,
       msg: "Berhasil memperbarui data area.",
@@ -151,7 +148,7 @@ export const DELETE = async (request: NextRequest) => {
 
 export async function generateAreaId() {
   const prefix = "KW";
-  const padLength = 2;
+  const padLength = 3;
   const lastRecord = await prisma.area.count({});
   return `${prefix}${String(lastRecord + 1).padStart(padLength, "0")}`;
 }

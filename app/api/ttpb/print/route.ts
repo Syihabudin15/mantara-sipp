@@ -1,6 +1,8 @@
 import { GetRoman, serializeForApi } from "@/components/utils/PembiayaanUtil";
+import { getSession } from "@/libs/Auth";
 import { IDocument } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
@@ -8,40 +10,57 @@ export const GET = async (req: NextRequest) => {
   const limit = req.nextUrl.searchParams.get("limit") || "50";
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const data = await prisma.sumdan.findMany({
-    where: {
-      status: true,
-    },
-    include: {
-      ProdukPembiayaan: {
-        include: {
-          Dapem: {
-            include: {
-              Debitur: true,
-              JenisPembiayaan: true,
-              ProdukPembiayaan: { include: { Sumdan: true } },
+  const session = await getSession();
+  if (!session)
+    return NextResponse.json(
+      { data: [], total: 0, status: 200 },
+      { status: 200 },
+    );
+  const user = await prisma.user.findFirst({ where: { id: session.user.id } });
+  if (!user)
+    return NextResponse.json(
+      { data: [], total: 0, status: 200 },
+      { status: 200 },
+    );
+
+  const where: Prisma.SumdanWhereInput = {
+    status: true,
+    ...(user.sumdanId && { id: user.sumdanId }),
+  };
+
+  const [data, total] = await Promise.all([
+    prisma.sumdan.findMany({
+      where,
+      include: {
+        ProdukPembiayaans: {
+          include: {
+            Dapems: {
+              include: {
+                Debitur: true,
+                JenisPembiayaan: true,
+                ProdukPembiayaan: { include: { Sumdan: true } },
+              },
+              where: {
+                dropping_status: { in: ["DISETUJUI", "LUNAS"] },
+                berkasId: null,
+              },
+              orderBy: { created_at: "desc" },
             },
-            where: {
-              dropping_status: { in: ["DISETUJUI", "LUNAS"] },
-              berkasId: null,
-            },
-            orderBy: { created_at: "desc" },
           },
         },
       },
-    },
-    orderBy: {
-      created_at: "desc",
-    },
-    skip: skip,
-    take: parseInt(limit),
-  });
-
-  const total = await prisma.sumdan.count({ where: { status: true } });
+      orderBy: {
+        created_at: "desc",
+      },
+      skip: skip,
+      take: parseInt(limit),
+    }),
+    prisma.sumdan.count({ where }),
+  ]);
 
   const newData = data.map((d) => ({
     ...d,
-    Dapem: d.ProdukPembiayaan.flatMap((pd) => pd.Dapem),
+    Dapems: d.ProdukPembiayaans.flatMap((pd) => pd.Dapems),
   }));
 
   return NextResponse.json({
@@ -55,10 +74,10 @@ export const POST = async (req: NextRequest) => {
   const data: IDocument = await req.json();
 
   try {
-    const { Sumdan, Dapem, ...saved } = data;
+    const { Sumdan, Dapems, ...saved } = data;
     await prisma.$transaction(async (tx) => {
       const drop = await tx.berkas.create({ data: saved });
-      for (const dpm of Dapem) {
+      for (const dpm of Dapems) {
         await tx.dapem.update({
           where: { id: dpm.id },
           data: { berkasId: drop.id, document_status: "DELIVERY" },
@@ -93,7 +112,7 @@ export const PATCH = async (req: NextRequest) => {
       { status: 400 },
     );
 
-  const nomor = `${String(count + 1).padStart(3, "0")}/${process.env.NEXT_PUBLIC_APP_CODE_FILE}/SD-${sumdan.code.replace("BPR", "").replace(" ", "")}/${GetRoman(new Date().getMonth() + 1)}/${new Date().getFullYear()}`;
+  const nomor = `${String(count + 1).padStart(3, "0")}/${process.env.NEXT_PUBLIC_APP_CODE_FILE}/SD-${sumdan.code.replace("BPR", "").replace(" ", "").replace(" ", "")}/${GetRoman(new Date().getMonth() + 1)}/${new Date().getFullYear()}`;
 
   return NextResponse.json({ data: nomor, status: 200 }, { status: 200 });
 };

@@ -79,7 +79,23 @@ export default function Page() {
       key: "cabang",
       className: "text-center",
       render(value, record, index) {
-        return record.Cabang.length;
+        return record.Cabangs.length;
+      },
+    },
+    {
+      title: "PIC",
+      dataIndex: "pic",
+      key: "pic",
+      className: "text-center",
+      render(value, record, index) {
+        const find = record.HeadAreas.filter((f) => f.status);
+        return (
+          <div>
+            {find.map((f) => (
+              <div key={f.id}>{f.User.fullname}</div>
+            ))}
+          </div>
+        );
       },
     },
     {
@@ -170,7 +186,7 @@ export default function Page() {
             return (
               <div className="ms-15">
                 <TableCabang
-                  record={record.Cabang}
+                  record={record.Cabangs}
                   areaId={record.id}
                   getData={getData}
                   modal={modal}
@@ -219,7 +235,7 @@ function UpsertArea({
 
   const handleSave = async () => {
     setLoading(true);
-    const { Cabang, ...saved } = data;
+    const { Cabangs, ...saved } = data;
     await fetch("/api/area", {
       method: record ? "PUT" : "POST",
       body: JSON.stringify(saved),
@@ -257,6 +273,7 @@ function UpsertArea({
       onCancel={() => setOpen(false)}
       footer={[]}
       loading={loading}
+      destroyOnHidden
     >
       <div className="flex flex-col gap-3">
         <FormInput
@@ -340,6 +357,7 @@ export function DeleteArea({
       width={400}
       style={{ top: 20 }}
       title={"Delete Area " + record?.name}
+      destroyOnHidden
     >
       <p>Are you sure you want to delete this data?</p>
       <div className="flex justify-end gap-4">
@@ -508,7 +526,7 @@ function UpsertCabang({
 
   const handleSave = async () => {
     setLoading(true);
-    await fetch("/api/unit", {
+    await fetch("/api/cabang", {
       method: record ? "PUT" : "POST",
       body: JSON.stringify(data),
     })
@@ -545,6 +563,7 @@ function UpsertCabang({
       onCancel={() => setOpen(false)}
       footer={[]}
       loading={loading}
+      destroyOnHidden
     >
       <div className="flex flex-col gap-3">
         <FormInput
@@ -606,7 +625,7 @@ export function DeleteCabang({
   const [loading, setLoading] = useState(false);
   const handleDelete = async () => {
     setLoading(true);
-    await fetch(`/api/unit?id=${record?.id}`, {
+    await fetch(`/api/cabang?id=${record?.id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -646,6 +665,7 @@ export function DeleteCabang({
       width={400}
       style={{ top: 20 }}
       title={"Delete Cabang " + record?.name}
+      destroyOnHidden
     >
       <p>Are you sure you want to delete this data?</p>
       <div className="flex justify-end gap-4">
@@ -664,7 +684,8 @@ const defaultData: IArea = {
   status: true,
   created_at: new Date(),
   updated_at: new Date(),
-  Cabang: [],
+  Cabangs: [],
+  HeadAreas: [],
 };
 
 const defaultCabang: Cabang = {

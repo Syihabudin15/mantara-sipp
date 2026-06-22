@@ -87,7 +87,7 @@ export default function Page() {
           id: res.data,
           sumdanId: sumdan.id,
           Sumdan: sumdan,
-          Dapem: selecteds,
+          Dapems: selecteds,
         });
       });
     setLoading(false);
@@ -146,9 +146,9 @@ export default function Page() {
           loading={loading}
           expandable={{
             expandedRowRender: (record) => (
-              <TableDapem data={record.Dapem} setSelecteds={setSelecteds} />
+              <TableDapem data={record.Dapems} setSelecteds={setSelecteds} />
             ),
-            rowExpandable: (record) => record.Dapem.length !== 0,
+            rowExpandable: (record) => record.Dapems.length !== 0,
           }}
         />
       </Card>
@@ -280,7 +280,7 @@ const columnSumdan: TableProps<ISumdanDropping>["columns"] = [
     dataIndex: "enduser",
     className: "text-center",
     render(value, record, index) {
-      return <>{record.Dapem.length}</>;
+      return <>{record.Dapems.length}</>;
     },
   },
   {
@@ -288,7 +288,7 @@ const columnSumdan: TableProps<ISumdanDropping>["columns"] = [
     key: "plafond",
     dataIndex: "plafond",
     render(value, record, index) {
-      const total = record.Dapem.reduce((acc, curr) => acc + curr.plafond, 0);
+      const total = record.Dapems.reduce((acc, curr) => acc + curr.plafond, 0);
       return <>{IDRFormat(total)}</>;
     },
   },
@@ -309,6 +309,23 @@ const columnDapem: TableProps<IDapem>["columns"] = [
         <div>
           <p>{record.Debitur.fullname}</p>
           <p className="opacity-80 text-xs">@{record.nopen}</p>
+        </div>
+      );
+    },
+  },
+  {
+    title: "AKAD KREDIT",
+    key: "akad",
+    dataIndex: "akad",
+    render(value, record, index) {
+      return (
+        <div>
+          {record.no_contract && <div>{record.no_contract}</div>}
+          {record.date_contract && (
+            <div className="text-xs opacity-80">
+              {moment(record.date_contract).format("DD/MM/YYYY")}
+            </div>
+          )}
         </div>
       );
     },
@@ -337,5 +354,5 @@ const defaultDropping: IDropping = {
   created_at: new Date(),
   sumdanId: "",
   Sumdan: {} as Sumdan,
-  Dapem: [],
+  Dapems: [],
 };

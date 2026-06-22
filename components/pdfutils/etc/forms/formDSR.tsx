@@ -3,6 +3,7 @@ import { Header, ListNonStyle, ListStyle } from "../../utils";
 import moment from "moment";
 
 export const FormDSR = (record?: IDapem) => {
+  const ao = record?.AO || record?.AOCabang || record?.AOArea;
   return `
     <div>
       ${Header("SURAT PERNYATAN", "PEMOTONGAN GAJI DIATAS 70%", undefined, process.env.NEXT_PUBLIC_APP_LOGO, process.env.NEXT_PUBLIC_APP_LOGO)}
@@ -62,7 +63,7 @@ export const FormDSR = (record?: IDapem) => {
           <p class="h-5"></p>
           <p>Mengetahui</p>
           <div class="h-36"></div>
-          <p class="border-b h-5">${record?.AO.fullname || ""}</p>
+          <p class="border-b h-5">${ao?.fullname || ""}</p>
           <p class="h-5">MOC/SPV/KORWIL</p>
         </div>
       </div>

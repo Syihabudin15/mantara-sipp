@@ -46,7 +46,7 @@ export default function LaporanRugiLaba() {
   const totalPendapatan = useMemo(
     () =>
       data.pendapatan
-        .flatMap((d) => d.JournalDetail)
+        .flatMap((d) => d.JournalDetails)
         .reduce((acc, curr) => acc + (curr.credit - curr.debit), 0),
     [data.pendapatan],
   );
@@ -54,7 +54,7 @@ export default function LaporanRugiLaba() {
   const totalBeban = useMemo(
     () =>
       data.beban
-        .flatMap((d) => d.JournalDetail)
+        .flatMap((d) => d.JournalDetails)
         .reduce((acc, curr) => acc + (curr.debit - curr.credit), 0),
     [data.beban],
   );
@@ -105,7 +105,7 @@ export default function LaporanRugiLaba() {
                   <span className="text-gray-600">{d.name}</span>
                   <span className="font-mono text-gray-800">
                     {IDRFormat(
-                      d.JournalDetail.reduce(
+                      d.JournalDetails.reduce(
                         (acc, curr) => acc + (curr.credit - curr.debit),
                         0,
                       ),
@@ -137,7 +137,7 @@ export default function LaporanRugiLaba() {
                   <span className="text-gray-600">{d.name}</span>
                   <span className="font-mono text-gray-800">
                     {IDRFormat(
-                      d.JournalDetail.reduce(
+                      d.JournalDetails.reduce(
                         (acc, curr) => acc + (curr.debit - curr.credit),
                         0,
                       ),

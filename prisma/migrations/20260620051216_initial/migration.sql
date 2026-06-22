@@ -2,6 +2,7 @@
 CREATE TABLE `Role` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
+    `data_status` ENUM('USER', 'CABANG', 'AREA', 'SEMUA') NOT NULL DEFAULT 'SEMUA',
     `permission` TEXT NOT NULL,
     `status` BOOLEAN NOT NULL DEFAULT true,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -22,21 +23,33 @@ CREATE TABLE `Sumdan` (
     `phone` VARCHAR(191) NULL,
     `email` VARCHAR(191) NULL,
     `tbo` INTEGER NOT NULL DEFAULT 3,
-    `rounded` INTEGER NOT NULL DEFAULT 1000,
-    `rounded_sumdan` INTEGER NOT NULL DEFAULT 1,
     `limit` BIGINT NOT NULL DEFAULT 0,
     `c_margin` DOUBLE NOT NULL,
+    `c_adm_sumdan` DOUBLE NOT NULL,
+    `c_account_sumdan` INTEGER NOT NULL,
+    `c_provisi_sumdan` DOUBLE NOT NULL DEFAULT 0,
+    `rounded_sumdan` INTEGER NOT NULL DEFAULT 1,
     `c_adm` DOUBLE NOT NULL,
+    `c_adm_mitra` DOUBLE NOT NULL,
+    `c_adm_ff` DOUBLE NOT NULL,
+    `c_fee_ao` DOUBLE NOT NULL DEFAULT 0,
+    `c_fee_cabang` DOUBLE NOT NULL DEFAULT 0,
+    `c_fee_area` DOUBLE NOT NULL DEFAULT 0,
+    `c_fee_bpp` DOUBLE NOT NULL DEFAULT 0,
+    `c_fee_bpb` DOUBLE NOT NULL DEFAULT 0,
+    `c_account` INTEGER NOT NULL DEFAULT 0,
     `c_gov` INTEGER NOT NULL,
     `c_stamps` INTEGER NOT NULL,
-    `c_account` INTEGER NOT NULL,
+    `c_flagging` INTEGER NOT NULL,
     `c_information` INTEGER NOT NULL,
-    `c_provisi` INTEGER NOT NULL DEFAULT 0,
+    `max_bop` INTEGER NOT NULL,
+    `rounded` INTEGER NOT NULL DEFAULT 1,
     `dsr` DOUBLE NOT NULL,
-    `sk_no` VARCHAR(191) NULL,
-    `sk_date` DATETIME(3) NULL,
-    `pic1` VARCHAR(191) NULL,
-    `pic2` VARCHAR(191) NULL,
+    `contract_no` VARCHAR(191) NULL,
+    `contract_date` DATETIME(3) NULL,
+    `pic` VARCHAR(191) NULL,
+    `file` TEXT NOT NULL,
+    `sk_akad` TEXT NULL,
     `status` BOOLEAN NOT NULL DEFAULT true,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -84,18 +97,39 @@ CREATE TABLE `User` (
     `start_pkwt` DATETIME(3) NULL,
     `end_pkwt` DATETIME(3) NULL,
     `nik` VARCHAR(191) NULL,
-    `salary` INTEGER NOT NULL DEFAULT 0,
-    `t_transport` INTEGER NOT NULL DEFAULT 0,
-    `t_position` INTEGER NOT NULL DEFAULT 0,
-    `ptkp` VARCHAR(191) NULL,
     `status` BOOLEAN NOT NULL DEFAULT true,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `roleId` VARCHAR(191) NOT NULL,
     `cabangId` VARCHAR(191) NOT NULL,
     `sumdanId` VARCHAR(191) NULL,
+    `agentFrontingId` VARCHAR(191) NULL,
 
     UNIQUE INDEX `User_username_key`(`username`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `HeadArea` (
+    `id` VARCHAR(191) NOT NULL,
+    `status` BOOLEAN NOT NULL DEFAULT true,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `userId` VARCHAR(191) NOT NULL,
+    `areaId` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `HeadCabang` (
+    `id` VARCHAR(191) NOT NULL,
+    `status` BOOLEAN NOT NULL DEFAULT true,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `userId` VARCHAR(191) NOT NULL,
+    `cabangId` VARCHAR(191) NOT NULL,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -104,7 +138,6 @@ CREATE TABLE `ProdukPembiayaan` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `c_margin` DOUBLE NOT NULL,
-    `c_adm` DOUBLE NOT NULL,
     `c_insurance` DOUBLE NOT NULL,
     `max_tenor` INTEGER NOT NULL,
     `max_plafond` INTEGER NOT NULL,
@@ -163,12 +196,12 @@ CREATE TABLE `Debitur` (
     `group_skep` VARCHAR(191) NULL,
     `soul_code` INTEGER NULL,
     `job_year` INTEGER NULL,
-    `pay_office` VARCHAR(191) NULL,
     `start_flagging` VARCHAR(191) NULL,
     `end_flagging` VARCHAR(191) NULL,
     `mother_name` VARCHAR(191) NULL,
     `account_name` VARCHAR(191) NULL,
     `account_number` VARCHAR(191) NULL,
+    `payOfficeId` VARCHAR(191) NULL,
 
     UNIQUE INDEX `Debitur_nopen_key`(`nopen`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -178,30 +211,38 @@ CREATE TABLE `Dapem` (
     `id` VARCHAR(191) NOT NULL,
     `tenor` INTEGER NOT NULL,
     `plafond` INTEGER NOT NULL,
-    `c_margin` DOUBLE NOT NULL,
     `c_margin_sumdan` DOUBLE NOT NULL,
-    `c_adm` DOUBLE NOT NULL,
+    `c_account_sumdan` INTEGER NOT NULL,
     `c_adm_sumdan` DOUBLE NOT NULL,
+    `c_provisi_sumdan` DOUBLE NOT NULL DEFAULT 0,
+    `c_margin` DOUBLE NOT NULL,
+    `c_adm` DOUBLE NOT NULL,
+    `c_adm_mitra` DOUBLE NOT NULL,
+    `c_adm_ff` DOUBLE NOT NULL,
     `c_insurance` DOUBLE NOT NULL,
     `c_gov` INTEGER NOT NULL,
     `c_stamp` INTEGER NOT NULL,
     `c_account` INTEGER NOT NULL,
+    `c_flagging` INTEGER NOT NULL,
+    `c_infomation` INTEGER NOT NULL,
     `c_mutasi` INTEGER NOT NULL,
     `c_blokir` INTEGER NOT NULL,
-    `c_retensi` INTEGER NOT NULL,
-    `c_takeover` INTEGER NOT NULL,
-    `c_bpp` INTEGER NOT NULL,
+    `c_fee_ao` DOUBLE NOT NULL DEFAULT 0,
+    `c_fee_cabang` DOUBLE NOT NULL DEFAULT 0,
+    `c_fee_area` DOUBLE NOT NULL DEFAULT 0,
+    `c_fee_bpp` DOUBLE NOT NULL DEFAULT 0,
+    `c_fee_bpb` DOUBLE NOT NULL DEFAULT 0,
+    `c_fee_fronting` DOUBLE NOT NULL DEFAULT 0,
     `c_provisi` DOUBLE NOT NULL DEFAULT 0,
-    `c_infomation` INTEGER NOT NULL,
+    `c_takeover` INTEGER NOT NULL,
+    `c_bop` INTEGER NOT NULL,
     `tbo` INTEGER NOT NULL,
     `rounded` INTEGER NOT NULL,
     `rounded_sumdan` INTEGER NOT NULL DEFAULT 0,
     `margin_type` ENUM('FLAT', 'ANUITAS') NOT NULL,
-    `insurance_type` VARCHAR(191) NULL,
+    `prev_payoffice` VARCHAR(191) NULL,
     `takeover_from` VARCHAR(191) NULL,
     `takeover_date` DATETIME(3) NULL,
-    `mutasi_from` VARCHAR(191) NULL,
-    `mutasi_to` VARCHAR(191) NULL,
     `dom_status` BOOLEAN NOT NULL,
     `address` VARCHAR(191) NOT NULL,
     `ward` VARCHAR(191) NOT NULL,
@@ -228,28 +269,34 @@ CREATE TABLE `Dapem` (
     `f_relate` VARCHAR(191) NULL,
     `f_phone` VARCHAR(191) NULL,
     `f_address` VARCHAR(191) NULL,
-    `dropping_status` ENUM('DRAFT', 'CANCEL', 'PENDING', 'PROCCESS', 'APPROVED', 'REJECTED', 'PAID_OFF') NOT NULL DEFAULT 'DRAFT',
-    `verif_status` ENUM('PENDING', 'APPROVED', 'REJECTED') NULL,
+    `dropping_status` ENUM('DRAFT', 'BATAL', 'PENDING', 'PROSES', 'DISETUJUI', 'DITOLAK', 'LUNAS') NOT NULL DEFAULT 'DRAFT',
+    `verif_status` ENUM('PENDING', 'DISETUJUI', 'DITOLAK') NULL,
     `verif_desc` TEXT NULL,
-    `slik_status` ENUM('PENDING', 'APPROVED', 'REJECTED') NULL,
+    `slik_status` ENUM('PENDING', 'DISETUJUI', 'DITOLAK') NULL,
     `slik_desc` TEXT NULL,
-    `approv_status` ENUM('PENDING', 'APPROVED', 'REJECTED') NULL,
+    `approv_status` ENUM('PENDING', 'DISETUJUI', 'DITOLAK') NULL,
     `approv_desc` TEXT NULL,
-    `takeover_status` ENUM('DRAFT', 'CANCEL', 'PENDING', 'PROCCESS', 'APPROVED', 'REJECTED', 'PAID_OFF') NOT NULL DEFAULT 'DRAFT',
+    `takeover_status` ENUM('DRAFT', 'BATAL', 'PENDING', 'PROSES', 'DISETUJUI', 'DITOLAK', 'LUNAS') NOT NULL DEFAULT 'DRAFT',
     `takeover_desc` TEXT NULL,
     `takeover_date_exc` DATETIME(3) NULL,
-    `mutasi_status` ENUM('DRAFT', 'CANCEL', 'PENDING', 'PROCCESS', 'APPROVED', 'REJECTED', 'PAID_OFF') NOT NULL DEFAULT 'DRAFT',
+    `mutasi_status` ENUM('DRAFT', 'BATAL', 'PENDING', 'PROSES', 'DISETUJUI', 'DITOLAK', 'LUNAS') NOT NULL DEFAULT 'DRAFT',
     `mutasi_desc` TEXT NULL,
     `mutasi_date_exc` DATETIME(3) NULL,
-    `flagging_status` ENUM('DRAFT', 'CANCEL', 'PENDING', 'PROCCESS', 'APPROVED', 'REJECTED', 'PAID_OFF') NOT NULL DEFAULT 'DRAFT',
+    `flagging_status` ENUM('DRAFT', 'BATAL', 'PENDING', 'PROSES', 'DISETUJUI', 'DITOLAK', 'LUNAS') NOT NULL DEFAULT 'DRAFT',
     `flagging_desc` TEXT NULL,
     `flagging_date_exc` DATETIME(3) NULL,
-    `cash_status` ENUM('DRAFT', 'CANCEL', 'PENDING', 'PROCCESS', 'APPROVED', 'REJECTED', 'PAID_OFF') NOT NULL DEFAULT 'DRAFT',
+    `cash_status` ENUM('DRAFT', 'BATAL', 'PENDING', 'PROSES', 'DISETUJUI', 'DITOLAK', 'LUNAS') NOT NULL DEFAULT 'DRAFT',
     `cash_desc` TEXT NULL,
     `document_status` ENUM('UNIT', 'DELIVERY', 'PUSAT', 'MITRA') NOT NULL DEFAULT 'UNIT',
     `document_desc` TEXT NULL,
     `guarantee_status` ENUM('UNIT', 'DELIVERY', 'PUSAT', 'MITRA') NOT NULL DEFAULT 'UNIT',
     `guarantee_desc` TEXT NULL,
+    `ao_fee_status` ENUM('DRAFT', 'BATAL', 'PENDING', 'PROSES', 'DISETUJUI', 'DITOLAK', 'LUNAS') NOT NULL DEFAULT 'DRAFT',
+    `ao_fee_desc` TEXT NULL,
+    `ao_cabang_fee_status` ENUM('DRAFT', 'BATAL', 'PENDING', 'PROSES', 'DISETUJUI', 'DITOLAK', 'LUNAS') NOT NULL DEFAULT 'DRAFT',
+    `ao_cabang_fee_desc` TEXT NULL,
+    `ao_area_fee_status` ENUM('DRAFT', 'BATAL', 'PENDING', 'PROSES', 'DISETUJUI', 'DITOLAK', 'LUNAS') NOT NULL DEFAULT 'DRAFT',
+    `ao_area_fee_desc` TEXT NULL,
     `used_for` VARCHAR(191) NOT NULL,
     `no_contract` VARCHAR(191) NOT NULL,
     `date_contract` DATETIME(3) NULL,
@@ -258,21 +305,78 @@ CREATE TABLE `Dapem` (
     `file_submission` VARCHAR(191) NULL,
     `video_interview` VARCHAR(191) NULL,
     `video_insurance` VARCHAR(191) NULL,
+    `video_contract` VARCHAR(191) NULL,
     `file_contract` VARCHAR(191) NULL,
     `file_takeover` VARCHAR(191) NULL,
     `file_mutasi` VARCHAR(191) NULL,
     `file_flagging` VARCHAR(191) NULL,
+    `file_skep` VARCHAR(191) NULL,
     `status` BOOLEAN NOT NULL DEFAULT true,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `nopen` VARCHAR(191) NOT NULL,
     `produkPembiayaanId` VARCHAR(191) NOT NULL,
     `jenisPembiayaanId` VARCHAR(191) NOT NULL,
-    `createdById` VARCHAR(191) NOT NULL,
-    `aoId` VARCHAR(191) NOT NULL,
+    `aoId` VARCHAR(191) NULL,
+    `aoCabangId` VARCHAR(191) NULL,
+    `aoAreaId` VARCHAR(191) NULL,
     `droppingId` VARCHAR(191) NULL,
     `berkasId` VARCHAR(191) NULL,
     `jaminanId` VARCHAR(191) NULL,
+    `agentFrontingId` VARCHAR(191) NULL,
+    `payOfficeId` VARCHAR(191) NULL,
+    `insuranceId` VARCHAR(191) NULL,
+    `userId` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `AIAnalysis` (
+    `id` VARCHAR(191) NOT NULL,
+    `submission_data` TEXT NOT NULL,
+    `slik_data` TEXT NOT NULL,
+    `verif_summary` TEXT NOT NULL,
+    `slik_summary` TEXT NOT NULL,
+    `interview_summary` TEXT NOT NULL,
+    `insurance_summary` TEXT NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `dapemId` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `PayOffice` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `code` VARCHAR(191) NULL,
+    `description` VARCHAR(191) NULL,
+    `no_contract` VARCHAR(191) NULL,
+    `date_contract` DATETIME(3) NULL,
+    `file` TEXT NULL,
+    `pic` VARCHAR(191) NULL,
+    `status` BOOLEAN NOT NULL DEFAULT true,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Insurance` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `code` VARCHAR(191) NULL,
+    `description` VARCHAR(191) NULL,
+    `no_contract` VARCHAR(191) NULL,
+    `date_contract` DATETIME(3) NULL,
+    `file` TEXT NULL,
+    `pic` VARCHAR(191) NULL,
+    `status` BOOLEAN NOT NULL DEFAULT true,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -327,7 +431,7 @@ CREATE TABLE `Pelunasan` (
     `file_sub` VARCHAR(191) NULL,
     `guarantee_status` ENUM('UNIT', 'DELIVERY', 'PUSAT', 'MITRA') NOT NULL DEFAULT 'MITRA',
     `type` ENUM('MENINGGAL', 'TOPUP', 'LEPAS', 'JATUHTEMPO') NOT NULL,
-    `status_paid` ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `status_paid` ENUM('PENDING', 'DISETUJUI', 'DITOLAK') NOT NULL DEFAULT 'PENDING',
     `process_at` DATETIME(3) NULL,
     `created_at` DATETIME(3) NOT NULL,
     `dapemId` VARCHAR(191) NOT NULL,
@@ -384,8 +488,36 @@ CREATE TABLE `JournalDetail` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `AgentFronting` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `code` VARCHAR(191) NULL,
+    `description` VARCHAR(191) NULL,
+    `file` TEXT NULL,
+    `contract_no` VARCHAR(191) NULL,
+    `contract_date` DATETIME(3) NULL,
+    `pic` VARCHAR(191) NULL,
+    `target` INTEGER NOT NULL DEFAULT 0,
+    `c_fee` DOUBLE NOT NULL DEFAULT 0,
+    `status` BOOLEAN NOT NULL DEFAULT true,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `SumdanAgentFronting` (
+    `id` VARCHAR(191) NOT NULL,
+    `sumdanId` VARCHAR(191) NOT NULL,
+    `agentFrontingId` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
-ALTER TABLE `Cabang` ADD CONSTRAINT `Cabang_areaId_fkey` FOREIGN KEY (`areaId`) REFERENCES `Area`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Cabang` ADD CONSTRAINT `Cabang_areaId_fkey` FOREIGN KEY (`areaId`) REFERENCES `Area`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `User` ADD CONSTRAINT `User_roleId_fkey` FOREIGN KEY (`roleId`) REFERENCES `Role`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -397,7 +529,25 @@ ALTER TABLE `User` ADD CONSTRAINT `User_cabangId_fkey` FOREIGN KEY (`cabangId`) 
 ALTER TABLE `User` ADD CONSTRAINT `User_sumdanId_fkey` FOREIGN KEY (`sumdanId`) REFERENCES `Sumdan`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `User` ADD CONSTRAINT `User_agentFrontingId_fkey` FOREIGN KEY (`agentFrontingId`) REFERENCES `AgentFronting`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `HeadArea` ADD CONSTRAINT `HeadArea_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `HeadArea` ADD CONSTRAINT `HeadArea_areaId_fkey` FOREIGN KEY (`areaId`) REFERENCES `Area`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `HeadCabang` ADD CONSTRAINT `HeadCabang_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `HeadCabang` ADD CONSTRAINT `HeadCabang_cabangId_fkey` FOREIGN KEY (`cabangId`) REFERENCES `Cabang`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `ProdukPembiayaan` ADD CONSTRAINT `ProdukPembiayaan_sumdanId_fkey` FOREIGN KEY (`sumdanId`) REFERENCES `Sumdan`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Debitur` ADD CONSTRAINT `Debitur_payOfficeId_fkey` FOREIGN KEY (`payOfficeId`) REFERENCES `PayOffice`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_nopen_fkey` FOREIGN KEY (`nopen`) REFERENCES `Debitur`(`nopen`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -409,10 +559,13 @@ ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_produkPembiayaanId_fkey` FOREIGN KEY (
 ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_jenisPembiayaanId_fkey` FOREIGN KEY (`jenisPembiayaanId`) REFERENCES `JenisPembiayaan`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_createdById_fkey` FOREIGN KEY (`createdById`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_aoId_fkey` FOREIGN KEY (`aoId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_aoId_fkey` FOREIGN KEY (`aoId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_aoCabangId_fkey` FOREIGN KEY (`aoCabangId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_aoAreaId_fkey` FOREIGN KEY (`aoAreaId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_droppingId_fkey` FOREIGN KEY (`droppingId`) REFERENCES `Dropping`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
@@ -422,6 +575,21 @@ ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_berkasId_fkey` FOREIGN KEY (`berkasId`
 
 -- AddForeignKey
 ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_jaminanId_fkey` FOREIGN KEY (`jaminanId`) REFERENCES `Jaminan`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_agentFrontingId_fkey` FOREIGN KEY (`agentFrontingId`) REFERENCES `AgentFronting`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_payOfficeId_fkey` FOREIGN KEY (`payOfficeId`) REFERENCES `PayOffice`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Dapem` ADD CONSTRAINT `Dapem_insuranceId_fkey` FOREIGN KEY (`insuranceId`) REFERENCES `Insurance`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `AIAnalysis` ADD CONSTRAINT `AIAnalysis_dapemId_fkey` FOREIGN KEY (`dapemId`) REFERENCES `Dapem`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Dropping` ADD CONSTRAINT `Dropping_sumdanId_fkey` FOREIGN KEY (`sumdanId`) REFERENCES `Sumdan`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -449,3 +617,9 @@ ALTER TABLE `JournalDetail` ADD CONSTRAINT `JournalDetail_categoryOfAccountId_fk
 
 -- AddForeignKey
 ALTER TABLE `JournalDetail` ADD CONSTRAINT `JournalDetail_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SumdanAgentFronting` ADD CONSTRAINT `SumdanAgentFronting_sumdanId_fkey` FOREIGN KEY (`sumdanId`) REFERENCES `Sumdan`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `SumdanAgentFronting` ADD CONSTRAINT `SumdanAgentFronting_agentFrontingId_fkey` FOREIGN KEY (`agentFrontingId`) REFERENCES `AgentFronting`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

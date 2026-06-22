@@ -125,7 +125,7 @@ export default function Page() {
       dataIndex: "enduser",
       className: "text-center",
       render(value, record, index) {
-        return <>{record.Dapem.length}</>;
+        return <>{record.Dapems.length}</>;
       },
     },
     {
@@ -133,8 +133,11 @@ export default function Page() {
       key: "plafond",
       dataIndex: "plafond",
       render(value, record, index) {
-        const total = record.Dapem.reduce((acc, curr) => acc + curr.plafond, 0);
-        const angsuran = record.Dapem.reduce(
+        const total = record.Dapems.reduce(
+          (acc, curr) => acc + curr.plafond,
+          0,
+        );
+        const angsuran = record.Dapems.reduce(
           (acc, curr) =>
             acc +
             GetAngsuran(
@@ -220,7 +223,7 @@ export default function Page() {
                     data: [
                       { name: "Berkas TTPJ", url: record.file_sub || "" },
                       { name: "Tanda Terima", url: record.file_proof || "" },
-                      ...record.Dapem.map((d) => ({
+                      ...record.Dapems.map((d) => ({
                         name: "PK " + d.id,
                         url: d.file_contract || "",
                       })),
@@ -350,8 +353,8 @@ export default function Page() {
         }}
         loading={loading}
         expandable={{
-          expandedRowRender: (record) => <TableDapem data={record.Dapem} />,
-          rowExpandable: (record) => record.Dapem.length !== 0,
+          expandedRowRender: (record) => <TableDapem data={record.Dapems} />,
+          rowExpandable: (record) => record.Dapems.length !== 0,
         }}
       />
       <ViewFiles
@@ -450,9 +453,9 @@ const UpsertDropping = ({
         <FormInput
           data={{
             label: "Pemohon",
-            type: data.Dapem.length > 2 ? "textarea" : "text",
+            type: data.Dapems.length > 2 ? "textarea" : "text",
             required: true,
-            value: data.Dapem.flatMap((d) => d.Debitur.fullname).join(" | "),
+            value: data.Dapems.flatMap((d) => d.Debitur.fullname).join(" | "),
             disabled: true,
           }}
         />
@@ -510,7 +513,7 @@ const ProsesDropping = ({
   const handleSubmit = async () => {
     setLoading(true);
     if (record.status !== data.status) {
-      data.Dapem = data.Dapem.map((d) => ({
+      data.Dapems = data.Dapems.map((d) => ({
         ...d,
         guarantee_status: data.status,
       }));
@@ -551,9 +554,9 @@ const ProsesDropping = ({
         <FormInput
           data={{
             label: "Pemohon",
-            type: data.Dapem.length > 2 ? "textarea" : "text",
+            type: data.Dapems.length > 2 ? "textarea" : "text",
             required: true,
-            value: data.Dapem.flatMap((d) => d.Debitur.fullname).join(" | "),
+            value: data.Dapems.flatMap((d) => d.Debitur.fullname).join(" | "),
             disabled: true,
           }}
         />

@@ -1,5 +1,5 @@
 import prisma from "@/libs/Prisma";
-import { ProdukPembiayaan } from "@prisma/client";
+import { Prisma, ProdukPembiayaan } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
@@ -8,36 +8,33 @@ export const GET = async (request: NextRequest) => {
   const search = request.nextUrl.searchParams.get("search") || "";
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const find = await prisma.produkPembiayaan.findMany({
-    where: {
-      ...(search && { name: { contains: search } }),
-      status: true,
-    },
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      id: "desc",
-    },
-    include: { Sumdan: true },
-  });
-
-  const total = await prisma.produkPembiayaan.count({
-    where: {
-      ...(search && { name: { contains: search } }),
-      status: true,
-    },
-  });
+  const where: Prisma.ProdukPembiayaanWhereInput = {
+    ...(search && { name: { contains: search } }),
+    status: true,
+  };
+  const [data, total] = await Promise.all([
+    prisma.produkPembiayaan.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: {
+        id: "desc",
+      },
+      include: { Sumdan: true },
+    }),
+    prisma.produkPembiayaan.count({ where }),
+  ]);
 
   return NextResponse.json({
     status: 200,
-    data: find,
+    data: data,
     total: total,
   });
 };
 
 export const POST = async (request: NextRequest) => {
-  const body: ProdukPembiayaan = await request.json();
-  const { id, ...saved } = body;
+  const body = await request.json();
+  const { id, Dapems, Sumdan, ...saved } = body;
   try {
     const generateId = await generateProdukId(body.sumdanId);
     await prisma.produkPembiayaan.create({
@@ -57,8 +54,8 @@ export const POST = async (request: NextRequest) => {
 };
 
 export const PUT = async (request: NextRequest) => {
-  const body: ProdukPembiayaan = await request.json();
-  const { id, ...updated } = body;
+  const body = await request.json();
+  const { id, Dapems, Sumdan, ...updated } = body;
   try {
     await prisma.produkPembiayaan.update({
       where: { id: id },
@@ -97,8 +94,8 @@ export const DELETE = async (request: NextRequest) => {
 
 export async function generateProdukId(sumdanId: string) {
   const find = await prisma.sumdan.findFirst({ where: { id: sumdanId } });
-  const prefix = `${find ? find.code : "BPR"}`;
-  const padLength = 2;
+  const prefix = `${find ? find.code.replace("BPR", "").replace("BANK", "") : "BPR"}`;
+  const padLength = 3;
   const lastRecord = await prisma.produkPembiayaan.count({
     where: { sumdanId: sumdanId },
   });

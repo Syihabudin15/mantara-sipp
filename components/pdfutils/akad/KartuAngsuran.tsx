@@ -11,6 +11,7 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
     record.margin_type,
     record.rounded,
   ).angsuran;
+  const ao = record.AO || record.AOCabang || record.AOArea;
 
   return `
   ${Header("JADWAL ANGSURAN", record.no_contract, sub, process.env.NEXT_PUBLIC_APP_LOGO, record.ProdukPembiayaan.Sumdan.logo)}
@@ -55,14 +56,14 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
         <div>Rp. ${IDRFormat(angsuran)}</div>
       </div>
       <div class="flex gap-2">
-        <div class="w-32">Petugas</div>
+        <div class="w-32">Account Officer</div>
         <div class="w-4">:</div>
-        <div>${record.AO.fullname} (${record.AO.nip})</div>
+        <div>${ao?.fullname} (${ao?.nip})</div>
       </div>
       <div class="flex gap-2">
         <div class="w-32">Unit Pelayanan</div>
         <div class="w-4">:</div>
-        <div>${record.AO.Cabang.name} - ${record.AO.Cabang.Area.name}</div>
+        <div>${ao?.Cabang.name} - ${ao?.Cabang.Area.name}</div>
       </div>
       <div class="flex gap-2">
         <div class="w-32">Est Tanggal Lunas</div>
@@ -85,7 +86,7 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
           </tr>
         </thead>
         <tbody>
-          ${record.Angsuran.map(
+          ${record.Angsurans.map(
             (r, i) => `
             <tr>
               <td class="border border-gray-400 border-dashed p-1 text-center">${r.counter}</td>

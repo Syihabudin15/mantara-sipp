@@ -212,7 +212,7 @@ export default function Page() {
                 <p className="w-4">:</p>
                 <p className="flex-1 text-right">
                   {IDRFormat(
-                    b.JournalDetail.reduce(
+                    b.JournalDetails.reduce(
                       (acc, curr) => acc + (curr.debit - curr.credit),
                       0,
                     ),
@@ -259,7 +259,7 @@ export default function Page() {
               <p className="flex-1 text-right">
                 {IDRFormat(
                   bebans
-                    .flatMap((d) => d.JournalDetail)
+                    .flatMap((d) => d.JournalDetails)
                     .reduce(
                       (acc, curr) => acc + (curr.debit - curr.credit),
                       0,
@@ -315,7 +315,7 @@ export default function Page() {
               }, 0);
               const beb =
                 bebans
-                  .flatMap((b) => b.JournalDetail)
+                  .flatMap((b) => b.JournalDetails)
                   .reduce((acc, curr) => acc + (curr.debit - curr.credit), 0) +
                 pageProps.data.reduce((acc, curr) => acc + curr.c_takeover, 0) +
                 pageProps.data.reduce(

@@ -108,7 +108,7 @@ const generate = (record: INeraca, periode?: string) => {
                   <div class="border border-gray-300 border-dashed my-1 p-2">
                     <p class="font-bold">${d.name}</p>
                     <div class="ml-4">
-                      ${d.Children.map(
+                      ${d.Childrens.map(
                         (dc) =>
                           `
                           <div key={dc.id}>
@@ -116,7 +116,7 @@ const generate = (record: INeraca, periode?: string) => {
                               <p>${dc.name}</p>
                               <p class="text-right">
                                 ${IDRFormat(
-                                  dc.JournalDetail.reduce(
+                                  dc.JournalDetails.reduce(
                                     (acc, curr) =>
                                       acc + (curr.debit - curr.credit),
                                     0,
@@ -131,7 +131,7 @@ const generate = (record: INeraca, periode?: string) => {
                       <span>Total ${d.name}</span>
                       <span class="text-right">
                         ${IDRFormat(
-                          d.Children.flatMap((dc) => dc.JournalDetail).reduce(
+                          d.Childrens.flatMap((dc) => dc.JournalDetails).reduce(
                             (acc, curr) => acc + curr.debit - curr.credit,
                             0,
                           ),
@@ -147,7 +147,7 @@ const generate = (record: INeraca, periode?: string) => {
                   ${IDRFormat(
                     record.asset
                       .flatMap((d) =>
-                        d.Children.flatMap((dc) => dc.JournalDetail),
+                        d.Childrens.flatMap((dc) => dc.JournalDetails),
                       )
                       .reduce(
                         (acc, curr) => acc + (curr.debit - curr.credit),
@@ -165,14 +165,14 @@ const generate = (record: INeraca, periode?: string) => {
                   `<div class="border border-gray-300 border-dashed my-1 p-2">
                   <p class="font-bold">${d.name}</p>
                   <div class="ml-4">
-                    ${d.Children.map(
+                    ${d.Childrens.map(
                       (dc) =>
                         `<div key={dc.id}>
                         <div class="flex justify-between">
                           <p>${dc.name}</p>
                           <p class="text-right">
                             ${IDRFormat(
-                              dc.JournalDetail.reduce(
+                              dc.JournalDetails.reduce(
                                 (acc, curr) => acc + (curr.credit - curr.debit),
                                 0,
                               ),
@@ -186,7 +186,7 @@ const generate = (record: INeraca, periode?: string) => {
                     <span>Total ${d.name}</span>
                     <span class="text-right">
                       ${IDRFormat(
-                        d.Children.flatMap((dc) => dc.JournalDetail).reduce(
+                        d.Childrens.flatMap((dc) => dc.JournalDetails).reduce(
                           (acc, curr) => acc + curr.credit - curr.debit,
                           0,
                         ),
@@ -202,14 +202,14 @@ const generate = (record: INeraca, periode?: string) => {
                 >
                   <p class="font-bold">${d.name}</p>
                   <div class="ml-4">
-                    ${d.Children.map(
+                    ${d.Childrens.map(
                       (dc) =>
                         `<div key={dc.id}>
                         <div class="flex justify-between">
                           <p>${dc.name}</p>
                           <p class="text-right">
                             ${IDRFormat(
-                              dc.JournalDetail.reduce(
+                              dc.JournalDetails.reduce(
                                 (acc, curr) => acc + (curr.credit - curr.debit),
                                 0,
                               ),
@@ -227,7 +227,7 @@ const generate = (record: INeraca, periode?: string) => {
                     <span>Total ${d.name}</span>
                     <span class="text-right">
                       ${IDRFormat(
-                        d.Children.flatMap((dc) => dc.JournalDetail).reduce(
+                        d.Childrens.flatMap((dc) => dc.JournalDetails).reduce(
                           (acc, curr) => acc + curr.credit - curr.debit,
                           0,
                         ) + record.shu,
@@ -242,7 +242,7 @@ const generate = (record: INeraca, periode?: string) => {
                   ${IDRFormat(
                     [...record.kewajiban, ...record.modal]
                       .flatMap((d) =>
-                        d.Children.flatMap((dc) => dc.JournalDetail),
+                        d.Childrens.flatMap((dc) => dc.JournalDetails),
                       )
                       .reduce(
                         (acc, curr) => acc + (curr.credit - curr.debit),

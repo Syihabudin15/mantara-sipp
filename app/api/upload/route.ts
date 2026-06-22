@@ -2,6 +2,7 @@ import { getContainerClient } from "@/libs/Azure";
 import { NextRequest, NextResponse } from "next/server";
 
 const folderName = process.env.NEXT_PUBLIC_APP_FOLDER!;
+const nestedFolderName = process.env.NEXT_PUBLIC_APP_NESTED_FOLDER!;
 const containerClient = getContainerClient();
 
 export const POST = async (req: NextRequest) => {
@@ -15,7 +16,7 @@ export const POST = async (req: NextRequest) => {
         { status: 400 },
       );
     const blockBlobClient = containerClient.getBlockBlobClient(
-      `${folderName}/${file.name}`,
+      `${folderName}/${nestedFolderName}/${file.name}`,
     );
 
     const arrayBuffer = await file.arrayBuffer();
@@ -50,7 +51,7 @@ export const DELETE = async (req: NextRequest) => {
       {
         data: null,
         status: 400,
-        msg: "Url / Resource Type tidak terdeteksi",
+        msg: "Dokumen tidak ditemukan",
       },
       { status: 400 },
     );
@@ -76,16 +77,13 @@ export const DELETE = async (req: NextRequest) => {
 export const GET = async (req: NextRequest) => {
   const url = req.nextUrl.searchParams.get("url");
   if (!url)
-    return NextResponse.json({ message: "Belum di upload" }, { status: 400 });
+    return NextResponse.json({ msg: "Data tidak ditemukan" }, { status: 400 });
 
   // Fetch file dari Azure
   const response = await fetch(url);
 
   if (!response.ok) {
-    return NextResponse.json(
-      { message: "Failed to fetch file" },
-      { status: 500 },
-    );
+    return NextResponse.json({ msg: "Data tidak ditemukan" }, { status: 500 });
   }
 
   const blob = await response.arrayBuffer();

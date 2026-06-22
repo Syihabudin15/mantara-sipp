@@ -12,27 +12,30 @@ import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
-  const page = request.nextUrl.searchParams.get("page") || "1";
-  const limit = request.nextUrl.searchParams.get("limit") || "50";
-  const search = request.nextUrl.searchParams.get("search");
-  const dropping_status = request.nextUrl.searchParams.get("dropping_status");
-  const nominatif = request.nextUrl.searchParams.get("nominatif");
-  const slik_status = request.nextUrl.searchParams.get("slik_status");
-  const verif_status = request.nextUrl.searchParams.get("verif_status");
-  const approv_status = request.nextUrl.searchParams.get("approv_status");
-  const jenisPembiayaanId =
-    request.nextUrl.searchParams.get("jenisPembiayaanId");
-  const sumdanId = request.nextUrl.searchParams.get("sumdanId");
-  const document_status = request.nextUrl.searchParams.get("document_status");
-  const guarantee_status = request.nextUrl.searchParams.get("guarantee_status");
-  const takeover_status = request.nextUrl.searchParams.get("takeover_status");
-  const mutasi_status = request.nextUrl.searchParams.get("mutasi_status");
-  const cash_status = request.nextUrl.searchParams.get("cash_status");
-  const flagging_status = request.nextUrl.searchParams.get("flagging_status");
-  const paid_status = request.nextUrl.searchParams.get("paid_status");
-  const backdate = request.nextUrl.searchParams.get("backdate");
-  const currmont = request.nextUrl.searchParams.get("currmont");
-  const agentFrontingId = request.nextUrl.searchParams.get("agentFrontingId");
+  const params = Object.fromEntries(request.nextUrl.searchParams);
+  const {
+    page = "1",
+    limit = "50",
+    search,
+    dropping_status,
+    nominatif,
+    slik_status,
+    verif_status,
+    approv_status,
+    jenisPembiayaanId,
+    produkPembiayaanId,
+    sumdanId,
+    document_status,
+    guarantee_status,
+    takeover_status,
+    mutasi_status,
+    cash_status,
+    flagging_status,
+    // paid_status,
+    currmonth,
+    backdate,
+    agentFrontingId,
+  } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const session = await getSession();
@@ -89,6 +92,9 @@ export const GET = async (request: NextRequest) => {
       : {}),
     ...(jenisPembiayaanId && { jenisPembiayaanId: jenisPembiayaanId }),
     ...(sumdanId && { ProdukPembiayaan: { sumdanId: sumdanId } }),
+    ...(produkPembiayaanId && {
+      ProdukPembiayaan: { name: produkPembiayaanId },
+    }),
     ...(document_status && {
       document_status: document_status as EDocStatus,
     }),
@@ -105,9 +111,9 @@ export const GET = async (request: NextRequest) => {
     ...(agentFrontingId && {
       agentFrontingId: agentFrontingId,
     }),
-    ...(paid_status && {
-      Pelunasan: { status_paid: paid_status as ESubmissionStatus },
-    }),
+    // ...(paid_status && {
+    //   Pelunasan: { status_paid: paid_status as ESubmissionStatus },
+    // }),
     ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
     ...(backdate
       ? {
@@ -116,7 +122,7 @@ export const GET = async (request: NextRequest) => {
             lte: moment(backdate.split(",")[1]).toDate(),
           },
         }
-      : currmont
+      : currmonth
         ? {
             created_at: {
               gte: moment().startOf("month").toDate(),
@@ -127,50 +133,69 @@ export const GET = async (request: NextRequest) => {
     status: true,
   };
 
-  const find = await prisma.dapem.findMany({
-    where,
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      created_at: "desc",
-    },
-    include: {
-      Debitur: true,
-      ProdukPembiayaan: { include: { Sumdan: true } },
-      JenisPembiayaan: true,
-      CreatedBy: {
-        include: {
-          Cabang: {
-            include: {
-              Area: true,
+  const [data, total] = await Promise.all([
+    prisma.dapem.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: {
+        created_at: "desc",
+      },
+      include: {
+        Debitur: true,
+        ProdukPembiayaan: { include: { Sumdan: true } },
+        JenisPembiayaan: true,
+        User: {
+          include: {
+            Cabang: {
+              include: {
+                Area: true,
+              },
             },
           },
         },
-      },
-      AO: {
-        include: {
-          Cabang: {
-            include: {
-              Area: true,
+        AO: {
+          include: {
+            Cabang: {
+              include: {
+                Area: true,
+              },
             },
           },
         },
+        AOCabang: {
+          include: {
+            Cabang: {
+              include: {
+                Area: true,
+              },
+            },
+          },
+        },
+        AOArea: {
+          include: {
+            Cabang: {
+              include: {
+                Area: true,
+              },
+            },
+          },
+        },
+        Berkas: true,
+        Jaminan: true,
+        Angsurans: true,
+        Dropping: true,
+        Pelunasan: true,
+        AgentFronting: true,
+        PayOffice: true,
+        Insurance: true,
       },
-      Berkas: true,
-      Jaminan: true,
-      Angsuran: true,
-      Dropping: true,
-      Pelunasan: true,
-      AgentFronting: true,
-    },
-  });
-
-  const total = await prisma.dapem.count({
-    where,
-  });
+    }),
+    prisma.dapem.count({ where }),
+  ]);
 
   return NextResponse.json(
-    { data: serializeForApi(find), total, status: 200 },
+    { data: serializeForApi(data), total, status: 200 },
     { status: 200 },
   );
 };
@@ -180,17 +205,20 @@ export const POST = async (req: NextRequest) => {
   const {
     id,
     Debitur,
-    CreatedBy,
+    User,
     AO,
+    AOCabang,
+    AOArea,
     ProdukPembiayaan,
     JenisPembiayaan,
     Berkas,
     Jaminan,
-    Angsuran,
+    Angsurans,
     Dropping,
     Pelunasan,
     AgentFronting,
-    AORelate,
+    PayOffice,
+    Insurance,
     ...saved
   } = data;
   try {
@@ -221,17 +249,20 @@ export const PUT = async (req: NextRequest) => {
   const {
     id,
     Debitur,
-    CreatedBy,
+    User,
     AO,
+    AOCabang,
+    AOArea,
     ProdukPembiayaan,
     JenisPembiayaan,
     Berkas,
     Jaminan,
-    Angsuran,
+    Angsurans,
     Dropping,
     Pelunasan,
     AgentFronting,
-    AORelate,
+    PayOffice,
+    Insurance,
     ...saved
   } = data;
   try {
@@ -294,7 +325,7 @@ export const PATCH = async (req: NextRequest) => {
       Debitur: true,
       ProdukPembiayaan: { include: { Sumdan: true } },
       JenisPembiayaan: true,
-      CreatedBy: {
+      User: {
         include: {
           Cabang: {
             include: {
@@ -312,15 +343,35 @@ export const PATCH = async (req: NextRequest) => {
           },
         },
       },
+      AOCabang: {
+        include: {
+          Cabang: {
+            include: {
+              Area: true,
+            },
+          },
+        },
+      },
+      AOArea: {
+        include: {
+          Cabang: {
+            include: {
+              Area: true,
+            },
+          },
+        },
+      },
       Berkas: true,
       Jaminan: true,
-      Angsuran: true,
+      Angsurans: true,
       Dropping: true,
       Pelunasan: true,
       AgentFronting: true,
+      PayOffice: true,
+      Insurance: true,
     },
   });
-  if (!id)
+  if (!find)
     return NextResponse.json(
       { msg: "Not Found", status: 404 },
       { status: 404 },
@@ -352,8 +403,8 @@ export const DELETE = async (req: NextRequest) => {
 };
 
 export async function generateDapemId() {
-  const prefix = `PP`;
-  const padLength = 4;
+  const prefix = `P`;
+  const padLength = 6;
   const lastRecord = await prisma.dapem.count({});
   return `${prefix}${String(lastRecord + 1).padStart(padLength, "0")}`;
 }

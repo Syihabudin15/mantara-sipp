@@ -13,11 +13,7 @@ import {
   MappingToExcelDapem,
 } from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
-import {
-  GetAngsuran,
-  GetRoman,
-  IDRFormat,
-} from "@/components/utils/PembiayaanUtil";
+import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
   IActionTable,
   IAgentFronting,
@@ -30,6 +26,7 @@ import { useAccess } from "@/libs/Permission";
 
 import {
   ArrowRightOutlined,
+  BankOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -49,6 +46,7 @@ import {
   Card,
   DatePicker,
   Input,
+  message,
   Modal,
   Select,
   Table,
@@ -102,20 +100,23 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    params.append("currmont", "ya");
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.jenisPembiayaanId)
-      params.append("jenisPembiayaanId", pageProps.jenisPembiayaanId);
-    if (pageProps.dropping_status)
-      params.append("dropping_status", pageProps.dropping_status);
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
-    if (pageProps.agentFrontingId)
-      params.append("agentFrontingId", pageProps.agentFrontingId);
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      currmonth: "ya",
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.jenisPembiayaanId && {
+        jenisPembiayaanId: pageProps.jenisPembiayaanId,
+      }),
+      ...(pageProps.dropping_status && {
+        dropping_status: pageProps.dropping_status,
+      }),
+      ...(pageProps.agentFrontingId && {
+        agentFrontingId: pageProps.agentFrontingId,
+      }),
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+    });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
     const json = await res.json();
@@ -145,15 +146,17 @@ export default function Page() {
 
   useEffect(() => {
     (async () => {
-      await fetch("/api/sumdan")
-        .then((res) => res.json())
-        .then((res) => setSumdans(res.data));
-      await fetch("/api/jenis")
-        .then((res) => res.json())
-        .then((res) => setJeniss(res.data));
-      await fetch("/api/agent")
-        .then((res) => res.json())
-        .then((res) => setAgents(res.data));
+      await Promise.all([
+        fetch("/api/sumdan?limit=500")
+          .then((res) => res.json())
+          .then((res) => setSumdans(res.data)),
+        fetch("/api/jenis?limit=100")
+          .then((res) => res.json())
+          .then((res) => setJeniss(res.data)),
+        fetch("/api/agent?limit=500")
+          .then((res) => res.json())
+          .then((res) => setAgents(res.data)),
+      ]);
     })();
   }, []);
 
@@ -224,11 +227,14 @@ export default function Page() {
         ).angsuran;
         return (
           <div className="text-xs">
-            <div>
-              Total : <Tag color={"blue"}>{IDRFormat(total)}</Tag>
+            <div className="flex gap-2 items-center">
+              <Tag color={"blue"}>
+                <BankOutlined /> {IDRFormat(mitra)}
+              </Tag>
+              <Tag color={"blue"}>{IDRFormat(total - mitra)}</Tag>
             </div>
-            <div>
-              Mitra : <Tag color={"blue"}> {IDRFormat(mitra)}</Tag>
+            <div className="flex justify-center">
+              <Tag color={"blue"}> {IDRFormat(total)}</Tag>
             </div>
           </div>
         );
@@ -255,11 +261,14 @@ export default function Page() {
       dataIndex: "aoup",
       key: "aoup",
       render(value, record, index) {
+        const ao = record.AO || record.AOCabang || record.AOArea;
         return (
           <div>
-            <div>{record.AO.fullname}</div>
+            <div>
+              {ao?.fullname} ({ao?.position})
+            </div>
             <div className="text-xs opacity-80">
-              {record.AO.Cabang.name} | {record.AO.Cabang.Area.name}
+              {ao?.Cabang.name} | {ao?.Cabang.Area.name}
             </div>
           </div>
         );
@@ -281,17 +290,17 @@ export default function Page() {
       },
     },
     {
-      title: "Status VERIFIKASI",
-      dataIndex: "verif_status",
-      key: "verif_status",
+      title: "Status SLIK",
+      dataIndex: "slik_status",
+      key: "slik_status",
       width: 250,
       render: (_, record, i) => {
-        const temp = record.verif_desc
-          ? (JSON.parse(record.verif_desc) as IDesc)
+        const temp = record.slik_desc
+          ? (JSON.parse(record.slik_desc) as IDesc)
           : null;
         return (
           <div className="flex gap-1">
-            {GetStatusTag(record.verif_status)}
+            {GetStatusTag(record.slik_status)}
             {temp && (
               <Paragraph
                 ellipsis={{
@@ -311,17 +320,17 @@ export default function Page() {
       },
     },
     {
-      title: "Status SLIK",
-      dataIndex: "slik_status",
-      key: "slik_status",
+      title: "Status VERIFIKASI",
+      dataIndex: "verif_status",
+      key: "verif_status",
       width: 250,
       render: (_, record, i) => {
-        const temp = record.slik_desc
-          ? (JSON.parse(record.slik_desc) as IDesc)
+        const temp = record.verif_desc
+          ? (JSON.parse(record.verif_desc) as IDesc)
           : null;
         return (
           <div className="flex gap-1">
-            {GetStatusTag(record.slik_status)}
+            {GetStatusTag(record.verif_status)}
             {temp && (
               <Paragraph
                 ellipsis={{
@@ -445,39 +454,38 @@ export default function Page() {
         );
       },
     },
-    // {
-    //   title: "Mutasi & Takeover",
-    //   dataIndex: "produk",
-    //   key: "produk",
-    //   width: 350,
-    //   render(value, record, index) {
-    //     return (
-    //       <div>
-    //         {record.JenisPembiayaan.status_mutasi && (
-    //           <div style={{ fontSize: 9 }}>
-    //             <SwapOutlined />{" "}
-    //             <Tag style={{ fontSize: 9 }} color={"red"}>
-    //               {record.mutasi_from}
-    //             </Tag>{" "}
-    //             <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
-    //             <Tag style={{ fontSize: 9 }} color={"blue"}>
-    //               {record.mutasi_to}
-    //             </Tag>
-    //           </div>
-    //         )}
-    //         {record.JenisPembiayaan.status_takeover && (
-    //           <div style={{ fontSize: 9 }}>
-    //             <PayCircleOutlined />{" "}
-    //             <Tag color={"blue"} style={{ fontSize: 9 }}>
-    //               {record.takeover_from} (
-    //               {moment(record.takeover_date).format("DD/MM/YYYY")})
-    //             </Tag>
-    //           </div>
-    //         )}
-    //       </div>
-    //     );
-    //   },
-    // },
+    {
+      title: "Mutasi & Takeover",
+      dataIndex: "produk",
+      key: "produk",
+      render(value, record, index) {
+        return (
+          <div>
+            {record.JenisPembiayaan.status_mutasi && (
+              <div style={{ fontSize: 9 }}>
+                <SwapOutlined />{" "}
+                <Tag style={{ fontSize: 9 }} color={"red"}>
+                  {record.prev_payoffice}
+                </Tag>{" "}
+                <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
+                <Tag style={{ fontSize: 9 }} color={"blue"}>
+                  {record.PayOffice.code || record.PayOffice.name}
+                </Tag>
+              </div>
+            )}
+            {record.JenisPembiayaan.status_takeover && (
+              <div style={{ fontSize: 9 }}>
+                <PayCircleOutlined />{" "}
+                <Tag color={"blue"} style={{ fontSize: 9 }}>
+                  {record.takeover_from} (
+                  {moment(record.takeover_date).format("DD/MM/YYYY")})
+                </Tag>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
     {
       title: "Created",
       dataIndex: "created_at",
@@ -485,7 +493,7 @@ export default function Page() {
       render(value, record, index) {
         return (
           <div>
-            <div>{record.CreatedBy.fullname}</div>
+            <div>{record.User.fullname}</div>
             <div className="opacity-80 text-xs">
               {moment(record.created_at).format("DD/MM/YYYY")}
             </div>
@@ -801,10 +809,10 @@ export default function Page() {
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} className="text-center font-bold">
                 <div>
-                  {IDRFormat(angsuran)} - {IDRFormat(angssudan)}
+                  {IDRFormat(angsuran)} + {IDRFormat(angsuran - angssudan)}
                 </div>
                 <div className="border-t border-gray-500">
-                  {IDRFormat(angsuran - angssudan)}
+                  {IDRFormat(angsuran)}
                 </div>
               </Table.Summary.Cell>
             </Table.Summary.Row>
@@ -888,7 +896,7 @@ const SendSubmission = ({
       method: "PUT",
       body: JSON.stringify({
         ...data,
-        verif_status: "PENDING",
+        slik_status: "PENDING",
         dropping_status: "PENDING",
       }),
     })
@@ -896,7 +904,8 @@ const SendSubmission = ({
       .then(async (res) => {
         if (res.status === 200) {
           setOpen(false);
-          await getData();
+          getData();
+          message.success("Data pembiayaan berhasil diajukan");
         } else {
           hook.error({ title: "ERROR!!", content: res.msg });
         }
@@ -911,6 +920,7 @@ const SendSubmission = ({
       title="Konfirmasi Permohonan"
       loading={loading}
       onOk={handleSubmit}
+      destroyOnHidden
     >
       <div className="my-4">
         <p>
@@ -987,6 +997,7 @@ const DeleteSubmission = ({
       title="Konfirmasi Hapus Permohonan"
       loading={loading}
       footer={[]}
+      destroyOnHidden
     >
       <div className="my-4">
         <p>
@@ -1042,7 +1053,7 @@ const PrintContractSubmission = ({
         const { msg, status, data } = res;
         if (status === 200) {
           await getData();
-          printContract({ ...temp, Angsuran: data } as IDapem);
+          printContract({ ...temp, Angsurans: data } as IDapem);
         } else {
           hook.error({ content: msg });
         }

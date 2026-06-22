@@ -3,8 +3,9 @@ import { FormList } from "../../utils";
 import moment from "moment";
 import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
 
-export const FormPermohonan = (record?: IDapem) =>
-  `<div class="flex justify-between gap-4 items-center p-1" style="background:blue;">
+export const FormPermohonan = (record?: IDapem) => {
+  const ao = record?.AO || record?.AOCabang || record?.AOArea;
+  return `<div class="flex justify-between gap-4 items-center p-1" style="background:blue;">
       <div class="bg-white p-1 h-16 w-20">
         <img src="${process.env.NEXT_PUBLIC_APP_LOGO || ""}" alt="Logo" class="w-full h-full" />
       </div>
@@ -26,9 +27,7 @@ export const FormPermohonan = (record?: IDapem) =>
           },
           {
             key: "Unit Pelayanan",
-            value: record
-              ? `${record.AO.Cabang.name} - ${record.AO.Cabang.Area.name}`
-              : "",
+            value: record ? `${ao?.Cabang.name} - ${ao?.Cabang.Area.name}` : "",
           },
         ])}
       </div>
@@ -36,13 +35,11 @@ export const FormPermohonan = (record?: IDapem) =>
         ${FormList([
           {
             key: "MOC/SPV/KORWIL",
-            value: record ? `${record.AO.fullname} (${record.AO.nip})` : "",
+            value: record ? `${ao?.fullname} (${ao?.nip})` : "",
           },
           {
             key: "ADMIN",
-            value: record
-              ? `${record.CreatedBy.fullname} (${record.CreatedBy.nip})`
-              : "",
+            value: record ? `${record.User.fullname} (${record.User.nip})` : "",
           },
         ])}
       </div>
@@ -214,7 +211,7 @@ export const FormPermohonan = (record?: IDapem) =>
           },
           {
             key: "Kantor Bayar",
-            value: record?.Debitur.pay_office || "",
+            value: record?.prev_payoffice || "",
           },
         ])}
       </div>
@@ -324,3 +321,4 @@ export const FormPermohonan = (record?: IDapem) =>
       <p>NOTE :</p>
       <p>DIISI DENGAN HURUF CETAK DAN DIBERI TANDA [X] PADA KOTAK PILIHAN YANG SESUAI!</p>
     </div>`;
+};

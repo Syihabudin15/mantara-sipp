@@ -1,24 +1,44 @@
+import { getSession } from "@/libs/Auth";
 import prisma from "@/libs/Prisma";
-import { Cabang } from "@prisma/client";
+import { Cabang, Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
-  const page = request.nextUrl.searchParams.get("page") || "1";
-  const limit = request.nextUrl.searchParams.get("limit") || "50";
-  const search = request.nextUrl.searchParams.get("search") || "";
+  const params = Object.fromEntries(request.nextUrl.searchParams);
+  const { page = "1", limit = "50", search, areaId } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const find = await prisma.cabang.findMany({
-    where: { ...(search && { name: { contains: search } }), status: true },
-    take: parseInt(limit),
-    skip: skip,
+  const session = await getSession();
+  if (!session)
+    return NextResponse.json({ data: [], status: 200 }, { status: 200 });
+  const user = await prisma.user.findFirst({
+    where: { id: session.user.id },
+    include: { Role: true, Cabang: true },
   });
+  if (!user)
+    return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
-  const total = await prisma.cabang.count({
-    where: { ...(search && { name: { contains: search } }), status: true },
-  });
+  const where: Prisma.CabangWhereInput = {
+    ...(search && { name: { contains: search } }),
+    ...(areaId && { areaId: areaId }),
+    ...(user.Role.data_status === "AREA" && { areaId: user.Cabang.areaId }),
+    ...(user.Role.data_status === "CABANG" && { id: user.cabangId }),
+    ...(user.Role.data_status === "USER" && {
+      Users: { some: { id: user.id } },
+    }),
+    status: true,
+  };
 
-  return NextResponse.json({ data: find, total, status: 200 }, { status: 200 });
+  const [data, total] = await Promise.all([
+    prisma.cabang.findMany({
+      where,
+      take: parseInt(limit),
+      skip: skip,
+    }),
+    prisma.cabang.count({ where }),
+  ]);
+
+  return NextResponse.json({ data: data, total, status: 200 }, { status: 200 });
 };
 
 export const POST = async (request: NextRequest) => {
@@ -82,7 +102,7 @@ export const DELETE = async (request: NextRequest) => {
 
 export async function generateCabangId() {
   const prefix = "UP";
-  const padLength = 3;
+  const padLength = 4;
   const lastRecord = await prisma.cabang.count({});
   return `${prefix}${String(lastRecord + 1).padStart(padLength, "0")}`;
 }

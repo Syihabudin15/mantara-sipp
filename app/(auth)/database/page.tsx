@@ -228,11 +228,11 @@ export default function Page() {
                 pagination={false}
                 rowKey={"id"}
                 columns={columnDapem}
-                dataSource={record.Dapem}
+                dataSource={record.Dapems}
               />
             </div>
           ),
-          rowExpandable: (record) => record.Dapem.length !== 0,
+          rowExpandable: (record) => record.Dapems.length !== 0,
         }}
       />
     </Card>
@@ -308,12 +308,12 @@ const columnDapem: TableProps<IDapem>["columns"] = [
     dataIndex: "aoup",
     key: "aoup",
     render(value, record, index) {
+      const ao = record.AO || record.AOCabang || record.AOArea;
       return (
         <div>
-          <div>{record.AO.fullname}</div>
+          <div>{ao?.fullname}</div>
           <div className="text-xs opacity-80">
-            <span>{record.AO.Cabang.name}</span> |{" "}
-            <span>{record.AO.Cabang.Area.name}</span>
+            <span>{ao?.Cabang.name}</span> | <span>{ao?.Cabang.Area.name}</span>
           </div>
         </div>
       );
@@ -335,7 +335,7 @@ const columnDapem: TableProps<IDapem>["columns"] = [
     key: "progres",
     width: 150,
     render(value, record, index) {
-      const filter = record.Angsuran.filter((f) => f.date_paid !== null);
+      const filter = record.Angsurans.filter((f) => f.date_paid !== null);
       return (
         <Tooltip title={`${filter.length} / ${record.tenor}`}>
           <Progress

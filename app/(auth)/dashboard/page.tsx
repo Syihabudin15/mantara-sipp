@@ -12,7 +12,12 @@ import {
   GetSisaPokokMargin,
   IDRFormat,
 } from "@/components/utils/PembiayaanUtil";
-import { ICashDesc, IDapem } from "@/libs/IInterfaces";
+import {
+  ICashDesc,
+  IDapem,
+  IJenisPembiayaan,
+  ISumdan,
+} from "@/libs/IInterfaces";
 import {
   DollarOutlined,
   FolderOpenOutlined,
@@ -23,41 +28,21 @@ import {
   TeamOutlined,
   BankOutlined,
 } from "@ant-design/icons";
-import {
-  Angsuran,
-  Dapem,
-  Debitur,
-  Dropping,
-  JenisPembiayaan,
-  Sumdan,
-} from "@prisma/client";
 import { Col, Row, Spin } from "antd";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 
-interface IDapemDashboard extends Dapem {
-  Dropping: Dropping;
-  Debitur: Debitur;
-  Angsuran: Angsuran[];
-}
-interface IJenisDapem extends JenisPembiayaan {
-  Dapem: Dapem[];
-}
-interface iSumdanDapem extends Sumdan {
-  Dapem: Dapem[];
-}
-
 interface IDashboard {
-  alldata: Dapem[];
-  droppingall: IDapemDashboard[];
-  droppingmonthly: IDapemDashboard[];
-  prevmonth: { month: string; data: IDapemDashboard[] }[];
-  byjepem: IJenisDapem[];
-  bysumdan: iSumdanDapem[];
+  alldata: IDapem[];
+  droppingall: IDapem[];
+  droppingmonthly: IDapem[];
+  prevmonth: { month: string; data: IDapem[] }[];
+  byjepem: IJenisPembiayaan[];
+  bysumdan: ISumdan[];
 }
 
 // Fungsi pembantu untuk menghitung Pending Terima Bersih agar kode JSX tetap bersih
-const hitungPendingTerimaBersih = (droppingall: IDapemDashboard[]) => {
+const hitungPendingTerimaBersih = (droppingall: IDapem[]) => {
   const dataTb = droppingall.filter(
     (d) => d.cash_status !== "DISETUJUI" && d.dropping_status === "DISETUJUI",
   );
@@ -74,7 +59,7 @@ const hitungPendingTerimaBersih = (droppingall: IDapemDashboard[]) => {
     const biaya =
       GetDapem(curr as IDapem).biaya +
       curr.c_takeover +
-      curr.c_bpp +
+      curr.c_bop +
       curr.c_blokir * angs;
 
     const tbDiberikan = curr.cash_desc
@@ -251,7 +236,7 @@ export default function Page() {
             subValue={`${
               data.droppingall
                 .filter((d) => d.dropping_status === "DISETUJUI")
-                .flatMap((d) => d.Angsuran)
+                .flatMap((d) => d.Angsurans)
                 .filter((d) => moment(d.date_pay).isSame(moment(), "month"))
                 .length
             } NOA Menagih`}
@@ -380,10 +365,9 @@ export default function Page() {
                   <BarChart
                     data={data.bysumdan.map((j) => ({
                       name: j.code,
-                      value: j.Dapem.reduce(
-                        (acc, curr) => acc + curr.plafond,
-                        0,
-                      ),
+                      value: j.ProdukPembiayaans.flatMap(
+                        (p) => p.Dapems,
+                      ).reduce((acc, curr) => acc + curr.plafond, 0),
                     }))}
                   />
                 </div>
@@ -403,7 +387,10 @@ export default function Page() {
                 <StatusDapemChart
                   data={data.byjepem.map((j) => ({
                     name: j.name,
-                    value: j.Dapem.reduce((acc, curr) => acc + curr.plafond, 0),
+                    value: j.Dapems.reduce(
+                      (acc, curr) => acc + curr.plafond,
+                      0,
+                    ),
                   }))}
                 />
               </div>

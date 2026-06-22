@@ -222,7 +222,7 @@ export default function Page() {
           record.margin_type,
           record.rounded_sumdan,
         ).angsuran;
-        const find = record.Angsuran.find((f) =>
+        const find = record.Angsurans.find((f) =>
           moment(f.date_pay).isSame(pageProps.backdate || new Date(), "month"),
         );
         return (
@@ -244,7 +244,7 @@ export default function Page() {
       dataIndex: "pm",
       key: "pm",
       render(value, record, index) {
-        const find = record.Angsuran.find((f) =>
+        const find = record.Angsurans.find((f) =>
           moment(f.date_pay).isSame(pageProps.backdate || new Date(), "month"),
         );
         return (
@@ -264,7 +264,7 @@ export default function Page() {
       dataIndex: "status",
       key: "status",
       render(value, record, index) {
-        const find = record.Angsuran.find((f) =>
+        const find = record.Angsurans.find((f) =>
           moment(f.date_pay).isSame(pageProps.backdate || new Date(), "month"),
         );
         return (
@@ -272,7 +272,7 @@ export default function Page() {
             {find && (
               <div className="flex gap-1">
                 <Tag color={find.date_paid ? "green" : "red"} variant="solid">
-                  {find.date_paid ? "PAID" : "UNPAID"}
+                  {find.date_paid ? "DIBAYAR" : "BELUM BAYAR"}
                 </Tag>
                 <div className="text-xs opacity-80">
                   <div>
@@ -291,12 +291,21 @@ export default function Page() {
       },
     },
     {
+      title: "Kantor bayar",
+      dataIndex: "kabay",
+      key: "kabay",
+      width: 150,
+      render(value, record, index) {
+        return <div>{record.PayOffice.code || record.PayOffice.name}</div>;
+      },
+    },
+    {
       title: "Progres",
       dataIndex: "progres",
       key: "progres",
       width: 150,
       render(value, record, index) {
-        const filter = record.Angsuran.filter((f) => f.date_paid !== null);
+        const filter = record.Angsurans.filter((f) => f.date_paid !== null);
         return (
           <Tooltip title={`${filter.length} / ${record.tenor}`}>
             <Progress
@@ -348,7 +357,7 @@ export default function Page() {
       method: "POST",
       body: JSON.stringify(
         selecteds.flatMap((d) =>
-          d.Angsuran.find((f) =>
+          d.Angsurans.find((f) =>
             moment(f.date_pay).isSame(
               pageProps.backdate || new Date(),
               "month",
@@ -542,7 +551,7 @@ export default function Page() {
           );
           const pokok = pageData
             .flatMap((d) =>
-              d.Angsuran.find((a) =>
+              d.Angsurans.find((a) =>
                 moment(a.date_pay).isSame(
                   pageProps.backdate || new Date(),
                   "month",
@@ -552,7 +561,7 @@ export default function Page() {
             .reduce((acc, curr) => acc + (curr ? curr.principal : 0), 0);
           const margin = pageData
             .flatMap((d) =>
-              d.Angsuran.find((a) =>
+              d.Angsurans.find((a) =>
                 moment(a.date_pay).isSame(
                   pageProps.backdate || new Date(),
                   "month",
@@ -562,7 +571,7 @@ export default function Page() {
             .reduce((acc, curr) => acc + (curr ? curr.margin : 0), 0);
           const os = pageData
             .flatMap((d) =>
-              d.Angsuran.find((a) =>
+              d.Angsurans.find((a) =>
                 moment(a.date_pay).isSame(
                   pageProps.backdate || new Date(),
                   "month",
@@ -606,7 +615,7 @@ export default function Page() {
         <UpdateTagihan
           open={action.upsert}
           record={
-            action.selected.Angsuran.find((a) =>
+            action.selected.Angsurans.find((a) =>
               moment(a.date_pay).isSame(
                 pageProps.backdate || new Date(),
                 "month",
@@ -626,7 +635,7 @@ export default function Page() {
         <CreatePelunasan
           open={action.delete}
           record={
-            action.selected.Angsuran.find((a) =>
+            action.selected.Angsurans.find((a) =>
               moment(a.date_pay).isSame(
                 pageProps.backdate || new Date(),
                 "month",
@@ -839,8 +848,9 @@ const CreatePelunasan = ({
       okButtonProps={{
         disabled:
           rootrecord.dropping_status === "LUNAS" ||
-          (rootrecord.Pelunasan &&
-            rootrecord.Pelunasan.status_paid !== "DITOLAK"),
+          (rootrecord.Pelunasan
+            ? rootrecord.Pelunasan.status_paid !== "DITOLAK"
+            : false),
       }}
     >
       <div className="flex flex-col sm:flex-row gap-2">
@@ -991,7 +1001,7 @@ const CreatePelunasan = ({
           </div>
           <Table
             columns={columnsangsuran}
-            dataSource={rootrecord.Angsuran}
+            dataSource={rootrecord.Angsurans}
             size="small"
             loading={loading}
             rowKey={"id"}

@@ -9,7 +9,7 @@ export const POST = async (req: NextRequest) => {
     await req.json();
   const find = await prisma.dapem.findFirst({
     where: { id: data.id },
-    include: { Angsuran: true },
+    include: { Angsurans: true },
   });
 
   if (!find)
@@ -24,6 +24,10 @@ export const POST = async (req: NextRequest) => {
         data: {
           date_contract: data.date_contract,
           no_contract: data.no_contract,
+          date_end: moment(data.date_contract)
+            .add(find.tenor, "month")
+            .toDate(),
+          tbo_date: moment(data.date_contract).add(find.tbo, "month").toDate(),
         },
       });
       const generateAngsurans = GenerateTableAngsuran({
@@ -33,11 +37,11 @@ export const POST = async (req: NextRequest) => {
       });
       await tx.angsuran.deleteMany({ where: { dapemId: data.id } });
       const newAngsurans =
-        find.Angsuran && find.Angsuran.length !== 0
+        find.Angsurans && find.Angsurans.length !== 0
           ? generateAngsurans.map((item) => ({
               ...item,
               date_paid:
-                find.Angsuran.find((a) => a.counter === item.counter)
+                find.Angsurans.find((a) => a.counter === item.counter)
                   ?.date_paid || null,
             }))
           : generateAngsurans;
@@ -83,7 +87,7 @@ export const PATCH = async (req: NextRequest) => {
     const find = await prisma.dapem.findFirst({
       where: { id: id },
       include: {
-        Angsuran: true,
+        Angsurans: true,
         ProdukPembiayaan: { include: { Sumdan: true } },
       },
     });
@@ -103,7 +107,9 @@ export const PATCH = async (req: NextRequest) => {
       {
         msg: "Berhasil memperbarui data akad!",
         status: 200,
-        data: `${String(count + 1).padStart(3, "0")}/${process.env.NEXT_PUBLIC_APP_NOPK_BRAND || ""}-PK/${find.ProdukPembiayaan.Sumdan.code}/${GetRoman(datecontract.month())}/${datecontract.format("MMYYYY")}`,
+        data: find.no_contract
+          ? find.no_contract
+          : `${String(count + 1).padStart(3, "0")}/${process.env.NEXT_PUBLIC_APP_CODE_FILE || ""}-PK/${find.ProdukPembiayaan.Sumdan.code.replace(" ", "").replace("BPR", "").replace("BANK", "")}/${GetRoman(datecontract.month())}/${datecontract.format("MMYYYY")}`,
       },
       { status: 200 },
     );

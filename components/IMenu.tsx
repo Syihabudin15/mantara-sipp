@@ -6,12 +6,14 @@ import {
   BorderOuterOutlined,
   BranchesOutlined,
   CalculatorOutlined,
+  ContainerOutlined,
   DashboardOutlined,
   DatabaseOutlined,
   DiffOutlined,
   DollarCircleOutlined,
   FileProtectOutlined,
   FolderOpenOutlined,
+  GlobalOutlined,
   KeyOutlined,
   MoneyCollectOutlined,
   PercentageOutlined,
@@ -22,6 +24,7 @@ import {
   SettingOutlined,
   SlidersOutlined,
   SnippetsOutlined,
+  TagOutlined,
   TeamOutlined,
   TransactionOutlined,
 } from "@ant-design/icons";
@@ -311,7 +314,21 @@ export const listMenuUI: IMenuType[] = [
       {
         label: "Manajemen Agent",
         key: "/master/agent",
-        icon: <BorderOuterOutlined />,
+        icon: <GlobalOutlined />,
+        needaccess: true,
+        availableAccess: ["read", "write", "update", "delete"],
+      },
+      {
+        label: "Kantor Bayar",
+        key: "/master/payoffice",
+        icon: <TagOutlined />,
+        needaccess: true,
+        availableAccess: ["read", "write", "update", "delete"],
+      },
+      {
+        label: "Asuransi",
+        key: "/master/insurance",
+        icon: <ContainerOutlined />,
         needaccess: true,
         availableAccess: ["read", "write", "update", "delete"],
       },
@@ -450,6 +467,14 @@ export const listMenuServer: { key: string; needaccess: boolean }[] = [
   },
   {
     key: "/master/agent",
+    needaccess: true,
+  },
+  {
+    key: "/master/payoffice",
+    needaccess: true,
+  },
+  {
+    key: "/master/insurance",
     needaccess: true,
   },
 ];

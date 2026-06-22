@@ -14,8 +14,10 @@ import {
 import {
   IAgentFronting,
   IDapem,
+  IInsurance,
+  IPayOffice,
   IProdukPembiayaan,
-  ISumdanDapem,
+  ISumdan,
   IUserDapem,
 } from "@/libs/IInterfaces";
 import {
@@ -35,6 +37,7 @@ import {
   Dropping,
   EMarginType,
   EMarriageStatus,
+  Insurance,
   Jaminan,
   JenisPembiayaan,
   Pelunasan,
@@ -60,10 +63,12 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
   const [data, setData] = useState<IDapem>(record || defaultData);
   const [loading, setLoading] = useState(false);
   const [jenis, setJenis] = useState<JenisPembiayaan[]>([]);
-  const [sumdan, setSumdan] = useState<ISumdanDapem[]>([]);
-  const [sumdanAv, setSumdanAv] = useState<ISumdanDapem[]>([]);
+  const [sumdan, setSumdan] = useState<ISumdan[]>([]);
+  const [sumdanAv, setSumdanAv] = useState<ISumdan[]>([]);
   const [users, setUser] = useState<IUserDapem[]>([]);
   const [agents, setAgets] = useState<IAgentFronting[]>([]);
+  const [payOffices, setPayOffices] = useState<IPayOffice[]>([]);
+  const [insurances, setInsurances] = useState<IInsurance[]>([]);
   const [temp, setItemp] = useState<ITemp>(defaultTemp);
   const { modal } = App.useApp();
   const user = useUser();
@@ -76,7 +81,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
         if (res.status === 200) {
           setData({
             ...data,
-            Debitur: res.data,
+            Debitur: { ...data.Debitur, ...res.data },
             // mutasi_from: res.data.pay_office,
           });
         }
@@ -85,9 +90,12 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      message.error("Login expired");
+      return;
+    }
     setLoading(true);
-    data.createdById = user.id;
+    data.userId = user.id;
     await fetch("/api/dapem", {
       method: record ? "PUT" : "POST",
       body: JSON.stringify(data),
@@ -109,18 +117,26 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      await fetch("/api/jenis?limit=1000")
-        .then((res) => res.json())
-        .then((res) => setJenis(res.data));
-      await fetch("/api/sumdan?limit=1000", { method: "PATCH" })
-        .then((res) => res.json())
-        .then((res) => setSumdan(res.data));
-      await fetch("/api/user?limit=5000")
-        .then((res) => res.json())
-        .then((res) => setUser(res.data));
-      await fetch("/api/agent?limit=5000")
-        .then((res) => res.json())
-        .then((res) => setAgets(res.data));
+      await Promise.all([
+        fetch("/api/jenis?limit=100")
+          .then((res) => res.json())
+          .then((res) => setJenis(res.data)),
+        fetch("/api/sumdan?limit=500")
+          .then((res) => res.json())
+          .then((res) => setSumdan(res.data)),
+        fetch("/api/user?limit=5000")
+          .then((res) => res.json())
+          .then((res) => setUser(res.data)),
+        fetch("/api/agent?limit=500")
+          .then((res) => res.json())
+          .then((res) => setAgets(res.data)),
+        fetch("/api/payoffice?limit=100")
+          .then((res) => res.json())
+          .then((res) => setPayOffices(res.data)),
+        fetch("/api/insurance?limit=100")
+          .then((res) => res.json())
+          .then((res) => setInsurances(res.data)),
+      ]);
       setLoading(false);
     })();
   }, []);
@@ -128,10 +144,10 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
   useEffect(() => {
     const { year, month } = GetFullAge(data.Debitur.birthdate, data.created_at);
     const newAv = sumdan.map((s) => {
-      const prod = s.ProdukPembiayaan.filter(
+      const prod = s.ProdukPembiayaans.filter(
         (p) => year >= p.min_age && year < p.max_age,
       );
-      return { ...s, ProdukPembiayaan: prod };
+      return { ...s, ProdukPembiayaans: prod };
     });
     setSumdanAv(newAv);
     const maxTenn = GetMaxTenor(data.ProdukPembiayaan.max_paid, year, month);
@@ -165,11 +181,6 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
       ...prev,
       tenor: prev.tenor > maxTen ? maxTen : prev.tenor,
       plafond: prev.plafond > maxPlaf ? maxPlaf : prev.plafond,
-      // c_insurance: GetInsurance(
-      //   data.Debitur.birthdate,
-      //   data.created_at,
-      //   prev.tenor > maxTen ? maxTen : prev.tenor,
-      // ),
     }));
     setItemp({
       ...temp,
@@ -242,7 +253,6 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
           group_skep: data.group_skep,
           publisher_skep: data.publisher_skep,
           soul_code: Number(data.soul_code ?? 0),
-          pay_office: data.pay_office,
 
           address: `${data.ktp_address} RT ${data.ktp_rt} RW ${data.ktp_rw}`,
           ward: data.ktp_ward,
@@ -256,7 +266,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
         house_status: data.house_status ?? "",
         house_year: data.house_year ?? 0,
         business: data.business,
-        // mutasi_from: data.pay_office,
+        prev_payoffice: data.pay_office,
         used_for: data.purpose_use,
         job: data.curr_job,
         f_name: data.family_name,
@@ -281,21 +291,6 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
     setLoading(false);
   };
 
-  const canSubmit =
-    !!data.nopen &&
-    !!data.Debitur.fullname &&
-    !!data.Debitur.pay_office &&
-    !!data.jenisPembiayaanId &&
-    !!data.produkPembiayaanId;
-
-  const currentStep = !data.nopen
-    ? 0
-    : !data.jenisPembiayaanId || !data.produkPembiayaanId
-      ? 1
-      : !data.aoId || !data.aoRelateId
-        ? 2
-        : 3;
-
   const SectionTitle = ({
     icon,
     title,
@@ -317,107 +312,8 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
     </div>
   );
 
-  const SummaryRow = ({
-    label,
-    value,
-    strong,
-    danger,
-    success,
-  }: {
-    label: string;
-    value: React.ReactNode;
-    strong?: boolean;
-    danger?: boolean;
-    success?: boolean;
-  }) => (
-    <div
-      className={[
-        "flex justify-between gap-4 border-b border-dashed py-2 text-sm",
-        strong ? "font-semibold" : "",
-        danger ? "text-red-600" : "",
-        success ? "text-green-600" : "",
-      ].join(" ")}
-    >
-      <span className="text-gray-500">{label}</span>
-      <span className="text-right">{value}</span>
-    </div>
-  );
-
   return (
     <div>
-      <div className="min-h-screen bg-gray-50 pb-5">
-        <div className="mx-auto max-w-7xl p-4">
-          <div className="mb-4 rounded-xl bg-white p-4 shadow-sm border">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h1 className="m-0 text-xl font-semibold">
-                  {record
-                    ? "Edit Permohonan Pembiayaan"
-                    : "Tambah Permohonan Pembiayaan"}
-                </h1>
-                <p className="mt-1 text-sm text-gray-500">
-                  Lengkapi data sesuai urutan agar proses pengajuan lebih mudah
-                  dicek.
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Tag color={canSubmit ? "green" : "orange"}>
-                  {canSubmit ? "Siap disimpan" : "Belum lengkap"}
-                </Tag>
-                <Tag color="blue">Status: {data.dropping_status}</Tag>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <Steps
-                current={currentStep}
-                size="small"
-                items={[
-                  { title: "Debitur" },
-                  { title: "Pembiayaan" },
-                  { title: "Petugas" },
-                  { title: "Berkas" },
-                ]}
-              />
-            </div>
-
-            {!canSubmit && (
-              <Alert
-                className="mt-4"
-                type="warning"
-                showIcon
-                message="Data wajib belum lengkap"
-                description="Minimal isi Nomor Pensiun, Nama Debitur, Kantor Bayar, Jenis Pembiayaan, Produk Pembiayaan, dan AO."
-              />
-            )}
-          </div>
-        </div>
-
-        {/* <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-            <div className="hidden text-sm text-gray-500 md:block">
-              {canSubmit
-                ? "Semua data utama sudah lengkap."
-                : "Lengkapi data wajib sebelum submit."}
-            </div>
-
-            <div className="ml-auto flex gap-2">
-              <Link href="/monitoring">
-                <Button>Cancel</Button>
-              </Link>
-              <Button
-                type="primary"
-                loading={loading}
-                onClick={handleSubmit}
-                disabled={!canSubmit}
-              >
-                {record ? "Update Permohonan" : "Simpan Permohonan"}
-              </Button>
-            </div>
-          </div>
-        </div> */}
-      </div>
       <Card
         title={
           <SectionTitle
@@ -549,7 +445,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               required: true,
               options: [
                 { label: "TIDAK TAMAT SD", value: "TIDAK TAMAT SD" },
-                { label: "SEDERAJAT", value: "SEDERAJAT" },
+                { label: "SD", value: "SD" },
                 { label: "SMP", value: "SMP" },
                 { label: "SMA", value: "SMA" },
                 { label: "D3", value: "D3" },
@@ -1396,12 +1292,11 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                   type: "text",
                   class: "flex-1",
                   required: true,
-                  value: data.Debitur.pay_office,
+                  value: data.prev_payoffice,
                   onChange: (e: string) =>
                     setData({
                       ...data,
-                      // mutasi_from: e,
-                      Debitur: { ...data.Debitur, pay_office: e },
+                      prev_payoffice: e,
                     }),
                 }}
               />
@@ -1409,14 +1304,20 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 data={{
                   mode: "vertical",
                   label: "Kantor Bayar Tujuan",
-                  type: "text",
+                  type: "select",
                   class: "flex-1",
-                  // value: data.mutasi_to,
-                  // onChange: (e: string) =>
-                  //   setData({
-                  //     ...data,
-                  //     mutasi_to: e,
-                  //   }),
+                  required: true,
+                  options: payOffices.map((p) => ({
+                    label: p.code || p.name,
+                    value: p.id,
+                  })),
+                  value: data.payOfficeId,
+                  onChange: (e: string) =>
+                    setData({
+                      ...data,
+                      payOfficeId: e,
+                      Debitur: { ...data.Debitur, payOfficeId: e },
+                    }),
                 }}
               />
               <FormInput
@@ -1483,33 +1384,40 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                   className="w-full"
                   options={sumdanAv.map((j) => ({
                     label: j.name,
-                    options: j.ProdukPembiayaan.map((p) => ({
-                      label: `${p.name} - ${p.id}`,
+                    options: j.ProdukPembiayaans.map((p) => ({
+                      label: `${p.name} - ${p.Sumdan?.code || ""}`,
                       value: p.id,
                     })),
                   }))}
                   value={data.produkPembiayaanId}
                   onChange={(e: string) => {
                     const find = sumdan
-                      .flatMap((s) => s.ProdukPembiayaan)
+                      .flatMap((s) => s.ProdukPembiayaans)
                       .find((f) => f.id === e);
                     if (find) {
                       setData({
                         ...data,
-                        produkPembiayaanId: e,
                         ProdukPembiayaan: find,
-                        c_margin: find.c_margin,
+                        produkPembiayaanId: find.id,
                         c_margin_sumdan: find.Sumdan.c_margin,
-                        margin_type: find.margin_type,
-                        c_adm: find.c_adm,
-                        c_adm_sumdan: find.Sumdan.c_adm,
-                        c_insurance: find.c_insurance,
-                        c_gov: find.Sumdan.c_gov,
+                        c_margin: find.c_margin,
+                        c_adm_sumdan: find.Sumdan.c_adm_sumdan,
+                        c_adm: find.Sumdan.c_adm,
+                        c_adm_mitra: find.Sumdan.c_adm_mitra,
+                        c_adm_ff: find.Sumdan.c_adm_ff,
+                        c_provisi_sumdan: find.Sumdan.c_provisi_sumdan,
+                        c_fee_ao: find.Sumdan.c_fee_ao,
+                        c_fee_cabang: find.Sumdan.c_fee_cabang,
+                        c_fee_area: find.Sumdan.c_fee_area,
+                        c_fee_bpp: find.Sumdan.c_fee_bpp,
+                        c_fee_bpb: find.Sumdan.c_fee_bpb,
                         c_account: find.Sumdan.c_account,
+                        c_account_sumdan: find.Sumdan.c_account_sumdan,
+                        c_gov: find.Sumdan.c_gov,
                         c_stamp: find.Sumdan.c_stamps,
+                        c_flagging: find.Sumdan.c_flagging,
                         c_infomation: find.Sumdan.c_information,
-                        c_provisi: find.Sumdan.c_provisi,
-                        c_provisi_sumdan: find.c_provisi,
+                        c_insurance: find.c_insurance,
                         rounded: find.Sumdan.rounded,
                         rounded_sumdan: find.Sumdan.rounded_sumdan,
                         tbo: find.Sumdan.tbo,
@@ -1594,7 +1502,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     class: "flex-1",
                     options: [
                       { label: "ANUITAS", value: "ANUITAS" },
-                      { label: "EFEKTIF", value: "EFEKTIF" },
+                      // { label: "EFEKTIF", value: "EFEKTIF" },
                       { label: "FLAT", value: "FLAT" },
                     ],
                     value: data.margin_type,
@@ -1636,10 +1544,13 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     label: "Jenis Asuransi",
                     type: "select",
                     class: "flex-1",
-                    options: [{ label: "BUMI PUTERA", value: "BUMI PUTERA" }],
-                    // value: data.insurance_type,
-                    // onChange: (e: string) =>
-                    //   setData({ ...data, insurance_type: e as EMarginType }),
+                    options: insurances.map((i) => ({
+                      label: i.code || i.name,
+                      value: i.id,
+                    })),
+                    value: data.insuranceId,
+                    onChange: (e: string) =>
+                      setData({ ...data, insuranceId: e }),
                   }}
                 />
               </div>
@@ -1656,13 +1567,16 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                   size="small"
                   style={{ width: 80 }}
                   suffix={<span className="text-xs italic opacity-70">%</span>}
-                  value={data.c_adm}
-                  onChange={(e) =>
-                    setData({ ...data, c_adm: Number(e.target.value || 0) })
+                  value={
+                    data.c_adm + data.c_adm + data.c_adm_mitra + data.c_adm_ff
                   }
+                  // onChange={(e) =>
+                  //   setData({ ...data, c_adm: Number(e.target.value || 0) })
+                  // }
+                  disabled
                   type={"number"}
                 />
-                <Input
+                {/* <Input
                   size="small"
                   style={{ width: 80 }}
                   suffix={<span className="text-xs italic opacity-70">%</span>}
@@ -1674,12 +1588,17 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     })
                   }
                   type={"number"}
-                />
+                /> */}
                 <Input
                   size="small"
                   disabled
                   value={IDRFormat(
-                    (data.plafond * (data.c_adm + data.c_adm_sumdan)) / 100,
+                    (data.plafond *
+                      (data.c_adm +
+                        data.c_adm_sumdan +
+                        data.c_adm_mitra +
+                        data.c_adm_ff)) /
+                      100,
                   )}
                   style={{ textAlign: "right", color: "black" }}
                 />
@@ -1716,44 +1635,35 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                   size="small"
                   style={{ width: 80 }}
                   suffix={<span className="text-xs italic opacity-70">%</span>}
-                  value={data.c_provisi}
-                  onChange={(e) =>
-                    setData({
-                      ...data,
-                      c_provisi: Number(e.target.value || 0),
-                    })
+                  value={
+                    data.c_provisi_sumdan +
+                    data.c_fee_ao +
+                    data.c_fee_cabang +
+                    data.c_fee_area +
+                    data.c_fee_bpp +
+                    data.c_fee_bpb
                   }
-                  type={"number"}
-                />
-                <Input
-                  size="small"
+                  // onChange={(e) =>
+                  //   setData({
+                  //     ...data,
+                  //     c_provisi: Number(e.target.value || 0),
+                  //   })
+                  // }
                   disabled
-                  value={IDRFormat((data.plafond * data.c_provisi) / 100)}
-                  style={{ textAlign: "right", color: "black" }}
-                />
-              </div>
-            </div>
-            <div className="flex justify-between border-b border-dashed my-2">
-              <div className="flex-1">Provisi Mitra</div>
-              <div className="flex gap-2 flex-2">
-                <Input
-                  size="small"
-                  style={{ width: 80 }}
-                  suffix={<span className="text-xs italic opacity-70">%</span>}
-                  value={data.c_provisi_sumdan}
-                  onChange={(e) =>
-                    setData({
-                      ...data,
-                      c_provisi_sumdan: Number(e.target.value || 0),
-                    })
-                  }
                   type={"number"}
                 />
                 <Input
                   size="small"
                   disabled
                   value={IDRFormat(
-                    (data.plafond * data.c_provisi_sumdan) / 100,
+                    (data.plafond *
+                      (data.c_provisi_sumdan +
+                        data.c_fee_ao +
+                        data.c_fee_cabang +
+                        data.c_fee_area +
+                        data.c_fee_bpp +
+                        data.c_fee_bpb)) /
+                      100,
                   )}
                   style={{ textAlign: "right", color: "black" }}
                 />
@@ -1780,19 +1690,36 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               <div className="flex gap-2 flex-2">
                 <Input
                   size="small"
-                  value={IDRFormat(data.c_account)}
+                  value={IDRFormat(data.c_account + data.c_account_sumdan)}
+                  style={{ textAlign: "right", color: "black" }}
+                  // onChange={(e) =>
+                  //   setData({
+                  //     ...data,
+                  //     c_account: IDRToNumber(e.target.value || "0"),
+                  //   })
+                  // }
+                  disabled
+                />
+              </div>
+            </div>
+            <div className="flex justify-between border-b border-dashed my-2">
+              <div className="flex-1">Flagging</div>
+              <div className="flex gap-2 flex-2">
+                <Input
+                  size="small"
+                  value={IDRFormat(data.c_flagging)}
                   style={{ textAlign: "right", color: "black" }}
                   onChange={(e) =>
                     setData({
                       ...data,
-                      c_account: IDRToNumber(e.target.value || "0"),
+                      c_flagging: IDRToNumber(e.target.value || "0"),
                     })
                   }
                 />
               </div>
             </div>
             <div className="flex justify-between border-b border-dashed my-2">
-              <div className="flex-1">Flagging</div>
+              <div className="flex-1">Sistem Informasi</div>
               <div className="flex gap-2 flex-2">
                 <Input
                   size="small"
@@ -1869,6 +1796,38 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               <span>Terima Kotor</span>
               <span>{IDRFormat(data.plafond - GetDapem(data).biaya)}</span>
             </div>
+            <div className="flex gap-2 justify-between items-center my-2">
+              <div className="flex-1">BOP Pembiayaan</div>
+              <div className="flex gap-2 flex-2">
+                <Input
+                  size="small"
+                  value={IDRFormat(data.c_bop || 0)}
+                  style={{ textAlign: "right", color: "red" }}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      c_bop: IDRToNumber(e.target.value || "0"),
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-between items-center my-2">
+              <div className="flex-1">Nominal Takeover</div>
+              <div className="flex gap-2 flex-2">
+                <Input
+                  size="small"
+                  value={IDRFormat(data.c_takeover || 0)}
+                  style={{ textAlign: "right", color: "red" }}
+                  onChange={(e) =>
+                    setData({
+                      ...data,
+                      c_takeover: IDRToNumber(e.target.value || "0"),
+                    })
+                  }
+                />
+              </div>
+            </div>
             <div className="flex justify-between border-b border-dashed my-2">
               <div className="flex-1">Blokir Angsuran</div>
               <div className="flex gap-2 flex-2">
@@ -1893,62 +1852,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 />
               </div>
             </div>
-            {/* <div className="flex justify-between border-b border-dashed my-2">
-              <div className="flex-1">Retensi Angsuran</div>
-              <div className="flex gap-2 flex-2">
-                <Input
-                  size="small"
-                  style={{ width: 80 }}
-                  suffix={<span className="text-xs italic opacity-70">%</span>}
-                  value={data.c_retensi}
-                  onChange={(e) =>
-                    setData({
-                      ...data,
-                      c_retensi: Number(e.target.value || 0),
-                    })
-                  }
-                  type={"number"}
-                />
-                <Input
-                  size="small"
-                  disabled
-                  value={IDRFormat(data.c_retensi * temp.angsuran)}
-                  style={{ textAlign: "right", color: "black" }}
-                />
-              </div>
-            </div> */}
-            <div className="flex gap-2 justify-between items-center my-2">
-              <div className="flex-1">Bpp</div>
-              <div className="flex gap-2 flex-2">
-                <Input
-                  size="small"
-                  value={IDRFormat(data.c_bpp || 0)}
-                  style={{ textAlign: "right", color: "red" }}
-                  onChange={(e) =>
-                    setData({
-                      ...data,
-                      c_bpp: IDRToNumber(e.target.value || "0"),
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-between items-center my-2">
-              <div className="flex-1">Nominal Takeover</div>
-              <div className="flex gap-2 flex-2">
-                <Input
-                  size="small"
-                  value={IDRFormat(data.c_takeover || 0)}
-                  style={{ textAlign: "right", color: "red" }}
-                  onChange={(e) =>
-                    setData({
-                      ...data,
-                      c_takeover: IDRToNumber(e.target.value || "0"),
-                    })
-                  }
-                />
-              </div>
-            </div>
+
             <div className="flex justify-between border-b border-dashed my-2 font-bold text-green-600">
               <span>Terima Bersih</span>
               <span>{IDRFormat(GetDapem(data).tb)}</span>
@@ -1959,7 +1863,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
       <Card
         title={
           <div>
-            <SignatureOutlined /> MOC
+            <SignatureOutlined /> Agent Fronting
           </div>
         }
         style={{ marginTop: 5 }}
@@ -1972,79 +1876,39 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               label: "Agent Fronting",
               type: "select",
               class: "flex-1",
-              required: true,
               value: data.agentFrontingId,
               options: agents.map((u) => ({
                 label: `${u.name} (${u.code})`,
                 value: u.id,
               })),
-              onChange: (e: string) => {
+              onChange: (e: string | null) => {
                 const find = agents.find((u) => u.id === e);
-                if (find)
-                  setData({
-                    ...data,
-                    agentFrontingId: e,
-                    AgentFronting: find || null,
-                  });
+                setData({
+                  ...data,
+                  agentFrontingId: e,
+                  AgentFronting: find || null,
+                });
               },
             }}
           />
           <FormInput
             data={{
               mode: "vertical",
-              label: "Nama AO",
-              type: "select",
+              label: "PIC",
+              type: "text",
               class: "flex-1",
-              required: true,
-              value: data.aoId,
-              options: users.map((u) => ({
-                label: `${u.fullname} (${u.Cabang.name})`,
-                value: u.id,
-              })),
-              onChange: (e: string) => {
-                const find = users.find((u) => u.id === e);
-                if (find) setData({ ...data, AO: find, aoId: e });
-              },
+              value: data.AgentFronting?.pic,
+              disabled: true,
             }}
           />
           <FormInput
             data={{
               mode: "vertical",
-              label: "No Telepon",
+              label: "No PKS",
               type: "text",
               class: "flex-1",
               disabled: true,
-              value: data.AO.phone,
-            }}
-          />
-          <FormInput
-            data={{
-              mode: "vertical",
-              label: "Posisi",
-              type: "text",
-              class: "flex-1",
-              disabled: true,
-              value: data.AO.position,
-            }}
-          />
-          <FormInput
-            data={{
-              mode: "vertical",
-              label: "Cabang",
-              type: "text",
-              class: "flex-1",
-              disabled: true,
-              value: data.AO.Cabang?.name,
-            }}
-          />
-          <FormInput
-            data={{
-              mode: "vertical",
-              label: "Area",
-              type: "text",
-              class: "flex-1",
-              disabled: true,
-              value: data.AO.Cabang?.Area?.name,
+              value: data.AgentFronting?.contract_no,
             }}
           />
         </div>
@@ -2052,7 +1916,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
       <Card
         title={
           <div>
-            <SignatureOutlined /> SPV
+            <SignatureOutlined /> AO
           </div>
         }
         style={{ marginTop: 5 }}
@@ -2062,18 +1926,33 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
           <FormInput
             data={{
               mode: "vertical",
-              label: "Nama SPV",
+              label: "Nama AO",
               type: "select",
               class: "flex-1",
-              required: true,
-              value: data.aoRelateId,
+              value: data.aoId,
               options: users.map((u) => ({
                 label: `${u.fullname} (${u.Cabang.name})`,
                 value: u.id,
               })),
               onChange: (e: string) => {
                 const find = users.find((u) => u.id === e);
-                if (find) setData({ ...data, AORelate: find, aoRelateId: e });
+                const AOCabang = find?.Cabang.HeadCabangs.find((u) => u.status);
+                const AOArea = find?.Cabang.Area.HeadAreas.find(
+                  (u) => u.status,
+                );
+                setData({
+                  ...data,
+                  AO: find || null,
+                  aoId: e,
+                  ...(AOCabang && {
+                    aoCabangId: AOCabang.id,
+                    AOCabang: AOCabang.User,
+                  }),
+                  ...(AOArea && {
+                    aoAreaId: AOArea.id,
+                    AOArea: AOArea.User,
+                  }),
+                });
               },
             }}
           />
@@ -2084,7 +1963,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               type: "text",
               class: "flex-1",
               disabled: true,
-              value: data.AORelate?.phone,
+              value: data.AO?.phone,
             }}
           />
           <FormInput
@@ -2094,7 +1973,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               type: "text",
               class: "flex-1",
               disabled: true,
-              value: data.AORelate?.position,
+              value: data.AO?.position,
             }}
           />
           <FormInput
@@ -2104,7 +1983,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               type: "text",
               class: "flex-1",
               disabled: true,
-              value: data.AORelate?.Cabang?.name,
+              value: data.AO?.Cabang?.name,
             }}
           />
           <FormInput
@@ -2114,7 +1993,145 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               type: "text",
               class: "flex-1",
               disabled: true,
-              value: data.AORelate?.Cabang?.Area?.name,
+              value: data.AO?.Cabang?.Area?.name,
+            }}
+          />
+        </div>
+      </Card>
+      <Card
+        title={
+          <div>
+            <SignatureOutlined /> AO Cabang
+          </div>
+        }
+        style={{ marginTop: 5 }}
+        loading={loading}
+      >
+        <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "AO Cabang",
+              type: "select",
+              class: "flex-1",
+              value: data.aoCabangId,
+              options: users.map((u) => ({
+                label: `${u.fullname} (${u.Cabang.name})`,
+                value: u.id,
+              })),
+              onChange: (e: string) => {
+                const find = users.find((u) => u.id === e);
+                setData({ ...data, AOCabang: find || null, aoCabangId: e });
+              },
+            }}
+          />
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "No Telepon",
+              type: "text",
+              class: "flex-1",
+              disabled: true,
+              value: data.AOCabang?.phone,
+            }}
+          />
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "Posisi",
+              type: "text",
+              class: "flex-1",
+              disabled: true,
+              value: data.AOCabang?.position,
+            }}
+          />
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "Cabang",
+              type: "text",
+              class: "flex-1",
+              disabled: true,
+              value: data.AOCabang?.Cabang?.name,
+            }}
+          />
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "Area",
+              type: "text",
+              class: "flex-1",
+              disabled: true,
+              value: data.AOCabang?.Cabang?.Area?.name,
+            }}
+          />
+        </div>
+      </Card>
+      <Card
+        title={
+          <div>
+            <SignatureOutlined /> AO Area
+          </div>
+        }
+        style={{ marginTop: 5 }}
+        loading={loading}
+      >
+        <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "AO Area",
+              type: "select",
+              class: "flex-1",
+              value: data.aoAreaId,
+              options: users.map((u) => ({
+                label: `${u.fullname} (${u.Cabang.Area.name})`,
+                value: u.id,
+              })),
+              onChange: (e: string) => {
+                const find = users.find((u) => u.id === e);
+                setData({ ...data, AOArea: find || null, aoAreaId: e });
+              },
+            }}
+          />
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "No Telepon",
+              type: "text",
+              class: "flex-1",
+              disabled: true,
+              value: data.AOArea?.phone,
+            }}
+          />
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "Posisi",
+              type: "text",
+              class: "flex-1",
+              disabled: true,
+              value: data.AOArea?.position,
+            }}
+          />
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "Cabang",
+              type: "text",
+              class: "flex-1",
+              disabled: true,
+              value: data.AOArea?.Cabang?.name,
+            }}
+          />
+          <FormInput
+            data={{
+              mode: "vertical",
+              label: "Area",
+              type: "text",
+              class: "flex-1",
+              disabled: true,
+              value: data.AOArea?.Cabang?.Area?.name,
             }}
           />
         </div>
@@ -2179,6 +2196,16 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               onChange: (e: string) => setData({ ...data, file_contract: e }),
             }}
           />
+          <FormInput
+            data={{
+              label: "Video Akad Kredit (MP4)",
+              type: "upload",
+              class: "flex-1",
+              accept: "video/mp4",
+              value: data.video_contract,
+              onChange: (e: string) => setData({ ...data, video_contract: e }),
+            }}
+          />
           <div className="my-4">
             <div className="flex gap-2">
               <p>Generate OCR</p>
@@ -2208,10 +2235,18 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
             onClick={() => handleSubmit()}
             disabled={
               !data.nopen ||
-              !data.Debitur.fullname ||
-              !data.Debitur.pay_office ||
+              !data.produkPembiayaanId ||
               !data.jenisPembiayaanId ||
-              !data.produkPembiayaanId
+              !data.payOfficeId ||
+              !data.insuranceId ||
+              !data.Debitur.fullname ||
+              !data.Debitur.birthdate ||
+              !data.plafond ||
+              !data.tenor ||
+              !data.aw_name ||
+              !data.f_name ||
+              !data.Debitur.address ||
+              !data.Debitur.salary
             }
           >
             Submit
@@ -2228,31 +2263,37 @@ const defaultData: IDapem = {
   plafond: 0,
   c_margin: 0,
   c_margin_sumdan: 0,
-  c_adm: 0,
   c_adm_sumdan: 0,
+  c_adm: 0,
+  c_adm_mitra: 0,
+  c_adm_ff: 0,
   c_insurance: 0,
   c_gov: 0,
   c_stamp: 0,
+  c_account_sumdan: 0,
   c_account: 0,
   c_mutasi: 0,
   c_blokir: 0,
-  c_retensi: 0,
   c_takeover: 0,
+  c_flagging: 0,
   c_infomation: 0,
-  c_provisi: 0,
   c_provisi_sumdan: 0,
-  c_bpp: 0,
+  c_fee_ao: 0,
+  c_fee_cabang: 0,
+  c_fee_area: 0,
+  c_fee_bpp: 0,
+  c_fee_bpb: 0,
+  c_bop: 0,
   tbo: 0,
   rounded: 0,
   rounded_sumdan: 0,
   margin_type: "ANUITAS",
-  // insurance_type: "BUMI PUTERA",
   agentFrontingId: null,
+  c_fee_fronting: 0,
 
+  prev_payoffice: null,
   takeover_from: null,
   takeover_date: null,
-  // mutasi_from: null,
-  // mutasi_to: null,
 
   dom_status: false,
   address: "",
@@ -2305,13 +2346,18 @@ const defaultData: IDapem = {
   document_desc: null,
   guarantee_status: "UNIT",
   guarantee_desc: null,
-  ao_fee: 0,
   ao_fee_desc: null,
   ao_fee_status: "DRAFT",
+  ao_cabang_fee_desc: null,
+  ao_cabang_fee_status: "DRAFT",
+  ao_area_fee_desc: null,
+  ao_area_fee_status: "DRAFT",
 
   used_for: "",
   no_contract: "",
   date_contract: null,
+  date_end: null,
+  tbo_date: null,
 
   file_slik: null,
   file_proses: null,
@@ -2322,29 +2368,40 @@ const defaultData: IDapem = {
   file_takeover: null,
   file_mutasi: null,
   file_flagging: null,
+  video_contract: null,
+  file_skep: null,
 
   status: true,
   created_at: new Date(),
   updated_at: new Date(),
-  Debitur: {} as Debitur,
+  Debitur: {
+    birthdate: new Date(),
+    salary: 0,
+    tmt_skep: new Date(),
+    date_skep: new Date(),
+  } as Debitur,
   ProdukPembiayaan: {} as IProdukPembiayaan,
   JenisPembiayaan: {} as JenisPembiayaan,
-  CreatedBy: {} as IUserDapem,
-  AO: {} as IUserDapem,
-  AORelate: null,
+  User: {} as IUserDapem,
+  AO: null,
+  AOCabang: null,
+  AOArea: null,
   Dropping: {} as Dropping,
   Berkas: {} as Berkas,
   Jaminan: {} as Jaminan,
   Pelunasan: {} as Pelunasan,
-  Angsuran: [],
+  PayOffice: {} as IPayOffice,
+  Insurance: {} as IInsurance,
+  Angsurans: [],
   AgentFronting: null,
 
   nopen: "",
   produkPembiayaanId: "",
   jenisPembiayaanId: "",
-  createdById: "",
+  userId: "",
   aoId: "",
-  aoRelateId: null,
+  aoCabangId: null,
+  aoAreaId: null,
   droppingId: null,
   berkasId: null,
   jaminanId: null,

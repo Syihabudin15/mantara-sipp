@@ -87,11 +87,12 @@ export const SPKDR = (record: IDapem) => {
     </div>
   </div>
 
-  
+  <p class="mt-6">Sehubungan dengan ini saya menyatakan telah mendapat pembiayaan dari ${record.ProdukPembiayaan.Sumdan.name} melalui ${process.env.NEXT_PUBLIC_APP_FULLNAME} Sebesar Rp. ${IDRFormat(record.plafond)};- (${NumberToWordsID(record.plafond)} Rupiah). atau sejumlah yang disetujui, serta sesuai dengan surat Perjanjian Pembiayaan nomor ${record.no_contract} yang saya tanda tangani kemudian, yang pembayaran gaji pensiunnya dibayarkan di ${record.PayOffice.name}, maka dengan ini saya menyatakan :</p>
 
   <div class="ml-1">
   ${ListStyle(
     [
+      `Pada saat dana pensiun saya sudah masuk ke rekening ${record.PayOffice.name}, dengan ini saya memberi kuasa kepada ${record.PayOffice.name}, untuk melakukan pemotongan dana pensiun saya untuk membayar angsuran sebesar Rp. ${IDRFormat(angsuran)} sampai dengan pinjaman/kewajiban saya lunas dan hasil potongan tersebut disetorkan ke rekening ${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_BANK} a.n ${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NAME} dengan nomor rekening ${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NUMBER};`,
       `Bahwa sisa gaji saya sendiri pada saat ini dan seterusnya (sampai pembiayan saya lunas) benar-benar cukup untuk dipotong sejumhlah tersebut diatas, dan jika ternyata dikemudian hari gaji saya tidak cukup jumlahnya untuk dipotong karena sebab apapun, maka berarti saya telah melakukan tindakan pidana pemalsuan data/keterangan;`,
       `Bahwa sepenuhnya dari pembiayaan yang saya ambil/terima tersebut benar-benar saya pergunakan untuk keperluan saya sendiri dan saya tidak akan mengalihkan tempat pengambilan gaji pensiun saya ketempat lain sampai dengan pembiayaan saya lunas sepenuhnya;`,
       `Bahwa saya sanggup melunasi pembiayaan saya kepada ${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NAME}, apabila saya melakukan pernikahan yang menyebabkan tunjangan pensiun (Janda/Duda**) hilang;`,
@@ -122,17 +123,3 @@ export const SPKDR = (record: IDapem) => {
 
 `;
 };
-
-{
-  /* <p class="mt-6">Sehubungan dengan ini saya menyatakan telah mendapat pembiayaan dari ${process.env.NEXT_PUBLIC_APP_FULLNAME} Sebesar Rp. ${IDRFormat(record.plafond)};- (${NumberToWordsID(record.plafond)} Rupiah). atau sejumlah yang disetujui, serta sesuai dengan surat Perjanjian Pembiayaan nomor ${record.no_contract} yang saya tanda tangani kemudian, yang pembayaran gaji pensiunnya dibayarkan di ${record.mutasi_to}, maka dengan ini saya menyatakan :</p> */
-}
-
-// ${ListStyle(
-//     [
-//       `Pada saat dana pensiun saya sudah masuk ke rekening ${record.mutasi_to}, dengan ini saya memberi kuasa kepada ${record.mutasi_to}, untuk melakukan pemotongan dana pensiun saya untuk membayar angsuran sebesar Rp. ${IDRFormat(angsuran)} sampai dengan pinjaman/kewajiban saya lunas dan hasil potongan tersebut disetorkan ke rekening ${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_BANK} a.n ${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NAME} dengan nomor rekening ${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NUMBER};`,
-//       `Bahwa sisa gaji saya sendiri pada saat ini dan seterusnya (sampai pembiayan saya lunas) benar-benar cukup untuk dipotong sejumhlah tersebut diatas, dan jika ternyata dikemudian hari gaji saya tidak cukup jumlahnya untuk dipotong karena sebab apapun, maka berarti saya telah melakukan tindakan pidana pemalsuan data/keterangan;`,
-//       `Bahwa sepenuhnya dari pembiayaan yang saya ambil/terima tersebut benar-benar saya pergunakan untuk keperluan saya sendiri dan saya tidak akan mengalihkan tempat pengambilan gaji pensiun saya ketempat lain sampai dengan pembiayaan saya lunas sepenuhnya;`,
-//       `Bahwa saya sanggup melunasi pembiayaan saya kepada ${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NAME}, apabila saya melakukan pernikahan yang menyebabkan tunjangan pensiun (Janda/Duda**) hilang;`,
-//     ],
-//     "number",
-//   )}

@@ -9,7 +9,7 @@ import {
   KeyOutlined,
   PlusCircleFilled,
 } from "@ant-design/icons";
-import { Role } from "@prisma/client";
+import { EDataStatus, Role } from "@prisma/client";
 import {
   App,
   Button,
@@ -17,6 +17,7 @@ import {
   Checkbox,
   Input,
   Modal,
+  Select,
   Space,
   Table,
   TableProps,
@@ -40,16 +41,15 @@ export default function Page() {
     search: "",
   });
   const [loading, setLoading] = useState(false);
-  const { hasAccess } = useAccess("/master/roles");
+  const { hasAccess } = useAccess(window.location.pathname);
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    if (pageProps.search) {
-      params.append("search", pageProps.search);
-    }
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.search && { search: pageProps.search }),
+    });
     const res = await fetch(`/api/roles?${params.toString()}`);
     const json = await res.json();
     setPageProps((prev) => ({
@@ -81,15 +81,10 @@ export default function Page() {
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => (
-        <Tag color={status ? "success" : "error"}>
-          {status ? "Aktif" : "Tidak Aktif"}
-        </Tag>
-      ),
-      sorter: (a, b) => (a.status === b.status ? 0 : a.status ? 1 : -1),
+      title: "Data Status",
+      dataIndex: "data_status",
+      key: "data_status",
+      render: (status) => <Tag>{status}</Tag>,
     },
     {
       title: "Updated",
@@ -197,6 +192,7 @@ export default function Page() {
             }));
           },
           pageSizeOptions: [50, 100, 500, 1000],
+          showSizeChanger: true,
         }}
         expandable={{
           expandedRowRender: (record) => {
@@ -215,14 +211,14 @@ export default function Page() {
 
       <UpsertRole
         open={upsert.upsert}
-        setOpen={(v: boolean) => setUpsert({ ...upsert, upsert: v })}
+        setOpen={(v: boolean) => setUpsert((prev) => ({ ...prev, upsert: v }))}
         record={upsert.selected}
         key={upsert.selected ? "upsert" + upsert.selected.id : "create"}
         getData={getData}
       />
       <DeleteRole
         open={upsert.delete}
-        setOpen={(v: boolean) => setUpsert({ ...upsert, delete: v })}
+        setOpen={(v: boolean) => setUpsert((prev) => ({ ...prev, delete: v }))}
         record={upsert.selected}
         getData={getData}
         key={upsert.selected ? "delete" + upsert.selected.id : "delete"}
@@ -369,6 +365,7 @@ export function UpsertRole({
       width={800}
       style={{ top: 20 }}
       title={record ? "Update Role " + record.name : "Add New Role"}
+      destroyOnHidden
     >
       <div className="p-2">
         <div className="flex gap-5 my-3 items-center">
@@ -383,6 +380,27 @@ export function UpsertRole({
             }
           />
         </div>
+        <div className="flex gap-5 my-3 items-center">
+          <p className="w-32">
+            <span className="text-red-500">*</span>Data Status
+          </p>
+          <Select
+            options={[
+              { label: EDataStatus.SEMUA, value: EDataStatus.SEMUA },
+              { label: EDataStatus.AREA, value: EDataStatus.AREA },
+              { label: EDataStatus.CABANG, value: EDataStatus.CABANG },
+              { label: EDataStatus.USER, value: EDataStatus.USER },
+            ]}
+            style={{ width: "100%" }}
+            value={data.data_status}
+            onChange={(e) =>
+              setData((prev: Role) => ({
+                ...prev,
+                data_status: e as EDataStatus,
+              }))
+            }
+          />
+        </div>
         <div className="my-2">
           <p>Role Permissions</p>
           <Table
@@ -391,12 +409,12 @@ export function UpsertRole({
             dataSource={menus}
             size="small"
             pagination={false}
-            scroll={{ x: "max-content", y: "50vh" }}
+            scroll={{ x: "max-content", y: "45vh" }}
             loading={loading}
             bordered
           />
         </div>
-        <div className="flex justify-end m-4 gap-4">
+        <div className="flex justify-end mt-2">
           <Button
             type="primary"
             onClick={() => handleSubmit()}
@@ -465,6 +483,7 @@ export function DeleteRole({
       width={400}
       style={{ top: 20 }}
       title={"Delete Role " + record?.name}
+      destroyOnHidden
     >
       <p>Are you sure you want to delete this role?</p>
       <div className="flex justify-end gap-4">
@@ -480,6 +499,7 @@ export function DeleteRole({
 const defaultRole: Role = {
   id: "",
   name: "",
+  data_status: "SEMUA",
   permission: "",
   status: true,
   created_at: new Date(),

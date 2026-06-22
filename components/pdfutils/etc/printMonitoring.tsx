@@ -265,7 +265,7 @@ export const printMonitoring = (
 ) => {
   const htmlContent = generateMonitoring(record, sumdans, periode);
 
-  const w = window.open("", "_blank", "width=900,height=1000");
+  const w = window.open("", "_blank");
   if (!w) {
     alert("Popup diblokir. Mohon izinkan popup dari situs ini.");
     return;

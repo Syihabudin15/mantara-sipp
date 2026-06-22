@@ -127,7 +127,7 @@ export default function Page() {
       dataIndex: "count",
       key: "count",
       render(value, record, index) {
-        return <div>{record.JournalDetail.length}</div>;
+        return <div>{record.JournalDetails.length}</div>;
       },
     },
     {
@@ -138,11 +138,11 @@ export default function Page() {
         return (
           <div className="text-right">
             {IDRFormat(
-              record.JournalDetail.reduce((acc, curr) => acc + curr.debit, 0),
+              record.JournalDetails.reduce((acc, curr) => acc + curr.debit, 0),
             )}{" "}
             /{" "}
             {IDRFormat(
-              record.JournalDetail.reduce((acc, curr) => acc + curr.credit, 0),
+              record.JournalDetails.reduce((acc, curr) => acc + curr.credit, 0),
             )}
           </div>
         );
@@ -302,11 +302,11 @@ const UpsertData = ({
   const [data, setData] = useState<IJournalEntry>(record || defaultData);
 
   // Kalkulasi total di luar render return agar lebih bersih
-  const totalDebit = data.JournalDetail.reduce(
+  const totalDebit = data.JournalDetails.reduce(
     (acc, curr) => acc + curr.debit,
     0,
   );
-  const totalCredit = data.JournalDetail.reduce(
+  const totalCredit = data.JournalDetails.reduce(
     (acc, curr) => acc + curr.credit,
     0,
   );
@@ -326,7 +326,7 @@ const UpsertData = ({
     // 2. Bersihkan baris kosong
     const payload = {
       ...data,
-      JournalDetail: data.JournalDetail.filter(
+      JournalDetails: data.JournalDetails.filter(
         (d) => d.debit !== 0 || d.credit !== 0 || d.categoryOfAccountId,
       ),
     };
@@ -358,7 +358,7 @@ const UpsertData = ({
   const updateDetail = (index: number, fields: Partial<IJournalDetail>) => {
     setData((prev) => ({
       ...prev,
-      JournalDetail: prev.JournalDetail.map((item, i) =>
+      JournalDetails: prev.JournalDetails.map((item, i) =>
         i === index ? { ...item, ...fields } : item,
       ),
     }));
@@ -367,7 +367,7 @@ const UpsertData = ({
   const removeRow = (index: number) => {
     setData((prev) => ({
       ...prev,
-      JournalDetail: prev.JournalDetail.filter((_, i) => i !== index),
+      JournalDetails: prev.JournalDetails.filter((_, i) => i !== index),
     }));
   };
 
@@ -412,7 +412,7 @@ const UpsertData = ({
 
           {/* Rows */}
           <div className="space-y-3">
-            {data.JournalDetail.map((d, i) => (
+            {data.JournalDetails.map((d, i) => (
               <div
                 className="flex gap-4 flex-wrap md:flex-nowrap items-start bg-white p-2 rounded shadow-sm"
                 key={i}
@@ -522,7 +522,7 @@ const UpsertData = ({
             onClick={() =>
               setData({
                 ...data,
-                JournalDetail: [...data.JournalDetail, { ...defaultJournal }],
+                JournalDetails: [...data.JournalDetails, { ...defaultJournal }],
               })
             }
           >
@@ -595,7 +595,7 @@ const ListJournalDetail = ({ records }: { records: IJournalEntry }) => {
     <div className="ms-15">
       <Table
         columns={columns}
-        dataSource={records.JournalDetail}
+        dataSource={records.JournalDetails}
         rowKey={"id"}
         pagination={false}
         size="small"
@@ -672,5 +672,5 @@ const defaultJournal: IJournalDetail = {
 const defaultData: IJournalEntry = {
   id: "1",
   date: new Date(),
-  JournalDetail: [defaultJournal],
+  JournalDetails: [defaultJournal],
 };

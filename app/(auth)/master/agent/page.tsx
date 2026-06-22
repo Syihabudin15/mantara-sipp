@@ -15,8 +15,8 @@ import {
 import { useAccess } from "@/libs/Permission";
 import {
   DeleteOutlined,
-  DropboxOutlined,
   EditOutlined,
+  GlobalOutlined,
   PlusCircleFilled,
   SaveOutlined,
 } from "@ant-design/icons";
@@ -59,12 +59,11 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    if (pageProps.search) {
-      params.append("search", pageProps.search);
-    }
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.search && { search: pageProps.search }),
+    });
     const res = await fetch(`/api/agent?${params.toString()}`);
     const json = await res.json();
     setPageProps((prev) => ({
@@ -95,7 +94,14 @@ export default function Page() {
       title: "ID",
       dataIndex: "id",
       key: "id",
-      width: 100,
+      render(value, record, index) {
+        return (
+          <>
+            <div>{(pageProps.page - 1) * pageProps.limit + index + 1}</div>
+            <div className="text-xs opacity-70">{record.id}</div>
+          </>
+        );
+      },
     },
     {
       title: "Agent Fronting",
@@ -128,7 +134,7 @@ export default function Page() {
       dataIndex: "user",
       key: "user",
       render(value, record, index) {
-        return <div>{record.User.length} User terdaftar</div>;
+        return <div>{record.Users.length}</div>;
       },
     },
     {
@@ -144,7 +150,7 @@ export default function Page() {
             }}
             style={{ fontSize: 11, width: 200 }}
           >
-            {record.SumdanAgentFronting.map((s) => s.Sumdan.name).join(", ")}
+            {record.SumdanAgentFrontings.map((s) => s.Sumdan.code).join(", ")}
           </Paragraph>
         );
       },
@@ -209,7 +215,7 @@ export default function Page() {
     <Card
       title={
         <div className="flex gap-2 font-bold text-xl">
-          <DropboxOutlined /> Jenis Pembiayaan
+          <GlobalOutlined /> Agent Fronting
         </div>
       }
       styles={{ body: { padding: 5 } }}
@@ -257,6 +263,7 @@ export default function Page() {
             }));
           },
           pageSizeOptions: [50, 100, 500, 1000],
+          showSizeChanger: true,
         }}
       />
       <UpsertData
@@ -343,6 +350,7 @@ function UpsertData({
       loading={loading}
       style={{ top: 20 }}
       width={1000}
+      destroyOnHidden
     >
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 flex flex-col gap-3">
@@ -383,15 +391,14 @@ function UpsertData({
               mode: "horizontal",
               required: true,
               type: "text",
-              value: data.up,
-              onChange: (e: string) => setData({ ...data, up: e }),
+              value: data.pic,
+              onChange: (e: string) => setData({ ...data, pic: e }),
             }}
           />
           <FormInput
             data={{
               label: "Keterangan",
               mode: "horizontal",
-              required: true,
               type: "textarea",
               value: data.description,
               onChange: (e: string) => setData({ ...data, description: e }),
@@ -401,7 +408,6 @@ function UpsertData({
             data={{
               label: "Target",
               mode: "horizontal",
-              required: true,
               type: "text",
               value: IDRFormat(data.target),
               onChange: (e: string) =>
@@ -428,18 +434,18 @@ function UpsertData({
               <Checkbox
                 title={s.name}
                 // Look for the specific s.id in your data array
-                checked={data.SumdanAgentFronting.some(
+                checked={data.SumdanAgentFrontings.some(
                   (item) => item.sumdanId === s.id,
                 )}
                 onChange={(e) =>
                   setData({
                     ...data,
-                    SumdanAgentFronting: !e.target.checked
-                      ? data.SumdanAgentFronting.filter(
+                    SumdanAgentFrontings: !e.target.checked
+                      ? data.SumdanAgentFrontings.filter(
                           (item) => item.sumdanId !== s.id,
                         )
                       : ([
-                          ...data.SumdanAgentFronting,
+                          ...data.SumdanAgentFrontings,
                           { agentFrontingId: record?.id, sumdanId: s.id },
                         ] as ISumdanAgentFronting[]),
                   })
@@ -521,6 +527,7 @@ export function DeleteData({
       width={400}
       style={{ top: 20 }}
       title={"Delete Jenis Pembiayaan " + record?.name}
+      destroyOnHidden
     >
       <p>Are you sure you want to delete this agent fronting?</p>
       <div className="flex justify-end gap-4">
@@ -537,13 +544,16 @@ const defaultJenis: IAgentFronting = {
   id: "",
   name: "",
   code: "",
-  up: null,
+  pic: null,
   description: null,
   file: null,
   target: 0,
-  User: [],
-  Dapem: [],
-  SumdanAgentFronting: [],
+  contract_date: null,
+  contract_no: null,
+  c_fee: 0,
+  Users: [],
+  Dapems: [],
+  SumdanAgentFrontings: [],
 
   status: true,
   created_at: new Date(),

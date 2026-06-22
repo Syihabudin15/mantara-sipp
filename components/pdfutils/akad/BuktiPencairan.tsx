@@ -16,6 +16,7 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
     record.rounded,
   ).angsuran;
   const dapem = GetDapem(record);
+  const ao = record.AO || record.AOCabang || record.AOArea;
 
   return `
   ${Header("BUKTI PENCAIRAN PEMBIAYAAN", isFor, record.no_contract, process.env.NEXT_PUBLIC_APP_LOGO, record.ProdukPembiayaan.Sumdan.logo)}
@@ -81,7 +82,12 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
           {
             key: "Biaya Administrasi",
             value: IDRFormat(
-              record.plafond * ((record.c_adm + record.c_adm_sumdan) / 100),
+              record.plafond *
+                ((record.c_adm +
+                  record.c_adm_sumdan +
+                  record.c_adm_mitra +
+                  record.c_adm_ff) /
+                  100),
             ),
             currency: true,
           },
@@ -94,7 +100,13 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
             key: "Biaya Provisi",
             value: IDRFormat(
               record.plafond *
-                ((record.c_provisi + record.c_provisi_sumdan) / 100),
+                ((record.c_provisi_sumdan +
+                  record.c_fee_ao +
+                  record.c_fee_cabang +
+                  record.c_fee_area +
+                  record.c_fee_bpp +
+                  record.c_fee_bpb) /
+                  100),
             ),
             currency: true,
           },
@@ -105,12 +117,16 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
           },
           {
             key: "Biaya Buka Rekening",
-            value: IDRFormat(record.c_account),
+            value: IDRFormat(record.c_account + record.c_account_sumdan),
             currency: true,
           },
-
           {
             key: "Biaya Flagging",
+            value: IDRFormat(record.c_flagging),
+            currency: true,
+          },
+          {
+            key: "Biaya Sistem Informasi",
             value: IDRFormat(record.c_infomation),
             currency: true,
           },
@@ -141,23 +157,18 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
           currency: true,
         },
         {
-          key: `Blokir Angsuran ${record.c_blokir}x`,
-          value: IDRFormat(dapem.blok),
-          currency: true,
-        },
-        // {
-        //   key: `Retensi Angsuran ${record.c_retensi}x`,
-        //   value: IDRFormat(retensi),
-        //   currency: true,
-        // },
-        {
-          key: `Bpp`,
-          value: IDRFormat(record.c_bpp),
+          key: `BOP Pembiayaan`,
+          value: IDRFormat(record.c_bop),
           currency: true,
         },
         {
           key: "Nominal Takeover",
           value: IDRFormat(record.c_takeover),
+          currency: true,
+        },
+        {
+          key: `Blokir Angsuran ${record.c_blokir}x`,
+          value: IDRFormat(dapem.blok),
           currency: true,
         },
         {
@@ -184,8 +195,8 @@ export const BuktiPencairan = (record: IDapem, isFor: string) => {
     <div class="flex-1">
       <p>Diperiksa oleh</p>
       <div class="h-28"></div>
-      <p class="border-b">${record.AO.fullname}</p>
-      <p>Petugas</p>
+      <p class="border-b">${ao?.fullname}</p>
+      <p>Account Officer</p>
     </div>
   </div>
   <div class="mt-10 flex justify-around gap-10 items-end text-center">

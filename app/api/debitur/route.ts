@@ -5,13 +5,16 @@ import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
-  const page = request.nextUrl.searchParams.get("page") || "1";
-  const limit = request.nextUrl.searchParams.get("limit") || "50";
-  const search = request.nextUrl.searchParams.get("search") || "";
-  const group_skep = request.nextUrl.searchParams.get("group_skep");
-  const pay_office = request.nextUrl.searchParams.get("pay_office");
-  const aktif = request.nextUrl.searchParams.get("aktif");
-  const address = request.nextUrl.searchParams.get("address");
+  const params = Object.fromEntries(request.nextUrl.searchParams);
+  const {
+    page = "1",
+    limit = "50",
+    search,
+    address,
+    group_skep,
+    payOfficeId,
+    aktif,
+  } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
   const session = await getSession();
 
@@ -40,12 +43,12 @@ export const GET = async (request: NextRequest) => {
       ],
     }),
     ...(group_skep && { group_skep: group_skep }),
-    ...(pay_office && { pay_office: { contains: pay_office } }),
+    ...(payOfficeId && { payOfficeId: payOfficeId }),
     ...(user.sumdanId && {
-      Dapem: { some: { ProdukPembiayaan: { sumdanId: user.sumdanId } } },
+      Dapems: { some: { ProdukPembiayaan: { sumdanId: user.sumdanId } } },
     }),
     ...(aktif && {
-      Dapem: {
+      Dapems: {
         some: {
           dropping_status: {
             in: ["LUNAS", "DISETUJUI", "PROSES"],
@@ -55,38 +58,45 @@ export const GET = async (request: NextRequest) => {
       },
     }),
   };
-  const find = await prisma.debitur.findMany({
-    where,
-    skip: skip,
-    take: parseInt(limit),
-    include: {
-      Dapem: {
-        where: {
-          dropping_status: {
-            in: ["LUNAS", "DISETUJUI", "PROSES"],
+  const [data, total] = await Promise.all([
+    prisma.debitur.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      include: {
+        Dapems: {
+          where: {
+            dropping_status: {
+              in: ["LUNAS", "DISETUJUI", "PROSES"],
+            },
+            status: true,
+            ...(user.sumdanId && {
+              ProdukPembiayaan: { sumdanId: user.sumdanId },
+            }),
           },
-          status: true,
+          include: {
+            ProdukPembiayaan: { include: { Sumdan: true } },
+            JenisPembiayaan: true,
+            AO: { include: { Cabang: { include: { Area: true } } } },
+            AOCabang: { include: { Cabang: { include: { Area: true } } } },
+            AOArea: { include: { Cabang: { include: { Area: true } } } },
+            Angsurans: true,
+          },
         },
-        include: {
-          ProdukPembiayaan: { include: { Sumdan: true } },
-          JenisPembiayaan: true,
-          AO: { include: { Cabang: { include: { Area: true } } } },
-          Angsuran: true,
+        PayOffice: true,
+      },
+      orderBy: {
+        Dapems: {
+          _count: "desc",
         },
       },
-    },
-    orderBy: {
-      Dapem: {
-        _count: "desc",
-      },
-    },
-  });
-
-  const total = await prisma.debitur.count({ where });
+    }),
+    prisma.debitur.count({ where }),
+  ]);
 
   return NextResponse.json({
     status: 200,
-    data: serializeForApi(find),
+    data: serializeForApi(data),
     total: total,
   });
 };

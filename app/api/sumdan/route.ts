@@ -1,102 +1,113 @@
 import { serializeForApi } from "@/components/utils/PembiayaanUtil";
 import { getSession } from "@/libs/Auth";
 import prisma from "@/libs/Prisma";
-import { Sumdan } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
-  const page = request.nextUrl.searchParams.get("page") || "1";
-  const include = request.nextUrl.searchParams.get("include");
-  const limit = request.nextUrl.searchParams.get("limit") || "50";
-  const search = request.nextUrl.searchParams.get("search") || "";
-  const backdate = request.nextUrl.searchParams.get("backdate");
+  const params = Object.fromEntries(request.nextUrl.searchParams);
+  const { page = "1", limit = "50", search } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const session = await getSession();
 
   if (!session)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-  const user = await prisma.user.findFirst({ where: { id: session.user.id } });
+  const user = await prisma.user.findFirst({
+    where: { id: session.user.id },
+    include: { AgentFronting: { include: { SumdanAgentFrontings: true } } },
+  });
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
-  const find = await prisma.sumdan.findMany({
-    where: {
-      ...(search && {
-        OR: [{ name: { contains: search } }, { code: { contains: search } }],
-      }),
-      ...(user.sumdanId && { id: user.sumdanId }),
-      status: true,
-    },
-    skip: skip,
-    take: parseInt(limit),
-    include: {
-      ProdukPembiayaan: {
-        where: { status: true },
-        ...(include && {
+  const where: Prisma.SumdanWhereInput = {
+    ...(search && {
+      OR: [
+        { name: { contains: search } },
+        { code: { contains: search } },
+        { contract_no: { contains: search } },
+        { email: { contains: search } },
+        { phone: { contains: search } },
+      ],
+    }),
+    ...(user.sumdanId && { id: user.sumdanId }),
+    ...(user.agentFrontingId && {
+      SumdanAgentFrontings: {
+        some: {
+          sumdanId: {
+            in: user.AgentFronting?.SumdanAgentFrontings.map((s) => s.sumdanId),
+          },
+        },
+      },
+    }),
+    status: true,
+  };
+
+  const [data, total] = await Promise.all([
+    prisma.sumdan.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      include: {
+        ProdukPembiayaans: {
+          where: { status: true },
           include: {
-            Dapem: {
+            Sumdan: true,
+            Dapems: {
               where: {
                 status: true,
                 dropping_status: { in: ["DISETUJUI", "LUNAS"] },
-                ...(backdate && {
-                  Dropping: {
-                    process_at: {
-                      gte: moment(backdate.split(",")[0]).toDate(),
-                      lte: moment(backdate.split(",")[1]).toDate(),
+              },
+              include: {
+                Angsurans: {
+                  where: {
+                    date_pay: {
+                      gte: moment().startOf("month").toDate(),
+                      lte: moment().endOf("month").toDate(),
                     },
                   },
-                }),
+                },
               },
-              include: { Angsuran: true },
             },
           },
-        }),
+        },
       },
-    },
-  });
-
-  const total = await prisma.sumdan.count({
-    where: {
-      ...(search && {
-        OR: [{ name: { contains: search } }, { code: { contains: search } }],
-      }),
-      ...(user.sumdanId && { id: user.sumdanId }),
-      status: true,
-    },
-  });
+    }),
+    prisma.sumdan.count({ where }),
+  ]);
 
   return NextResponse.json({
     status: 200,
-    data: serializeForApi(find),
+    data: serializeForApi(data),
     total: total,
   });
 };
 
 export const POST = async (request: NextRequest) => {
-  const body: Sumdan = await request.json();
-  const { id, ...saved } = body;
+  const body = await request.json();
+  const { id, ProductPembiayaans, ...saved } = body;
   try {
-    const generateId = await generateSumdanId();
+    const genId = await generateID();
     await prisma.sumdan.create({
-      data: { id: generateId, ...saved },
+      data: { id: genId, ...saved },
     });
     return NextResponse.json({
       status: 201,
-      msg: "Berhasil menyimpan data sumdan.",
+      msg: "Berhasil menyimpan data.",
     });
   } catch (err) {
+    console.log(err);
     return NextResponse.json({
       status: 500,
-      msg: "Gagal menyimpan data sumdan. internal server error.",
+      msg: "Gagal menyimpan data. internal server error.",
     });
   }
 };
 
 export const PUT = async (request: NextRequest) => {
-  const body: Sumdan = await request.json();
-  const { id, ...updated } = body;
+  const body = await request.json();
+  const { id, ProductPembiayaans, ...updated } = body;
   try {
     await prisma.sumdan.update({
       where: { id: id },
@@ -104,12 +115,12 @@ export const PUT = async (request: NextRequest) => {
     });
     return NextResponse.json({
       status: 200,
-      msg: "Berhasil memperbarui data sumdan.",
+      msg: "Berhasil memperbarui data.",
     });
   } catch (err) {
     return NextResponse.json({
       status: 500,
-      msg: "Gagal memperbarui data sumdan. internal server error.",
+      msg: "Gagal memperbarui data. internal server error.",
     });
   }
 };
@@ -123,65 +134,81 @@ export const DELETE = async (request: NextRequest) => {
     });
     return NextResponse.json({
       status: 200,
-      msg: "Berhasil menghapus data sumdan.",
+      msg: "Berhasil menghapus data.",
     });
   } catch (err) {
     return NextResponse.json({
       status: 500,
-      msg: "Gagal menghapus data sumdan. internal server error.",
+      msg: "Gagal menghapus data. internal server error.",
     });
   }
 };
 
+// export const PATCH = async (request: NextRequest) => {
+//   const page = request.nextUrl.searchParams.get("page") || "1";
+//   const limit = request.nextUrl.searchParams.get("limit") || "50";
+//   const search = request.nextUrl.searchParams.get("search") || "";
+//   const skip = (parseInt(page) - 1) * parseInt(limit);
+
+//   const session = await getSession();
+
+//   if (!session)
+//     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
+//   const user = await prisma.user.findFirst({ where: { id: session.user.id } });
+//   if (!user)
+//     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
+
+//   const where: Prisma.SumdanWhereInput = {
+//     ...(search && {
+//       OR: [
+//         { name: { contains: search } },
+//         { code: { contains: search } },
+//         { contract_no: { contains: search } },
+//         { email: { contains: search } },
+//         { phone: { contains: search } },
+//       ],
+//     }),
+//     ...(user.sumdanId && { id: user.sumdanId }),
+//     status: true,
+//   };
+
+//   const [data, total] = await Promise.all([
+//     prisma.sumdan.findMany({
+//       where,
+//       skip: skip,
+//       take: parseInt(limit),
+//       include: {
+//         ProdukPembiayaans: {
+//           where: { status: true },
+//           include: { Sumdan: true },
+//         },
+//       },
+//     }),
+//     prisma.sumdan.count({ where }),
+//   ]);
+
+//   return NextResponse.json({
+//     status: 200,
+//     data: serializeForApi(data),
+//     total: total,
+//   });
+// };
+
 export const PATCH = async (request: NextRequest) => {
-  const page = request.nextUrl.searchParams.get("page") || "1";
-  const limit = request.nextUrl.searchParams.get("limit") || "50";
-  const search = request.nextUrl.searchParams.get("search") || "";
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const id = request.nextUrl.searchParams.get("id");
 
-  const session = await getSession();
-
-  if (!session)
-    return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-  const user = await prisma.user.findFirst({ where: { id: session.user.id } });
-  if (!user)
-    return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-
-  const find = await prisma.sumdan.findMany({
-    where: {
-      ...(search && {
-        OR: [{ name: { contains: search } }, { code: { contains: search } }],
-      }),
-      ...(user.sumdanId && { id: user.sumdanId }),
-      status: true,
-    },
-    skip: skip,
-    take: parseInt(limit),
+  const data = await prisma.sumdan.findFirst({
+    where: { id: id as string },
     include: {
-      ProdukPembiayaan: { where: { status: true }, include: { Sumdan: true } },
+      ProdukPembiayaans: true,
     },
   });
-
-  const total = await prisma.sumdan.count({
-    where: {
-      ...(search && {
-        OR: [{ name: { contains: search } }, { code: { contains: search } }],
-      }),
-      ...(user.sumdanId && { id: user.sumdanId }),
-      status: true,
-    },
-  });
-
-  return NextResponse.json({
-    status: 200,
-    data: serializeForApi(find),
-    total: total,
-  });
+  return NextResponse.json({ msg: "ok", status: 200, data }, { status: 200 });
 };
 
-export async function generateSumdanId() {
-  const prefix = "MITRA";
-  const padLength = 2;
-  const lastRecord = await prisma.sumdan.count({});
-  return `${prefix}${String(lastRecord + 1).padStart(padLength, "0")}`;
+export async function generateID() {
+  const prefix = `MITRA`;
+  const padLength = 4;
+  const lastRecord = await prisma.sumdan.count();
+  return `${prefix}${String(lastRecord).padStart(padLength, "0")}`;
 }

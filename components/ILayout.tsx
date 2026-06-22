@@ -77,7 +77,7 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
     window.addEventListener("resize", handleResize);
 
     getNotif();
-    const interval = setInterval(getNotif, 1000 * 5);
+    const interval = setInterval(getNotif, 1000 * 3);
 
     return () => {
       window.removeEventListener("resize", handleResize);

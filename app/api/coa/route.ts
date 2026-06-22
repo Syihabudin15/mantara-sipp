@@ -19,7 +19,7 @@ export const GET = async (request: NextRequest) => {
     },
     skip: skip,
     take: parseInt(limit),
-    include: { Children: true, Parent: true },
+    include: { Childrens: true, Parent: true },
   });
 
   return NextResponse.json(
@@ -86,9 +86,9 @@ export const DELETE = async (req: NextRequest) => {
   try {
     const find = await prisma.categoryOfAccount.findFirst({
       where: { id },
-      include: { JournalDetail: true },
+      include: { JournalDetails: true },
     });
-    if (find && find.JournalDetail.length !== 0)
+    if (find && find.JournalDetails.length !== 0)
       return NextResponse.json(
         {
           msg: "COA ini memiliki journal yang terhubung. tidak dapat hapus data!",

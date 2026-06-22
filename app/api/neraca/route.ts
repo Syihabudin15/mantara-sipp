@@ -14,9 +14,9 @@ export const GET = async (request: NextRequest) => {
         },
         include: {
           Parent: true,
-          Children: {
+          Childrens: {
             include: {
-              JournalDetail: {
+              JournalDetails: {
                 where: {
                   ...(backdate && {
                     JournalEntry: {
@@ -30,7 +30,7 @@ export const GET = async (request: NextRequest) => {
               },
             },
           },
-          JournalDetail: true,
+          JournalDetails: true,
         },
       }),
       prisma.categoryOfAccount.findMany({
@@ -40,9 +40,9 @@ export const GET = async (request: NextRequest) => {
         },
         include: {
           Parent: true,
-          Children: {
+          Childrens: {
             include: {
-              JournalDetail: {
+              JournalDetails: {
                 where: {
                   ...(backdate && {
                     JournalEntry: {
@@ -56,7 +56,7 @@ export const GET = async (request: NextRequest) => {
               },
             },
           },
-          JournalDetail: true,
+          JournalDetails: true,
         },
       }),
       prisma.categoryOfAccount.findMany({
@@ -66,9 +66,9 @@ export const GET = async (request: NextRequest) => {
         },
         include: {
           Parent: true,
-          Children: {
+          Childrens: {
             include: {
-              JournalDetail: {
+              JournalDetails: {
                 where: {
                   ...(backdate && {
                     JournalEntry: {
@@ -82,7 +82,7 @@ export const GET = async (request: NextRequest) => {
               },
             },
           },
-          JournalDetail: true,
+          JournalDetails: true,
         },
       }),
       prisma.journalDetail.findMany({
@@ -149,7 +149,7 @@ export const POST = async (request: NextRequest) => {
         parentId: { not: null },
       },
       include: {
-        JournalDetail: {
+        JournalDetails: {
           include: { JournalEntry: true },
           where: {
             ...(backdate && {
@@ -170,7 +170,7 @@ export const POST = async (request: NextRequest) => {
         parentId: { not: null },
       },
       include: {
-        JournalDetail: {
+        JournalDetails: {
           include: { JournalEntry: true },
           where: {
             ...(backdate && {

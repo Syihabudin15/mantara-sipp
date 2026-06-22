@@ -1,57 +1,51 @@
 import prisma from "@/libs/Prisma";
 
-import { JenisPembiayaan } from "@prisma/client";
+import { JenisPembiayaan, Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {
-  const page = request.nextUrl.searchParams.get("page") || "1";
-  const limit = request.nextUrl.searchParams.get("limit") || "50";
-  const search = request.nextUrl.searchParams.get("search") || "";
+  const params = Object.fromEntries(request.nextUrl.searchParams);
+  const { page = "1", limit = "50", search } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const find = await prisma.jenisPembiayaan.findMany({
-    where: {
-      ...(search && { name: { contains: search } }),
-      status: true,
-    },
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      updated_at: "desc",
-    },
-  });
-
-  const total = await prisma.jenisPembiayaan.count({
-    where: {
-      ...(search && { name: { contains: search } }),
-      status: true,
-    },
-  });
+  const where: Prisma.JenisPembiayaanWhereInput = {
+    ...(search && { name: { contains: search } }),
+    status: true,
+  };
+  const [data, total] = await Promise.all([
+    prisma.jenisPembiayaan.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+    }),
+    prisma.jenisPembiayaan.count({ where }),
+  ]);
 
   return NextResponse.json({
     status: 200,
-    data: find,
+    data: data,
     total: total,
   });
 };
 
 export const POST = async (request: NextRequest) => {
-  const body: JenisPembiayaan = await request.json();
+  const body = await request.json();
   const { id, ...saved } = body;
   try {
-    const generateId = await generateJenisId();
+    const genId = await generateID();
     await prisma.jenisPembiayaan.create({
-      data: { id: generateId, ...saved },
+      data: { id: genId, ...saved },
     });
+
     return NextResponse.json({
       status: 201,
-      msg: "Berhasil menyimpan data jenis pembiayaan.",
+      msg: "Berhasil menyimpan data.",
     });
   } catch (err) {
     console.log(err);
     return NextResponse.json({
       status: 500,
-      msg: "Gagal menyimpan data jenis pembiayaan. internal server error.",
+      msg: "Gagal menyimpan data. internal server error.",
     });
   }
 };
@@ -66,12 +60,12 @@ export const PUT = async (request: NextRequest) => {
     });
     return NextResponse.json({
       status: 200,
-      msg: "Berhasil memperbarui data jenis pembiayaan.",
+      msg: "Berhasil memperbarui data.",
     });
   } catch (err) {
     return NextResponse.json({
       status: 500,
-      msg: "Gagal memperbarui data jenis pembiayaan. internal server error.",
+      msg: "Gagal memperbarui data. internal server error.",
     });
   }
 };
@@ -85,19 +79,19 @@ export const DELETE = async (request: NextRequest) => {
     });
     return NextResponse.json({
       status: 200,
-      msg: "Berhasil menghapus data jenis pembiayaan.",
+      msg: "Berhasil menghapus data.",
     });
   } catch (err) {
     return NextResponse.json({
       status: 500,
-      msg: "Gagal menghapus data jenis pembiayaan. internal server error.",
+      msg: "Gagal menghapus data. internal server error.",
     });
   }
 };
 
-export async function generateJenisId() {
-  const prefix = "JPM";
-  const padLength = 2;
-  const lastRecord = await prisma.jenisPembiayaan.count({});
-  return `${prefix}${String(lastRecord + 1).padStart(padLength, "0")}`;
+export async function generateID() {
+  const prefix = `TYPE`;
+  const padLength = 4;
+  const lastRecord = await prisma.jenisPembiayaan.count();
+  return `${prefix}${String(lastRecord).padStart(padLength, "0")}`;
 }

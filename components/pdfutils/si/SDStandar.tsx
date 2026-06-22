@@ -98,7 +98,7 @@ const generateSD = (record: IDocument) => {
               </tr>
             </thead>
             <tbody>
-              ${record.Dapem.map(
+              ${record.Dapems.map(
                 (r, i) => `
                 <tr>
                   <td class="border border-gray-400 border-dashed p-1 text-center">${i + 1}</td>
@@ -126,7 +126,7 @@ const generateSD = (record: IDocument) => {
                   JUMLAH
                 </td>
                 <td class="border border-gray-400 p-2 text-right border-dashed">
-                  ${IDRFormat(record.Dapem.reduce((acc, curr) => acc + curr.plafond, 0))}
+                  ${IDRFormat(record.Dapems.reduce((acc, curr) => acc + curr.plafond, 0))}
                 </td>
               </tr>
             </tfoot>

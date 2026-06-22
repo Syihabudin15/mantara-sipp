@@ -4,7 +4,6 @@ import { IDapem } from "@/libs/IInterfaces";
 import { JadwalAngsuran } from "./KartuAngsuran";
 import { PerjanjianKredit } from "./PerjanjianKredit";
 import { SPKDR } from "./SKPDR";
-import { Flagging } from "./Flagging";
 import { BuktiPencairan } from "./BuktiPencairan";
 import { Pemotongan } from "./Pemotongan";
 import { Kesanggupan } from "./Kesanggupan";
@@ -24,7 +23,12 @@ const generateContractHtml = (record: IDapem) => {
       <style>
         @page {
           size: A4;
-          margin: 15mm;
+          margin: 10mm;
+          @bottom-center {
+            content: "Halaman " counter(page) " dari " counter(pages);
+            font-family: Cambria, Georgia, 'Times New Roman', Times, serif;
+            font-size: 9px;
+          }
         }
 
         html, body {
@@ -47,6 +51,7 @@ const generateContractHtml = (record: IDapem) => {
               min-height: 95vh;    /* atau height A4 jika untuk print */
               padding-top: 70px;    /* ruang untuk header */
               page-break-after: always;
+              line-height: 17px;
             }
     
             .page .page-header {
@@ -83,25 +88,10 @@ const generateContractHtml = (record: IDapem) => {
         ${SPKDR(record)}
       </div>
       <div class="page text-justify" style="font-size: 11px;">
-        ${Flagging(record)}
-      </div>
-      <div class="page text-justify" style="font-size: 11px;">
-        ${BuktiPencairan(record, "DEBITUR")}
-      </div>
-      <div class="page text-justify" style="font-size: 11px;">
         ${BuktiPencairan(record, record.ProdukPembiayaan.Sumdan.name)}
       </div>
       <div class="page text-justify" style="font-size: 11px;">
-        ${Pemotongan(record)}
-      </div>
-      <div class="page text-justify" style="font-size: 11px;">
-        ${Kesanggupan(record, "DEBOTUR")}
-      </div>
-      <div class="page text-justify" style="font-size: 11px;">
         ${Kesanggupan(record, record.ProdukPembiayaan.Sumdan.name)}
-      </div>
-      <div class="page text-justify" style="font-size: 11px;">
-        ${PenyerahanJaminan(record)}
       </div>
       <div class="page text-justify" style="font-size: 11px;">
         ${PenyerahanJaminan(record)}

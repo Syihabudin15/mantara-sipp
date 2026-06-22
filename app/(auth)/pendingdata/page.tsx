@@ -245,11 +245,12 @@ export default function Page() {
       dataIndex: "aoup",
       key: "aoup",
       render(value, record, index) {
+        const ao = record.AO || record.AOCabang || record.AOArea;
         return (
           <div>
-            <div>{record.AO.fullname}</div>
+            <div>{ao?.fullname}</div>
             <div className="text-xs opacity-80">
-              {record.AO.Cabang.name} | {record.AO.Cabang.Area.name}
+              {ao?.Cabang.name} | {ao?.Cabang.Area.name}
             </div>
           </div>
         );
@@ -420,39 +421,39 @@ export default function Page() {
         );
       },
     },
-    // {
-    //   title: "Mutasi & Takeover",
-    //   dataIndex: "produk",
-    //   key: "produk",
-    //   width: 350,
-    //   render(value, record, index) {
-    //     return (
-    //       <div>
-    //         {record.JenisPembiayaan.status_mutasi && (
-    //           <div style={{ fontSize: 9 }}>
-    //             <SwapOutlined />{" "}
-    //             <Tag style={{ fontSize: 9 }} color={"red"}>
-    //               {record.mutasi_from}
-    //             </Tag>{" "}
-    //             <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
-    //             <Tag style={{ fontSize: 9 }} color={"blue"}>
-    //               {record.mutasi_to}
-    //             </Tag>
-    //           </div>
-    //         )}
-    //         {record.JenisPembiayaan.status_takeover && (
-    //           <div style={{ fontSize: 9 }}>
-    //             <PayCircleOutlined />{" "}
-    //             <Tag color={"blue"} style={{ fontSize: 9 }}>
-    //               {record.takeover_from} (
-    //               {moment(record.takeover_date).format("DD/MM/YYYY")})
-    //             </Tag>
-    //           </div>
-    //         )}
-    //       </div>
-    //     );
-    //   },
-    // },
+    {
+      title: "Mutasi & Takeover",
+      dataIndex: "produk",
+      key: "produk",
+      width: 350,
+      render(value, record, index) {
+        return (
+          <div>
+            {record.JenisPembiayaan.status_mutasi && (
+              <div style={{ fontSize: 9 }}>
+                <SwapOutlined />{" "}
+                <Tag style={{ fontSize: 9 }} color={"red"}>
+                  {record.prev_payoffice}
+                </Tag>{" "}
+                <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
+                <Tag style={{ fontSize: 9 }} color={"blue"}>
+                  {record.PayOffice.code || record.PayOffice.name}
+                </Tag>
+              </div>
+            )}
+            {record.JenisPembiayaan.status_takeover && (
+              <div style={{ fontSize: 9 }}>
+                <PayCircleOutlined />{" "}
+                <Tag color={"blue"} style={{ fontSize: 9 }}>
+                  {record.takeover_from} (
+                  {moment(record.takeover_date).format("DD/MM/YYYY")})
+                </Tag>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
     {
       title: "Created",
       dataIndex: "created_at",
@@ -460,7 +461,7 @@ export default function Page() {
       render(value, record, index) {
         return (
           <div>
-            <div>{record.CreatedBy.fullname}</div>
+            <div>{record.User.fullname}</div>
             <div className="opacity-80 text-xs">
               {moment(record.created_at).format("DD/MM/YYYY")}
             </div>

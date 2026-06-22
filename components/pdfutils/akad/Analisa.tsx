@@ -22,6 +22,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
   ).angsuran;
 
   const dapem = GetDapem(record);
+  const ao = record.AO || record.AOCabang || record.AOArea;
 
   return `
   ${Header("ANALISA PEMBIAYAAN", record.no_contract, undefined, process.env.NEXT_PUBLIC_APP_LOGO, record.ProdukPembiayaan.Sumdan.logo)}
@@ -53,7 +54,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
       },
       {
         key: "Usia Pemohon",
-        value: `${age.year} Tahun ${age.month} Bulan ${age.day} Hari`,
+        value: `${age.year} Thn ${age.month} Bln ${age.day} Hr`,
       },
       {
         key: "Est Tanggal Lunas",
@@ -70,7 +71,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
     </div>
   </div>
 
-  <div class="my-4 flex gap-4">
+  <div class="my-4 flex gap-4 border-t border-dashed">
     <div class="flex-1">
       ${ListNonStyle([
         {
@@ -96,16 +97,40 @@ export const AnalisaPerhitungan = (record: IDapem) => {
     <div class="flex-1">
     ${ListNonStyle([
       {
-        key: "SPV/MOC/KORWIL",
-        value: `${record.AO.fullname} (${record.AO.nip})`,
+        key: "Kantor Bayar Asal",
+        value: record.prev_payoffice,
       },
       {
-        key: "Unit Pelayanan",
-        value: `${record.AO.Cabang.name} - ${record.AO.Cabang.Area.name}`,
+        key: "Kantor Bayar Tujuan",
+        value: record.PayOffice.name,
       },
-      { key: "Admin", value: record.CreatedBy.fullname },
+      {
+        key: "Instansi Takeover",
+        value: record.takeover_from,
+      },
+      {
+        key: "Rencana Tgl Takeover",
+        value: record.takeover_date
+          ? moment(record.takeover_date).format("DD/MM/YYYY")
+          : "",
+      },
     ])}
     </div>
+  </div>
+
+  <div class="my-4 border-t border-dashed">
+  <p class="font-bold text-lg mb-2">Petugas dan Unit Pelayanan</p>
+  ${ListNonStyle([
+    {
+      key: "Account Officer",
+      value: `${ao?.fullname} (${ao?.nip})`,
+    },
+    {
+      key: "Unit Pelayanan",
+      value: `${ao?.Cabang.name} - ${ao?.Cabang.Area.name}`,
+    },
+    { key: "Admin", value: record.User.fullname },
+  ])}
   </div>
   
 
@@ -117,7 +142,12 @@ export const AnalisaPerhitungan = (record: IDapem) => {
           {
             key: "Biaya Administrasi",
             value: IDRFormat(
-              record.plafond * ((record.c_adm + record.c_adm_sumdan) / 100),
+              record.plafond *
+                ((record.c_adm +
+                  record.c_adm_sumdan +
+                  record.c_adm_mitra +
+                  record.c_adm_ff) /
+                  100),
             ),
             currency: true,
           },
@@ -127,25 +157,36 @@ export const AnalisaPerhitungan = (record: IDapem) => {
             currency: true,
           },
           {
+            key: "Biaya Provisi",
+            value: IDRFormat(
+              record.plafond *
+                ((record.c_provisi_sumdan +
+                  record.c_fee_ao +
+                  record.c_fee_cabang +
+                  record.c_fee_area +
+                  record.c_fee_bpp +
+                  record.c_fee_bpb) /
+                  100),
+            ),
+            currency: true,
+          },
+          {
             key: "Biaya Tatalaksana",
             value: IDRFormat(record.c_gov),
             currency: true,
           },
           {
             key: "Biaya Buka Rekening",
-            value: IDRFormat(record.c_account),
-            currency: true,
-          },
-          {
-            key: "Biaya Provisi",
-            value: IDRFormat(
-              record.plafond *
-                ((record.c_provisi + record.c_provisi_sumdan) / 100),
-            ),
+            value: IDRFormat(record.c_account + record.c_account_sumdan),
             currency: true,
           },
           {
             key: "Biaya Flagging",
+            value: IDRFormat(record.c_flagging),
+            currency: true,
+          },
+          {
+            key: "Biaya Sistem Informasi",
             value: IDRFormat(record.c_infomation),
             currency: true,
           },
@@ -176,18 +217,18 @@ export const AnalisaPerhitungan = (record: IDapem) => {
           currency: true,
         },
         {
-          key: "Blokir Angsuran",
-          value: IDRFormat(dapem.blok),
-          currency: true,
-        },
-        {
-          key: "BPP",
-          value: IDRFormat(record.c_bpp),
+          key: "BOP Pembiayaan",
+          value: IDRFormat(record.c_bop),
           currency: true,
         },
         {
           key: "Nominal Takeover",
           value: IDRFormat(record.c_takeover),
+          currency: true,
+        },
+        {
+          key: `Blokir Angsuran (${record.c_blokir}x)`,
+          value: IDRFormat(dapem.blok),
           currency: true,
         },
         {
@@ -200,17 +241,21 @@ export const AnalisaPerhitungan = (record: IDapem) => {
       </div>
     </div>
   </div>
-  
-  <div class="mt-5 italic">
-    <p>Informasi Lainnya : </p>
-    <ul style="list-style-type: disc;">
-      ${record.JenisPembiayaan.status_takeover ? `<li>Instansi takeover ke <span class="font-bold">${record.takeover_from}</span> dengan estimasi pelaksanaan tanggal <span class="font-bold">${moment(record.takeover_date).format("DD MMMM YYYY")}</span></li>` : ""}
-    </ul>
+
+  <div class="flex gap-10 justify-around mt-5 items-end">
+    <div class="flex-1 text-center">
+      <p>${(record.Debitur.city || "KOTA BANDUNG").toLowerCase().replace("kota", "").replace("kabupaten", "").toUpperCase()}, ${moment(record.date_contract).format("DD-MM-YYYY")}</p>
+      <p>DEBITUR</p>
+      <div class="h-28"></div>
+      <p class="border-b">${record.Debitur.fullname}</p>
+      <p>Penerima Pembiayaan</p>
     </div>
+    <div class="flex-1 text-center">
+      <p>Account Officer</p>
+      <div class="h-28"></div>
+      <p class="border-b">${ao?.fullname}</p>
+      <p>${ao?.position}</p>
+    </div>
+  </div>
     `;
 };
-
-// <ul style="list-style-type: disc;">
-//   ${record.JenisPembiayaan.status_takeover ? `<li>Instansi takeover ke <span class="font-bold">${record.takeover_from}</span> dengan estimasi pelaksanaan tanggal <span class="font-bold">${moment(record.takeover_date).format("DD MMMM YYYY")}</span></li>` : ""}
-//   ${record.JenisPembiayaan.status_mutasi ? `<li>Akan dilakukan mutasi kantor bayar gaji pensiun dari <span class="font-bold">${record.Debitur.pay_office} ke ${record.payOfficeId}</span>` : ""}
-// </ul>

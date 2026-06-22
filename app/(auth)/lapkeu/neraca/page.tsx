@@ -56,10 +56,10 @@ export default function NeracaPage() {
       data.asset.reduce(
         (acc, d) =>
           acc +
-          d.Children.reduce(
+          d.Childrens.reduce(
             (accC, dc) =>
               accC +
-              dc.JournalDetail.reduce(
+              dc.JournalDetails.reduce(
                 (accJ, j) => accJ + (j.debit - j.credit),
                 0,
               ),
@@ -75,10 +75,10 @@ export default function NeracaPage() {
       data.kewajiban.reduce(
         (acc, d) =>
           acc +
-          d.Children.reduce(
+          d.Childrens.reduce(
             (accC, dc) =>
               accC +
-              dc.JournalDetail.reduce(
+              dc.JournalDetails.reduce(
                 (accJ, j) => accJ + (j.credit - j.debit),
                 0,
               ),
@@ -94,10 +94,10 @@ export default function NeracaPage() {
       data.modal.reduce(
         (acc, d) =>
           acc +
-          d.Children.reduce(
+          d.Childrens.reduce(
             (accC, dc) =>
               accC +
-              dc.JournalDetail.reduce(
+              dc.JournalDetails.reduce(
                 (accJ, j) => accJ + (j.credit - j.debit),
                 0,
               ),
@@ -146,8 +146,8 @@ export default function NeracaPage() {
                   <h3 className="font-bold text-blue-600 border-b mb-2 uppercase tracking-wider text-sm">
                     {cat.name}
                   </h3>
-                  {cat.Children.map((acc) => {
-                    const balance = acc.JournalDetail.reduce(
+                  {cat.Childrens.map((acc) => {
+                    const balance = acc.JournalDetails.reduce(
                       (a, b) => a + (b.debit - b.credit),
                       0,
                     );
@@ -182,7 +182,7 @@ export default function NeracaPage() {
                   KEWAJIBAN
                 </h3>
                 {data.kewajiban.map((cat) =>
-                  cat.Children.map((acc) => (
+                  cat.Childrens.map((acc) => (
                     <div
                       key={acc.id}
                       className="flex justify-between py-1 text-sm border-b border-gray-50"
@@ -190,7 +190,7 @@ export default function NeracaPage() {
                       <span>{acc.name}</span>
                       <span className="font-mono">
                         {IDRFormat(
-                          acc.JournalDetail.reduce(
+                          acc.JournalDetails.reduce(
                             (a, b) => a + (b.credit - b.debit),
                             0,
                           ),
@@ -207,7 +207,7 @@ export default function NeracaPage() {
                   MODAL
                 </h3>
                 {data.modal.map((cat) =>
-                  cat.Children.map((acc) => (
+                  cat.Childrens.map((acc) => (
                     <div
                       key={acc.id}
                       className="flex justify-between py-1 text-sm border-b border-gray-50 ml-4"
@@ -215,7 +215,7 @@ export default function NeracaPage() {
                       <span>{acc.name}</span>
                       <span className="font-mono">
                         {IDRFormat(
-                          acc.JournalDetail.reduce(
+                          acc.JournalDetails.reduce(
                             (a, b) => a + (b.credit - b.debit),
                             0,
                           ),

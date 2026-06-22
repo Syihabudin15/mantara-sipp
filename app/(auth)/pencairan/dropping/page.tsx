@@ -3,7 +3,7 @@
 import { FormInput, ViewFiles } from "@/components";
 import { printSIStandar } from "@/components/pdfutils/si/SIStandar";
 import { FilterData } from "@/components/utils/CompUtils";
-import { IDRFormat } from "@/components/utils/PembiayaanUtil";
+import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
   IActionTable,
   IDapem,
@@ -125,7 +125,7 @@ export default function Page() {
       dataIndex: "enduser",
       className: "text-center",
       render(value, record, index) {
-        return <>{record.Dapem.length}</>;
+        return <>{record.Dapems.length}</>;
       },
     },
     {
@@ -133,10 +133,14 @@ export default function Page() {
       key: "plafond",
       dataIndex: "plafond",
       render(value, record, index) {
-        const total = record.Dapem.reduce((acc, curr) => acc + curr.plafond, 0);
-        const biaya = record.Dapem.reduce(
+        const total = record.Dapems.reduce(
+          (acc, curr) => acc + curr.plafond,
+          0,
+        );
+        const biaya = record.Dapems.reduce(
           (acc, curr) =>
-            acc + (curr.plafond * (curr.c_adm_sumdan / 100) + curr.c_account),
+            acc +
+            (curr.plafond * (curr.c_adm_sumdan / 100) + curr.c_account_sumdan),
           0,
         );
         return (
@@ -158,15 +162,18 @@ export default function Page() {
       key: "adm",
       dataIndex: "adm",
       render(value, record, index) {
-        const adm = record.Dapem.reduce(
+        const adm = record.Dapems.reduce(
           (acc, curr) => acc + curr.plafond * (curr.c_adm_sumdan / 100),
           0,
         );
-        const provisi = record.Dapem.reduce(
+        const provisi = record.Dapems.reduce(
           (acc, curr) => acc + curr.plafond * (curr.c_provisi_sumdan / 100),
           0,
         );
-        const rek = record.Dapem.reduce((acc, curr) => acc + curr.c_account, 0);
+        const rek = record.Dapems.reduce(
+          (acc, curr) => acc + curr.c_account_sumdan,
+          0,
+        );
         return (
           <div className="text-xs">
             <div className="flex justify-between gap-4">
@@ -236,7 +243,7 @@ export default function Page() {
                     data: [
                       { name: "Berkas SI", url: record.file_sub || "" },
                       { name: "Bukti Transfer", url: record.file_proof || "" },
-                      ...record.Dapem.map((d) => ({
+                      ...record.Dapems.map((d) => ({
                         name: "PK " + d.id,
                         url: d.file_contract || "",
                       })),
@@ -383,39 +390,39 @@ export default function Page() {
         }}
         loading={loading}
         expandable={{
-          expandedRowRender: (record) => <TableDapem data={record.Dapem} />,
-          rowExpandable: (record) => record.Dapem.length !== 0,
+          expandedRowRender: (record) => <TableDapem data={record.Dapems} />,
+          rowExpandable: (record) => record.Dapems.length !== 0,
         }}
         summary={(pageData) => {
           const plaf = pageData
-            .flatMap((p) => p.Dapem)
+            .flatMap((p) => p.Dapems)
             .reduce((acc, curr) => acc + curr.plafond, 0);
           const drop = pageData
-            .flatMap((p) => p.Dapem)
+            .flatMap((p) => p.Dapems)
             .reduce(
               (acc, curr) =>
                 acc +
                 (curr.plafond -
                   (curr.plafond * (curr.c_adm_sumdan / 100) +
-                    curr.c_account +
-                    curr.c_provisi)),
+                    curr.c_account_sumdan +
+                    curr.c_provisi_sumdan)),
               0,
             );
           const adm = pageData
-            .flatMap((p) => p.Dapem)
+            .flatMap((p) => p.Dapems)
             .reduce(
               (acc, curr) => acc + curr.plafond * (curr.c_adm_sumdan / 100),
               0,
             );
           const provisi = pageData
-            .flatMap((p) => p.Dapem)
+            .flatMap((p) => p.Dapems)
             .reduce(
               (acc, curr) => acc + curr.plafond * (curr.c_provisi_sumdan / 100),
               0,
             );
           const rek = pageData
-            .flatMap((p) => p.Dapem)
-            .reduce((acc, curr) => acc + curr.c_account, 0);
+            .flatMap((p) => p.Dapems)
+            .reduce((acc, curr) => acc + curr.c_account_sumdan, 0);
 
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
@@ -543,9 +550,9 @@ const UpsertDropping = ({
         <FormInput
           data={{
             label: "Pemohon",
-            type: data.Dapem.length > 2 ? "textarea" : "text",
+            type: data.Dapems.length > 2 ? "textarea" : "text",
             required: true,
-            value: data.Dapem.flatMap((d) => d.Debitur.fullname).join(" | "),
+            value: data.Dapems.flatMap((d) => d.Debitur.fullname).join(" | "),
             disabled: true,
           }}
         />
@@ -603,7 +610,7 @@ const ProsesDropping = ({
   const handleSubmit = async () => {
     setLoading(true);
     if (record.status !== data.status) {
-      data.Dapem = data.Dapem.map((d) => ({
+      data.Dapems = data.Dapems.map((d) => ({
         ...d,
         dropping_status: data.status ? "DISETUJUI" : "PROSES",
       }));
@@ -644,9 +651,9 @@ const ProsesDropping = ({
         <FormInput
           data={{
             label: "Pemohon",
-            type: data.Dapem.length > 2 ? "textarea" : "text",
+            type: data.Dapems.length > 2 ? "textarea" : "text",
             required: true,
-            value: data.Dapem.flatMap((d) => d.Debitur.fullname).join(" | "),
+            value: data.Dapems.flatMap((d) => d.Debitur.fullname).join(" | "),
             disabled: true,
           }}
         />
@@ -808,8 +815,30 @@ const TableDapem = ({ data }: { data: IDapem[] }) => {
             </div>
             <div>
               <span className="text-xs opacity-80">Rek:</span>
-              <Tag color={"blue"}>{IDRFormat(record.c_account)}</Tag>
+              <Tag color={"blue"}>{IDRFormat(record.c_account_sumdan)}</Tag>
             </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Blokir Angsuran",
+      key: "blokir",
+      dataIndex: "blokir",
+      render(value, record, index) {
+        const angs = GetAngsuran(
+          record.plafond,
+          record.tenor,
+          record.c_margin_sumdan,
+          record.margin_type,
+          record.rounded_sumdan,
+        ).angsuran;
+        return (
+          <div className="text-xs opacity-70">
+            <div>
+              {record.c_blokir} x {IDRFormat(angs)}
+            </div>
+            <div>{IDRFormat(angs * record.c_blokir)}</div>
           </div>
         );
       },

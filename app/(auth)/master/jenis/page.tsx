@@ -47,12 +47,12 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    if (pageProps.search) {
-      params.append("search", pageProps.search);
-    }
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.search && { search: pageProps.search }),
+    });
+
     const res = await fetch(`/api/jenis?${params.toString()}`);
     const json = await res.json();
     setPageProps((prev) => ({
@@ -75,7 +75,14 @@ export default function Page() {
       title: "ID",
       dataIndex: "id",
       key: "id",
-      width: 100,
+      render(value, record, index) {
+        return (
+          <>
+            <div>{(pageProps.page - 1) * pageProps.limit + index + 1}</div>
+            <div className="text-xs opacity-70">{record.id}</div>
+          </>
+        );
+      },
     },
     {
       title: "Jenis Pembiayaan",
@@ -295,6 +302,7 @@ function UpsertJenis({
       footer={[]}
       loading={loading}
       // style={{ top: 20 }}
+      destroyOnHidden
     >
       <div className="flex flex-col gap-3">
         <div className="hidden">
@@ -426,6 +434,7 @@ export function DeleteJenis({
       width={400}
       style={{ top: 20 }}
       title={"Delete Jenis Pembiayaan " + record?.name}
+      destroyOnHidden
     >
       <p>Are you sure you want to delete this jenis pembiayaan?</p>
       <div className="flex justify-end gap-4">

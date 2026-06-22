@@ -2,6 +2,7 @@ import { serializeForApi } from "@/components/utils/PembiayaanUtil";
 import { getSession } from "@/libs/Auth";
 import { IDropping } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
+import { Prisma } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -27,88 +28,67 @@ export const GET = async (req: NextRequest) => {
       { status: 200 },
     );
 
-  const find = await prisma.dropping.findMany({
-    where: {
-      ...(search && {
-        OR: [
-          { id: { contains: search } },
-          {
-            Dapem: {
-              some: {
-                Debitur: {
-                  OR: [
-                    { fullname: { contains: search } },
-                    { nopen: { contains: search } },
-                    { no_skep: { contains: search } },
-                  ],
+  const where: Prisma.DroppingWhereInput = {
+    ...(search && {
+      OR: [
+        { id: { contains: search } },
+        {
+          Dapems: {
+            some: {
+              OR: [
+                { no_contract: { contains: search } },
+                {
+                  Debitur: {
+                    OR: [
+                      { fullname: { contains: search } },
+                      { nopen: { contains: search } },
+                      { no_skep: { contains: search } },
+                      { name_skep: { contains: search } },
+                    ],
+                  },
                 },
-              },
+              ],
             },
           },
-        ],
-      }),
-      ...(sumdanId && { sumdanId: sumdanId }),
-      ...(backdate && {
-        created_at: {
-          gte: moment(backdate.split(",")[0]).toDate(),
-          lte: moment(backdate.split(",")[1]).toDate(),
         },
-      }),
-      ...(user.sumdanId && { sumdanId: user.sumdanId }),
-      ...(status && { status: status === "true" ? true : false }),
-    },
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      created_at: "desc",
-    },
-    include: {
-      Sumdan: true,
-      Dapem: {
-        include: {
-          Debitur: true,
-          ProdukPembiayaan: true,
-          JenisPembiayaan: true,
+      ],
+    }),
+    ...(sumdanId && { sumdanId: sumdanId }),
+    ...(backdate && {
+      created_at: {
+        gte: moment(backdate.split(",")[0]).toDate(),
+        lte: moment(backdate.split(",")[1]).toDate(),
+      },
+    }),
+    ...(user.sumdanId && { sumdanId: user.sumdanId }),
+    ...(status && { status: status === "true" ? true : false }),
+  };
+
+  const [data, total] = await Promise.all([
+    prisma.dropping.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: {
+        created_at: "desc",
+      },
+      include: {
+        Sumdan: true,
+        Dapems: {
+          include: {
+            Debitur: true,
+            ProdukPembiayaan: true,
+            JenisPembiayaan: true,
+          },
         },
       },
-    },
-  });
-
-  const total = await prisma.dropping.count({
-    where: {
-      ...(search && {
-        OR: [
-          { id: { contains: search } },
-          {
-            Dapem: {
-              some: {
-                Debitur: {
-                  OR: [
-                    { fullname: { contains: search } },
-                    { nopen: { contains: search } },
-                    { no_skep: { contains: search } },
-                  ],
-                },
-              },
-            },
-          },
-        ],
-      }),
-      ...(sumdanId && { sumdanId: sumdanId }),
-      ...(backdate && {
-        created_at: {
-          gte: moment(backdate.split(",")[0]).toDate(),
-          lte: moment(backdate.split(",")[1]).toDate(),
-        },
-      }),
-      ...(user.sumdanId && { sumdanId: user.sumdanId }),
-      ...(status && { status: status === "true" ? true : false }),
-    },
-  });
+    }),
+    await prisma.dropping.count({ where }),
+  ]);
 
   return NextResponse.json({
     status: 200,
-    data: serializeForApi(find),
+    data: serializeForApi(data),
     total: total,
   });
 };
@@ -117,23 +97,26 @@ export const PUT = async (req: NextRequest) => {
   const data: IDropping = await req.json();
 
   try {
-    const { Dapem, Sumdan, ...saved } = data;
+    const { Dapems, Sumdan, ...saved } = data;
     await prisma.$transaction(async (tx) => {
       await tx.dropping.update({ where: { id: data.id }, data: saved });
-      for (const dpm of Dapem) {
+      for (const dpm of Dapems) {
         const {
           ProdukPembiayaan,
           JenisPembiayaan,
           AO,
-          CreatedBy,
+          AOCabang,
+          AOArea,
+          User,
           Debitur,
-          Angsuran,
+          Angsurans,
           Berkas,
           Jaminan,
           Dropping,
           Pelunasan,
           AgentFronting,
-          AORelate,
+          PayOffice,
+          Insurance,
           ...dpmData
         } = dpm;
         await prisma.dapem.update({
@@ -176,7 +159,7 @@ export const DELETE = async (req: NextRequest) => {
 
   const find = await prisma.dropping.findFirst({
     where: { id },
-    include: { Dapem: true },
+    include: { Dapems: true },
   });
   if (find) {
     await prisma.$transaction(async (tx) => {
