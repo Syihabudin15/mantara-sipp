@@ -37,13 +37,11 @@ import {
   Dropping,
   EMarginType,
   EMarriageStatus,
-  Insurance,
   Jaminan,
   JenisPembiayaan,
   Pelunasan,
 } from "@prisma/client";
 import {
-  Alert,
   App,
   Button,
   Card,
@@ -52,7 +50,6 @@ import {
   Input,
   message,
   Select,
-  Steps,
   Tag,
 } from "antd";
 import moment from "moment";
@@ -450,6 +447,8 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 { label: "SD", value: "SD" },
                 { label: "SMP", value: "SMP" },
                 { label: "SMA", value: "SMA" },
+                { label: "D1", value: "D1" },
+                { label: "D2", value: "D2" },
                 { label: "D3", value: "D3" },
                 { label: "S1", value: "S1" },
                 { label: "S2", value: "S2" },
