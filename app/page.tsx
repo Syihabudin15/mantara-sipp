@@ -33,7 +33,7 @@ export default function Home() {
       } else if (data.status === 201) {
         message.success("Akses diberikan! Mengalihkan ke sistem...");
         if (typeof window !== "undefined") {
-          window.location.replace("/simulasi");
+          window.location.replace("/profile");
         }
       } else {
         message.error(data.msg || "Kombinasi pengguna atau sandi tidak cocok.");

@@ -507,7 +507,9 @@ function UpsertUser({
   sumdans: Sumdan[];
   agents: AgentFronting[];
 }) {
-  const [data, setData] = useState(record ? record : defaultUser);
+  const [data, setData] = useState(
+    record ? { ...record, password: null } : defaultUser,
+  );
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -661,7 +663,7 @@ function UpsertUser({
               mode: "horizontal",
               type: "password",
               required: true,
-              value: record ? null : data.password,
+              value: data.password,
               onChange: (e: string) => setData({ ...data, password: e }),
             }}
           />
