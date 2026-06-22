@@ -81,6 +81,8 @@ export const GET = async (req: NextRequest) => {
         where: {
           dropping_status: "PENDING",
           approv_status: "PENDING",
+          slik_status: "DISETUJUI",
+          verif_status: "DISETUJUI",
           ...where,
         },
       }),

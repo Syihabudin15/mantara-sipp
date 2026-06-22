@@ -25,7 +25,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
   const ao = record.AO || record.AOCabang || record.AOArea;
 
   return `
-  ${Header("ANALISA PEMBIAYAAN", record.no_contract, undefined, process.env.NEXT_PUBLIC_APP_LOGO, record.ProdukPembiayaan.Sumdan.logo)}
+  ${Header("ANALISA PERHITUNGAN PEMBIAYAAN", record.no_contract, undefined, record.ProdukPembiayaan.Sumdan.logo, undefined)}
   
   <div class="mt-4 flex gap-4">
     <div class="flex-1">
@@ -172,32 +172,18 @@ export const AnalisaPerhitungan = (record: IDapem) => {
           },
           {
             key: "Biaya Tatalaksana",
-            value: IDRFormat(record.c_gov),
+            value: IDRFormat(
+              record.c_gov +
+                record.c_flagging +
+                record.c_infomation +
+                record.c_stamp +
+                record.c_mutasi,
+            ),
             currency: true,
           },
           {
             key: "Biaya Buka Rekening",
             value: IDRFormat(record.c_account + record.c_account_sumdan),
-            currency: true,
-          },
-          {
-            key: "Biaya Flagging",
-            value: IDRFormat(record.c_flagging),
-            currency: true,
-          },
-          {
-            key: "Biaya Sistem Informasi",
-            value: IDRFormat(record.c_infomation),
-            currency: true,
-          },
-          {
-            key: "Biaya Materai",
-            value: IDRFormat(record.c_stamp),
-            currency: true,
-          },
-          {
-            key: "Biaya Mutasi",
-            value: IDRFormat(record.c_mutasi),
             currency: true,
           },
           {
@@ -240,6 +226,14 @@ export const AnalisaPerhitungan = (record: IDapem) => {
       ])}
       </div>
     </div>
+  </div>
+
+  <div class="my-6">
+    <p class="font-bold">Keterangan</p>
+      <ul class="list-inside list-decimal">
+        <li>Memberikan Kuasa kepada KREDITUR untuk mentransfer dana realisasi pembiayaan ke rekening Nasabah</li>
+        <li>Menyatakan telah menerima fasilitas Pembiayaan KREDITUR sebesar Pokok Pembiayaan tersebut di atas dengan cara pembayaran: Transfer ke Rekening / Tunai.</li>
+      </ul>
   </div>
 
   <div class="flex gap-10 justify-around mt-5 items-end">

@@ -78,6 +78,8 @@ export default function Page() {
     params.append("page", pageProps.page.toString());
     params.append("limit", pageProps.limit.toString());
     params.append("approv_status", pageProps.approv_status || "all");
+    params.append("slik_status", "DISETUJUI");
+    params.append("verif_status", "DISETUJUI");
 
     if (pageProps.search) params.append("search", pageProps.search);
     if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);

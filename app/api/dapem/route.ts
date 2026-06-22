@@ -35,13 +35,18 @@ export const GET = async (request: NextRequest) => {
     currmonth,
     backdate,
     agentFrontingId,
+    payOfficeId,
+    insuranceId,
   } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const session = await getSession();
   if (!session)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-  const user = await prisma.user.findFirst({ where: { id: session.user.id } });
+  const user = await prisma.user.findFirst({
+    where: { id: session.user.id },
+    include: { Role: true, Cabang: true },
+  });
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
@@ -108,13 +113,37 @@ export const GET = async (request: NextRequest) => {
     ...(flagging_status && {
       flagging_status: flagging_status as EDapemStatus,
     }),
-    ...(agentFrontingId && {
-      agentFrontingId: agentFrontingId,
-    }),
+    ...(agentFrontingId && { agentFrontingId: agentFrontingId }),
+    ...(payOfficeId && { payOfficeId: payOfficeId }),
+    ...(insuranceId && { insuranceId: insuranceId }),
     // ...(paid_status && {
     //   Pelunasan: { status_paid: paid_status as ESubmissionStatus },
     // }),
     ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
+    ...(user.Role.data_status === "AREA" && {
+      OR: [
+        { User: { Cabang: { areaId: user.Cabang.areaId } } },
+        { AO: { Cabang: { areaId: user.Cabang.areaId } } },
+        { AOCabang: { Cabang: { areaId: user.Cabang.areaId } } },
+        { AOArea: { Cabang: { areaId: user.Cabang.areaId } } },
+      ],
+    }),
+    ...(user.Role.data_status === "CABANG" && {
+      OR: [
+        { User: { cabangId: user.cabangId } },
+        { AO: { cabangId: user.cabangId } },
+        { AOCabang: { cabangId: user.cabangId } },
+        { AOArea: { cabangId: user.cabangId } },
+      ],
+    }),
+    ...(user.Role.data_status === "USER" && {
+      OR: [
+        { User: { id: user.id } },
+        { AO: { id: user.id } },
+        { AOCabang: { id: user.id } },
+        { AOArea: { id: user.id } },
+      ],
+    }),
     ...(backdate
       ? {
           created_at: {

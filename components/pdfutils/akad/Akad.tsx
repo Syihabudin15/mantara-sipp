@@ -5,7 +5,7 @@ import { JadwalAngsuran } from "./KartuAngsuran";
 import { PerjanjianKredit } from "./PerjanjianKredit";
 import { SPKDR } from "./SKPDR";
 import { BuktiPencairan } from "./BuktiPencairan";
-import { Pemotongan } from "./Pemotongan";
+// import { Pemotongan } from "./Pemotongan";
 import { Kesanggupan } from "./Kesanggupan";
 import { PenyerahanJaminan } from "./PenyerahanJaminan";
 import { FormCeklist1 } from "./FormCeklist1";

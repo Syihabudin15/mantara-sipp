@@ -26,7 +26,7 @@ export const PerjanjianKredit = (record: IDapem) => {
   const dapem = GetDapem(record);
 
   return `
-  ${Header("PERJANJIAN KREDIT", record.no_contract, undefined, process.env.NEXT_PUBLIC_APP_LOGO, record.ProdukPembiayaan.Sumdan.logo)}
+  ${Header("PERJANJIAN KREDIT", record.no_contract, undefined, undefined, undefined)}
   
   <p>Yang bertanda tangan dibawah ini :</p>
   <div class="my-2 ml-2 flex gap-2">

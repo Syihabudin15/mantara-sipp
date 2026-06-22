@@ -4,17 +4,24 @@ import moment from "moment";
 import { Header } from "../utils";
 
 export const JadwalAngsuran = (record: IDapem, sub?: string) => {
-  const angsuran = GetAngsuran(
+  const angs = GetAngsuran(
     record.plafond,
     record.tenor,
     record.c_margin + record.c_margin_sumdan,
     record.margin_type,
     record.rounded,
   ).angsuran;
+  const angsSumdan = GetAngsuran(
+    record.plafond,
+    record.tenor,
+    record.c_margin_sumdan,
+    record.margin_type,
+    record.rounded_sumdan,
+  ).angsuran;
   const ao = record.AO || record.AOCabang || record.AOArea;
 
   return `
-  ${Header("JADWAL ANGSURAN", record.no_contract, sub, process.env.NEXT_PUBLIC_APP_LOGO, record.ProdukPembiayaan.Sumdan.logo)}
+  ${Header("KARTU ANGSURAN", record.no_contract, sub, record.ProdukPembiayaan.Sumdan.logo, undefined)}
   
   <div class="mt-4 flex gap-4">
     <div class="flex-1">
@@ -53,12 +60,12 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
       <div class="flex gap-2">
         <div class="w-32">Angsuran</div>
         <div class="w-4">:</div>
-        <div>Rp. ${IDRFormat(angsuran)}</div>
+        <div>Rp. ${IDRFormat(angs)}</div>
       </div>
       <div class="flex gap-2">
         <div class="w-32">Account Officer</div>
         <div class="w-4">:</div>
-        <div>${ao?.fullname} (${ao?.nip})</div>
+        <div>${ao?.fullname}</div>
       </div>
       <div class="flex gap-2">
         <div class="w-32">Unit Pelayanan</div>
@@ -71,35 +78,51 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
         <div>${moment(record.date_contract).add(record.tenor, "month").format("DD/MM/YYYY")}</div>
       </div>
     </div>
+    <div class="w-32 border">
+     
     </div>
+  </div>
 
-    <div class="mt-4">
-      <table class="w-full border-collapse border border-gray-400 border-dashed text-sm mb-4">
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="border border-gray-400 border-dashed p-1">NO</th>
-            <th class="border border-gray-400 border-dashed p-1">Periode</th>
-            <th class="border border-gray-400 border-dashed p-1">Pokok</th>
-            <th class="border border-gray-400 border-dashed p-1">Magin</th>
-            <th class="border border-gray-400 border-dashed p-1">Total</th>
-            <th class="border border-gray-400 border-dashed p-1">Sisa Pokok</th>
+  <div class="mt-4">
+    <table class="w-full border-collapse border border-gray-400 border-dashed text-sm mb-4">
+      <thead>
+        <tr class="bg-gray-200">
+          <th class="border border-gray-400 border-dashed p-1">Periode</th>
+          <th class="border border-gray-400 border-dashed p-1">Jadwal Bayar</th>
+          <th class="border border-gray-400 border-dashed p-1">Total Angsuran</th>
+          <th class="border border-gray-400 border-dashed p-1">Pokok</th>
+          <th class="border border-gray-400 border-dashed p-1">Magin</th>
+          <th class="border border-gray-400 border-dashed p-1">Adm. Angsuran</th>
+          <th class="border border-gray-400 border-dashed p-1">Sisa Pokok</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${record.Angsurans.map(
+          (r, i) => `
+          <tr>
+            <td class="border border-gray-400 border-dashed p-1 text-center">${r.counter}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-center">${moment(r.date_pay).format("DD-MM-YYYY")}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal + r.margin)}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal)}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.margin)}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(angs - angsSumdan)}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.remaining)}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${record.Angsurans.map(
-            (r, i) => `
-            <tr>
-              <td class="border border-gray-400 border-dashed p-1 text-center">${r.counter}</td>
-              <td class="border border-gray-400 border-dashed p-1 text-center">${moment(r.date_pay).format("DD-MM-YYYY")}</td>
-              <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal)}</td>
-              <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.margin)}</td>
-              <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal + r.margin)}</td>
-              <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.remaining)}</td>
-            </tr>
-          `,
-          ).join("")}
-        </tbody>
-      </table>
-    </div>
+        `,
+        ).join("")}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    <p class="font-bold">Keterangan</p>
+      <ul class="list-inside list-decimal">
+        <li>Jadwal angsuran ini merupakan rincian pembayaran pinjaman/pembiayaan per bulan.</li>
+        <li>Pembayaran angsuran dilakukan setiap bulan sesuai tanggal jatuh tempo setiap tanggal.</li>
+        <li>Keterlambatan pembayaran dapat dikenakan denda sesuai ketentuan yang berlaku.</li>
+        <li>Pelunasan dipercepat dapat dilakukan sesuai syarat dan ketentuan lembaga pembiayaan.</li>
+        <li>Apabila terdapat perbedaan data, maka catatan administrasi lembaga yang berlaku.</li>
+      </ul>
+  </div>
 `;
 };
