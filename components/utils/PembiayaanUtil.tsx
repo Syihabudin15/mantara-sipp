@@ -139,9 +139,10 @@ export const GetDapem = (data: IDapem) => {
     data.c_mutasi +
     data.c_flagging +
     data.c_infomation +
+    data.c_bop +
     provisi;
 
-  const lastbiaya = biaya + blok + data.c_takeover + data.c_bop;
+  const lastbiaya = biaya + blok + data.c_takeover;
   const tb = data.plafond - lastbiaya;
   return { biaya, blok, lastbiaya, tb };
 };

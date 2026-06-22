@@ -24,6 +24,7 @@ export const BPK = (record: IDapem) => {
     record.margin_type,
     record.rounded_sumdan,
   ).angsuran;
+  const admAngsuran = Math.ceil(angsuran - angsSumdan);
   const dapem = GetDapem(record);
   const ao = record.AO || record.AOCabang || record.AOArea;
 
@@ -104,7 +105,8 @@ export const BPK = (record: IDapem) => {
             record.c_flagging +
             record.c_infomation +
             record.c_stamp +
-            record.c_mutasi,
+            record.c_mutasi +
+            record.c_bop,
         ),
         currency: true,
       },
@@ -129,11 +131,6 @@ export const BPK = (record: IDapem) => {
     ])}
     <div class="mt-4"></div>
     ${ListNonStyle([
-      {
-        key: `BOP Pembiayaan`,
-        value: IDRFormat(record.c_bop),
-        currency: true,
-      },
       {
         key: "Biaya Pelunasan",
         value: IDRFormat(record.c_takeover),
@@ -171,7 +168,7 @@ export const BPK = (record: IDapem) => {
       },
       {
         key: `Biaya Adm Angsuran`,
-        value: IDRFormat(angsuran - angsSumdan),
+        value: IDRFormat(admAngsuran),
         currency: true,
       },
       {

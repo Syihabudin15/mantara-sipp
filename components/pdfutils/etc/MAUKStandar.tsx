@@ -40,6 +40,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
     data.margin_type,
     data.rounded_sumdan,
   ).angsuran;
+  const admAngsuran = Math.ceil(angs - angsSumdan);
 
   const dapem = GetDapem(data);
 
@@ -199,7 +200,10 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                         key: "Kantor Bayar Tujuan",
                         value: data.PayOffice.name,
                       },
-                      { key: "Instansi Takeover", value: data.takeover_from },
+                      {
+                        key: "Instansi Takeover",
+                        value: data.takeover_from || "-",
+                      },
                       {
                         key: "Nominal Takeover",
                         value: IDRFormat(data.c_takeover),
@@ -283,8 +287,8 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                         currency: true,
                       },
                       {
-                        key: "Angsuran Koperasi",
-                        value: `${IDRFormat(angs - angsSumdan)}`,
+                        key: "Adm Angsuran",
+                        value: `${IDRFormat(admAngsuran)}`,
                         currency: true,
                       },
                       {

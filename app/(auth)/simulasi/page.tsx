@@ -119,7 +119,7 @@ export default function Page() {
     data.tenor,
     data.Debitur.birthdate,
     data.Debitur.salary,
-    data.c_margin,
+    data.c_bop,
     data.margin_type,
     data.ProdukPembiayaan,
   ]);
@@ -649,23 +649,6 @@ export default function Page() {
             />
           </div>
         </div>
-        <div className="flex gap-2 justify-between items-center my-1 font-bold text-red-500 border-t mt-2">
-          <div className="flex-1">Total Biaya</div>
-          <div className="text-right">
-            {IDRFormat(GetDapem(data as unknown as IDapem).biaya || 0)}
-          </div>
-        </div>
-        <div className="w-full bg-blue-800 text-gray-50 p-2 rounded mb-1">
-          Rincian Pembiayaan
-        </div>
-        <div className="flex gap-2 justify-between items-center my-1 font-bold text-blue-500 border-b border-dashed">
-          <div className="flex-1">Terima Kotor</div>
-          <div className="text-right">
-            {IDRFormat(
-              data.plafond - GetDapem(data as unknown as IDapem).biaya || 0,
-            )}
-          </div>
-        </div>
         <div className="flex gap-2 justify-between items-center my-1 border-b border-dashed">
           <div className="flex-1">BOP Pembiayaan</div>
           <div className="flex gap-2 flex-2">
@@ -684,6 +667,23 @@ export default function Page() {
                 })
               }
             />
+          </div>
+        </div>
+        <div className="flex gap-2 justify-between items-center my-1 font-bold text-red-500 border-t mt-2">
+          <div className="flex-1">Total Biaya</div>
+          <div className="text-right">
+            {IDRFormat(GetDapem(data as unknown as IDapem).biaya || 0)}
+          </div>
+        </div>
+        <div className="w-full bg-blue-800 text-gray-50 p-2 rounded mb-1">
+          Rincian Pembiayaan
+        </div>
+        <div className="flex gap-2 justify-between items-center my-1 font-bold text-blue-500 border-b border-dashed">
+          <div className="flex-1">Terima Kotor</div>
+          <div className="text-right">
+            {IDRFormat(
+              data.plafond - GetDapem(data as unknown as IDapem).biaya || 0,
+            )}
           </div>
         </div>
         <div className="flex gap-2 justify-between items-center my-1 text-red-500 border-b border-dashed">
@@ -926,7 +926,8 @@ const ModalDetailPembiayaan = ({
                       data.c_flagging +
                       data.c_infomation +
                       data.c_mutasi +
-                      data.c_stamp,
+                      data.c_stamp +
+                      data.c_bop,
                   )}
                 </span>
               </div>
@@ -971,9 +972,6 @@ const ModalDetailPembiayaan = ({
                 {IDRFormat(
                   data.plafond - GetDapem(data as unknown as IDapem).biaya,
                 )}
-              </Descriptions.Item>
-              <Descriptions.Item label="BOP Pembiayaan" style={{ padding: 5 }}>
-                {IDRFormat(data.c_bop)}
               </Descriptions.Item>
               <Descriptions.Item
                 label="Nominal Takeover"

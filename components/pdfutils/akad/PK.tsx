@@ -24,6 +24,7 @@ export const PK = (record: IDapem) => {
     record.margin_type,
     record.rounded_sumdan,
   ).angsuran;
+  const admAngsuran = Math.ceil(angsuran - angsuranSumdan);
 
   const dapem = GetDapem(record);
 
@@ -92,7 +93,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
         <p>Rp.</p>
         <div class="text-right w-24">
-          <p >${IDRFormat(Math.max(0, angsuran - angsuranSumdan))}</p>
+          <p >${IDRFormat(admAngsuran)}</p>
         </div>
       </div>
     </div>
@@ -143,7 +144,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(record.c_gov + record.c_flagging + record.c_infomation + record.c_stamp + record.c_mutasi)}</p>
+          <p>${IDRFormat(record.c_gov + record.c_flagging + record.c_infomation + record.c_stamp + record.c_mutasi + record.c_bop)}</p>
         </div>
       </div>
     </div>
@@ -199,17 +200,6 @@ export const PK = (record: IDapem) => {
         <p>Rp.</p>
         <div class="text-right w-24">
           <p >${IDRFormat(angsuran * record.c_blokir)}</p>
-        </div>
-      </div>
-    </div>
-    <div class="flex gap-2">
-      <p class="w-4">k.</p>
-      <p class="w-40">BOP Pembiayaan</p>
-      <p class="w-4">:</p>
-      <div class="flex-1 flex gap-4">
-        <p>Rp.</p>
-        <div class="text-right w-24">
-          <p >${IDRFormat(record.c_bop)}</p>
         </div>
       </div>
     </div>
@@ -281,102 +271,7 @@ export const PK = (record: IDapem) => {
       <p class="w-4">1.</p>
       <p class="flex-1">Untuk pembebanan angsuran, bunga, provisi, biaya-biaya, denda dan segala biaya lainnya yang terhutang berkenaan dengan pemberian kredit ini, DEBITUR memberi kuasa kepada BANK untuk mendebet rekening DEBITUR yang ada pada BANK.</p>
     </div>
-    <div class="flex gap-2">
-      <p class="w-4">2.</p>
-      <div class="flex-1">
-        <p>DEBITUR berjanji dan dengan ini mengikat diri untuk menanggung seluruh biaya yang diperlukan berkenaan dengan pelaksanaan Akad ini sepanjang hal ini diberitahukan BANK kepada DEBITUR sebelum ditandatangani Akad ini dan DEBITUR menyatakan persetujuannya. Adapun biaya-biaya tersebut adalah sebagai berikut :</p>
-        <div class="flex gap-2 ml-10">
-          <p class="w-4">a.</p>
-          <p class="w-44">Administrasi</p>
-          <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.plafond * ((record.c_adm + record.c_adm_sumdan + record.c_adm_mitra + record.c_adm_ff) / 100))}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 ml-10">
-          <p class="w-4">b.</p>
-          <p class="w-44">Asuransi</p>
-          <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.plafond * (record.c_insurance / 100))}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 ml-10">
-          <p class="w-4">c.</p>
-          <p class="w-44">Provisi</p>
-          <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.plafond * ((record.c_provisi_sumdan + record.c_fee_ao + record.c_fee_cabang + record.c_fee_area + record.c_fee_bpp + record.c_fee_bpb) / 100))}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 ml-10">
-          <p class="w-4">d.</p>
-          <p class="w-44">Tatalaksana</p>
-          <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.c_gov)}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 ml-10">
-          <p class="w-4">e.</p>
-          <p class="w-44">Buka Rekening</p>
-          <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.c_account + record.c_account_sumdan)}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 ml-10">
-          <p class="w-4">f.</p>
-          <p class="w-44">Flagging</p>
-          <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.c_flagging)}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 ml-10">
-          <p class="w-4">g.</p>
-          <p class="w-44">Sistem Informasi</p>
-          <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.c_infomation)}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 ml-10">
-          <p class="w-4">h.</p>
-          <p class="w-44">Materai</p>
-          <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.c_stamp)}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 ml-10">
-          <p class="w-4">i.</p>
-          <p class="w-44">Mutasi</p>
-          <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(record.c_mutasi)}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 ml-10 font-bold">
-          <p class="w-4"></p>
-          <p class="w-44">Total Biaya</p>
-          <p class="w-4">:</p>
-          <div class="w-28 border-t border-dashed flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="flex-1 text-right">${IDRFormat(dapem.biaya)}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    
     <div class="flex gap-2">
       <p class="w-4">3.</p>
       <div class="flex-1">

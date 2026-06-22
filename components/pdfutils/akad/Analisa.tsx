@@ -128,7 +128,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
       },
       {
         key: "Instansi Takeover",
-        value: record.takeover_from,
+        value: record.takeover_from || "",
       },
       {
         key: "Rencana Tgl Takeover",
@@ -199,7 +199,8 @@ export const AnalisaPerhitungan = (record: IDapem) => {
                 record.c_flagging +
                 record.c_infomation +
                 record.c_stamp +
-                record.c_mutasi,
+                record.c_mutasi +
+                record.c_bop,
             ),
             currency: true,
           },
@@ -222,11 +223,6 @@ export const AnalisaPerhitungan = (record: IDapem) => {
         {
           key: "Terima Kotor",
           value: IDRFormat(record.plafond - dapem.biaya),
-          currency: true,
-        },
-        {
-          key: "BOP Pembiayaan",
-          value: IDRFormat(record.c_bop),
           currency: true,
         },
         {

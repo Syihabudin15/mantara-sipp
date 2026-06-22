@@ -20,6 +20,7 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
     record.margin_type,
     record.rounded_sumdan,
   ).angsuran;
+  const admAngsuran = Math.ceil(angs - angsSumdan);
   const ao = record.AO || record.AOCabang || record.AOArea;
 
   return `
@@ -107,7 +108,7 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal + r.margin)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.margin)}</td>
-            <td class="border border-gray-400 border-dashed p-1 text-right">${r.counter === 0 ? "0" : IDRFormat(angs - angsSumdan)}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${r.counter === 0 ? "0" : IDRFormat(admAngsuran)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.remaining)}</td>
           </tr>
         `,
