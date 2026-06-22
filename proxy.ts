@@ -16,11 +16,13 @@ export const config = {
     "/ttpb/:path*",
     "/ttpj/:path*",
     "/nominatif",
+    "/tmftb",
     "/tagihan",
     "/debitur",
     "/pelunasan",
     "/lapkeu/:path*",
     "/database",
+    "/slik-analyze",
     "/master/:path*",
   ],
 };

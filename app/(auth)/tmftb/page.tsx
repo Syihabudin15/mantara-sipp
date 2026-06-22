@@ -89,7 +89,7 @@ export default function Page() {
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
   const [agents, setAgents] = useState<IAgentFronting[]>([]);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/nominatif");
+  const { hasAccess } = useAccess("/tmftb");
   const user = useUser();
   const [views, setViews] = useState<IViewFiles>({
     open: false,
@@ -301,6 +301,309 @@ export default function Page() {
       },
     },
     {
+      title: "Status Takeover",
+      dataIndex: "takeover_status",
+      key: "takeover_status",
+      width: 250,
+      render: (_, record, i) => {
+        return (
+          <div>
+            <div className="flex gap-1">
+              {GetDroppingStatusTag(record.takeover_status)}
+              <Button
+                size="small"
+                icon={<FileFilled />}
+                disabled={!record.file_takeover}
+                onClick={() =>
+                  setViews({
+                    open: true,
+                    data: [
+                      {
+                        name: "File Takeover",
+                        url: record.file_takeover || "",
+                      },
+                    ],
+                  })
+                }
+              ></Button>
+              <span className=" text-xs opacity-80">
+                {moment(record.takeover_date_exc).format("DD/MM/YYYY")}
+              </span>
+            </div>
+            <Paragraph
+              ellipsis={{
+                rows: 2,
+                expandable: "collapsible",
+              }}
+              style={{ fontSize: 11 }}
+            >
+              {record.takeover_desc}
+            </Paragraph>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Status Mutasi",
+      dataIndex: "mutasi_status",
+      key: "mutasi_status",
+      width: 250,
+      render: (_, record, i) => {
+        return (
+          <div>
+            <div className="flex gap-1">
+              {GetDroppingStatusTag(record.mutasi_status)}
+              <Button
+                size="small"
+                icon={<FileFilled />}
+                disabled={!record.file_mutasi}
+                onClick={() =>
+                  setViews({
+                    open: true,
+                    data: [
+                      {
+                        name: "File Mutasi",
+                        url: record.file_mutasi || "",
+                      },
+                    ],
+                  })
+                }
+              ></Button>
+              <span className="text-xs opacity-80">
+                {moment(record.mutasi_date_exc).format("DD/MM/YYYY")}
+              </span>
+            </div>
+            <Paragraph
+              ellipsis={{
+                rows: 2,
+                expandable: "collapsible",
+              }}
+              style={{ fontSize: 11 }}
+            >
+              {record.mutasi_desc}
+            </Paragraph>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Status Flagging",
+      dataIndex: "flagging_status",
+      key: "flagging_status",
+      width: 250,
+      render: (_, record, i) => {
+        return (
+          <div>
+            <div className="flex gap-1">
+              {GetDroppingStatusTag(record.flagging_status)}
+              <Button
+                size="small"
+                icon={<FileFilled />}
+                disabled={!record.file_flagging}
+                onClick={() =>
+                  setViews({
+                    open: true,
+                    data: [
+                      {
+                        name: "File Flagging",
+                        url: record.file_flagging || "",
+                      },
+                    ],
+                  })
+                }
+              ></Button>
+              <span className="text-xs opacity-80">
+                {moment(record.flagging_date_exc).format("DD/MM/YYYY")}
+              </span>
+            </div>
+            <Paragraph
+              ellipsis={{
+                rows: 2,
+                expandable: "collapsible",
+              }}
+              style={{ fontSize: 11 }}
+            >
+              {record.flagging_desc}
+            </Paragraph>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Status Terima Bersih",
+      dataIndex: "tb_status",
+      key: "tb_status",
+      width: 320,
+      render: (_, record, i) => {
+        const desc = record.cash_desc
+          ? (JSON.parse(record.cash_desc) as ICashDesc[])
+          : [];
+        const total = desc.reduce((acc, curr) => acc + curr.amount, 0);
+        const angs = GetAngsuran(
+          record.plafond,
+          record.tenor,
+          record.c_margin + record.c_margin_sumdan,
+          record.margin_type,
+          record.rounded,
+          record.c_ned,
+        ).angsuran;
+        const tb = GetDapem(record).tb;
+        return (
+          <div>
+            <div className="flex gap-1">
+              {GetDroppingStatusTag(record.cash_status)}
+              <Button
+                size="small"
+                icon={<FileFilled />}
+                disabled={desc.length === 0}
+                onClick={() =>
+                  setViews({
+                    open: true,
+                    data: desc.map((d, i) => ({
+                      name: "File " + i + 1,
+                      url: d.file,
+                    })),
+                  })
+                }
+              ></Button>
+              <span className="text-xs opacity-80">
+                {IDRFormat(total)}/{IDRFormat(tb)} (
+                {((total / tb) * 100).toFixed(2)}%) ({IDRFormat(tb - total)})
+              </span>
+            </div>
+            <Paragraph
+              ellipsis={{
+                rows: 1,
+                expandable: "collapsible",
+              }}
+              style={{ fontSize: 11 }}
+            >
+              {desc.map((d, i) => (
+                <div key={i}>
+                  {d.desc} {moment(d.date).format("DD/MM/YYYY HH:mm")}( Rp.{" "}
+                  {IDRFormat(d.amount)}) ({((d.amount / tb) * 100).toFixed(2)});
+                </div>
+              ))}
+            </Paragraph>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Status Berkas",
+      dataIndex: "berkas_status",
+      key: "berkas_status",
+      width: 250,
+      render: (_, record, i) => {
+        return (
+          <div>
+            <div className="flex gap-1">
+              {GetBerkasStatusTag(record.document_status)}
+              <Button
+                size="small"
+                icon={<FileFilled />}
+                disabled={!record.Berkas || !record.Berkas.file_sub}
+                onClick={() =>
+                  setViews({
+                    open: true,
+                    data: [
+                      {
+                        name: "Pengiriman",
+                        url: record.Berkas?.file_sub || "",
+                      },
+                      {
+                        name: "Bukti Terima",
+                        url: record.Berkas?.file_proof || "",
+                      },
+                    ],
+                  })
+                }
+              ></Button>
+              {record.Berkas && record.Berkas.process_at && (
+                <span className="text-xs opacity-80">
+                  Send : {moment(record.Berkas.process_at).format("DD/MM/YYYY")}
+                </span>
+              )}
+            </div>
+            <Paragraph
+              ellipsis={{
+                rows: 2,
+                expandable: "collapsible",
+              }}
+              style={{ fontSize: 11 }}
+            >
+              {record.document_desc}
+            </Paragraph>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Status Jaminan",
+      dataIndex: "Jaminan_status",
+      key: "Jaminan_status",
+      width: 350,
+      render: (_, record, i) => {
+        const created = moment(record.tbo_date);
+        const isTbo =
+          moment().isAfter(created, "date") &&
+          (!record.Jaminan || !record.Jaminan.status);
+        return (
+          <div>
+            <div className="flex gap-1">
+              {GetBerkasStatusTag(record.guarantee_status)}
+              <Tag color={isTbo ? "red" : "blue"} variant="solid">
+                {isTbo ? "LEWAT TBO" : "MASA TBO"}
+              </Tag>
+              <Button
+                size="small"
+                icon={<FileFilled />}
+                disabled={!record.Jaminan || !record.Jaminan.file_sub}
+                onClick={() =>
+                  setViews({
+                    open: true,
+                    data: [
+                      {
+                        name: "Pengiriman",
+                        url: record.Jaminan?.file_sub || "",
+                      },
+                      {
+                        name: "Bukti Terima",
+                        url: record.Jaminan?.file_proof || "",
+                      },
+                    ],
+                  })
+                }
+              ></Button>
+              <div className="text-xs opacity-80">
+                <div>
+                  TBO :{" "}
+                  {moment(record.date_contract)
+                    .add(record.tbo, "month")
+                    .format("DD/MM/YYYY")}
+                </div>
+                {record.Jaminan && record.Jaminan.process_at && (
+                  <div>
+                    Send :{" "}
+                    {moment(record.Jaminan.process_at).format("DD/MM/YYYY")}
+                  </div>
+                )}
+              </div>
+            </div>
+            <Paragraph
+              ellipsis={{
+                rows: 2,
+                expandable: "collapsible",
+              }}
+              style={{ fontSize: 11 }}
+            >
+              {record.guarantee_desc}
+            </Paragraph>
+          </div>
+        );
+      },
+    },
+    {
       title: "Nomor Akad",
       dataIndex: "dataakad",
       key: "dataakad",
@@ -403,189 +706,6 @@ export default function Page() {
       },
     },
     {
-      title: "Biaya Sumdan",
-      dataIndex: "biaya_sumdan",
-      key: "biaya_sumdan",
-      render(value, record, index) {
-        const adm = record.plafond * (record.c_adm_sumdan / 100);
-        const provisi = record.plafond * (record.c_provisi_sumdan / 100);
-        const total = adm + provisi + record.c_account_sumdan;
-        return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Admin</span>
-              <span>{IDRFormat(adm)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Provisi</span>
-              <span>{IDRFormat(provisi)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Rekening</span>
-              <span>{IDRFormat(record.c_account_sumdan)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(total)}</span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      title: "Biaya Adm Koperasi",
-      dataIndex: "biaya",
-      key: "biaya",
-      render(value, record, index) {
-        const adm = record.plafond * (record.c_adm / 100);
-        const adm_mitra = record.plafond * (record.c_adm_mitra / 100);
-        const adm_ff = record.plafond * (record.c_adm_ff / 100);
-        const total = adm + adm_mitra + adm_ff;
-        return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Adm Kop</span>
-              <span>{IDRFormat(adm)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Adm Mitra</span>
-              <span>{IDRFormat(adm_mitra)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Adm FF</span>
-              <span>{IDRFormat(adm_ff)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(total)}</span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      title: "Biaya Prov Koperasi",
-      dataIndex: "biaya",
-      key: "biaya",
-      render(value, record, index) {
-        const ao = record.plafond * (record.c_fee_ao / 100);
-        const cabang = record.plafond * (record.c_fee_cabang / 100);
-        const area = record.plafond * (record.c_fee_area / 100);
-        const bpp = record.plafond * (record.c_fee_bpp / 100);
-        const bpb = record.plafond * (record.c_fee_bpb / 100);
-        const total = ao + cabang + area + bpp + bpb;
-        return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee AO</span>
-              <span>{IDRFormat(ao)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee Cabang</span>
-              <span>{IDRFormat(cabang)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee Area</span>
-              <span>{IDRFormat(area)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee BPP</span>
-              <span>{IDRFormat(bpp)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Fee BPB</span>
-              <span>{IDRFormat(bpb)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(total)}</span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      title: "Biaya Lainnya",
-      dataIndex: "biaya",
-      key: "biaya",
-      render(value, record, index) {
-        return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Tatalaksana</span>
-              <span>{IDRFormat(record.c_gov)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Materai</span>
-              <span>{IDRFormat(record.c_stamp)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Flagging</span>
-              <span>{IDRFormat(record.c_flagging)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Sistem</span>
-              <span>{IDRFormat(record.c_infomation)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Mutasi</span>
-              <span>{IDRFormat(record.c_mutasi)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(record.c_mutasi + record.c_infomation)}</span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      title: "BOP & Takeover",
-      dataIndex: "blokir",
-      key: "blokir",
-      render(value, record, index) {
-        return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4">
-              <span className="w-20">BOP</span>
-              <span>{IDRFormat(record.c_bop)}</span>
-            </div>
-            <div className="flex justify-between gap-4">
-              <span className="w-20">Takeover</span>
-              <span>{IDRFormat(record.c_takeover)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-dashed">
-              <span className="w-20"></span>
-              <span>{IDRFormat(record.c_bop + record.c_takeover)}</span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      title: "Blokir Angsuran",
-      dataIndex: "blokir",
-      key: "blokir",
-      render(value, record, index) {
-        const angs = GetAngsuran(
-          record.plafond,
-          record.tenor,
-          record.c_margin + record.c_margin_sumdan,
-          record.margin_type,
-          record.rounded,
-          record.c_ned,
-        ).angsuran;
-        return (
-          <div className="text-xs">
-            <p>
-              {record.c_blokir} x {IDRFormat(angs)}
-            </p>
-            <p>{IDRFormat(record.c_blokir * angs)}</p>
-          </div>
-        );
-      },
-    },
-    {
       title: "Created",
       dataIndex: "created_at",
       key: "created_at",
@@ -637,7 +757,7 @@ export default function Page() {
     <Card
       title={
         <div className="flex gap-2 font-bold text-xl">
-          <FileProtectOutlined /> Daftar Nominatif
+          <FileProtectOutlined /> Proses TMFTB
         </div>
       }
       styles={{ body: { padding: 5 } }}
@@ -897,89 +1017,6 @@ export default function Page() {
               ).angsuran,
             0,
           );
-          const adm_sumdan = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_adm_sumdan / 100),
-            0,
-          );
-          const prov_sumdan = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_provisi_sumdan / 100),
-            0,
-          );
-          const rek_sumdan = pageData.reduce(
-            (acc, curr) => acc + curr.c_account_sumdan,
-            0,
-          );
-          const adm = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_adm / 100),
-            0,
-          );
-          const adm_mitra = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_adm_mitra / 100),
-            0,
-          );
-          const adm_ff = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_adm_ff / 100),
-            0,
-          );
-          const asuransi = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_insurance / 100),
-            0,
-          );
-          const tatalaksana = pageData.reduce(
-            (acc, curr) => acc + curr.c_gov,
-            0,
-          );
-          const materai = pageData.reduce((acc, curr) => acc + curr.c_stamp, 0);
-          const flagging = pageData.reduce(
-            (acc, curr) => acc + curr.c_flagging,
-            0,
-          );
-          const inform = pageData.reduce(
-            (acc, curr) => acc + curr.c_infomation,
-            0,
-          );
-          const mutasi = pageData.reduce((acc, curr) => acc + curr.c_mutasi, 0);
-          const rek = pageData.reduce((acc, curr) => acc + curr.c_account, 0);
-          const fee_ao = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_fee_ao / 100),
-            0,
-          );
-          const fee_cabang = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_fee_cabang / 100),
-            0,
-          );
-          const fee_area = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_fee_area / 100),
-            0,
-          );
-          const fee_bpp = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_fee_bpp / 100),
-            0,
-          );
-          const fee_bpb = pageData.reduce(
-            (acc, curr) => acc + curr.plafond * (curr.c_fee_bpb / 100),
-            0,
-          );
-          const bop = pageData.reduce((acc, curr) => acc + curr.c_bop, 0);
-          const takeover = pageData.reduce(
-            (acc, curr) => acc + curr.c_takeover,
-            0,
-          );
-
-          const blokir = pageData.reduce(
-            (acc, curr) =>
-              acc +
-              curr.c_blokir *
-                GetAngsuran(
-                  curr.plafond,
-                  curr.tenor,
-                  curr.c_margin + curr.c_margin_sumdan,
-                  curr.margin_type,
-                  curr.rounded,
-                  curr.c_ned,
-                ).angsuran,
-            0,
-          );
 
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
@@ -1003,120 +1040,9 @@ export default function Page() {
               </Table.Summary.Cell>
               <Table.Summary.Cell
                 index={5}
-                colSpan={8}
+                colSpan={14}
                 className="text-center font-bold"
               ></Table.Summary.Cell>
-
-              <Table.Summary.Cell index={9} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">Adm</p>
-                  <p className="text-right">{IDRFormat(adm_sumdan)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Provisi</p>
-                  <p className="text-right">{IDRFormat(prov_sumdan)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Rek</p>
-                  <p className="text-right">{IDRFormat(rek_sumdan)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
-                  {IDRFormat(adm_sumdan + prov_sumdan + rek_sumdan)}
-                </div>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={20} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">Adm Kop</p>
-                  <p className="text-right">{IDRFormat(adm)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Adm Mitra</p>
-                  <p className="text-right">{IDRFormat(adm_mitra)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Adm FF</p>
-                  <p className="text-right">{IDRFormat(adm_ff)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
-                  {IDRFormat(adm + adm_mitra + adm_ff)}
-                </div>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={21} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">Fee AO</p>
-                  <p className="text-right">{IDRFormat(fee_ao)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Fee Cabang</p>
-                  <p className="text-right">{IDRFormat(fee_cabang)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Fee Area</p>
-                  <p className="text-right">{IDRFormat(fee_area)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Fee BPP</p>
-                  <p className="text-right">{IDRFormat(fee_bpp)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Fee BPB</p>
-                  <p className="text-right">{IDRFormat(fee_bpb)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
-                  {IDRFormat(
-                    fee_ao + fee_cabang + fee_area + fee_bpp + fee_bpb,
-                  )}
-                </div>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={22} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">Tatalaksana</p>
-                  <p className="text-right">{IDRFormat(tatalaksana)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Rekening</p>
-                  <p className="text-right">{IDRFormat(rek)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Materai</p>
-                  <p className="text-right">{IDRFormat(materai)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Flagging</p>
-                  <p className="text-right">{IDRFormat(flagging)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Sistem</p>
-                  <p className="text-right">{IDRFormat(inform)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Mutasi</p>
-                  <p className="text-right">{IDRFormat(mutasi)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
-                  {IDRFormat(
-                    tatalaksana + rek + materai + flagging + inform + mutasi,
-                  )}
-                </div>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={23} className="font-bold">
-                <div className="flex justify-between">
-                  <p className="w-20">BOP</p>
-                  <p className="text-right">{IDRFormat(bop)}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="w-20">Takeover</p>
-                  <p className="text-right">{IDRFormat(takeover)}</p>
-                </div>
-                <div className="border-t border-gray-500 text-right">
-                  {IDRFormat(bop + takeover)}
-                </div>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={24} className="font-bold">
-                <div className="border-t border-gray-500 text-right">
-                  {IDRFormat(blokir)}
-                </div>
-              </Table.Summary.Cell>
             </Table.Summary.Row>
           );
         }}
@@ -1137,7 +1063,7 @@ export default function Page() {
         setOpen={(v: boolean) => setViews({ ...views, open: v })}
         data={{ ...views }}
       />
-      {/* {selected.selected && selected.proses && (
+      {selected.selected && selected.proses && (
         <UpdateStatus
           open={selected.proses}
           setOpen={(val: boolean) =>
@@ -1148,7 +1074,7 @@ export default function Page() {
           key={"upsert" + selected.selected.id}
           hook={modal}
         />
-      )} */}
+      )}
     </Card>
   );
 }

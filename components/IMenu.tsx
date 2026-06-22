@@ -45,7 +45,7 @@ export const listMenuUI: IMenuType[] = [
     label: "Dashboard",
     key: "/dashboard",
     icon: <DashboardOutlined />,
-    needaccess: false,
+    needaccess: true,
     availableAccess: ["read"],
   },
   {
@@ -183,7 +183,14 @@ export const listMenuUI: IMenuType[] = [
     key: "/nominatif",
     icon: <FileProtectOutlined />,
     needaccess: true,
-    availableAccess: ["read", "update", "proses"],
+    availableAccess: ["read", "update"],
+  },
+  {
+    label: "Proses TMFTB",
+    key: "/tmftb",
+    icon: <FileProtectOutlined />,
+    needaccess: true,
+    availableAccess: ["read", "update"],
   },
   {
     label: "Tagihan",
@@ -339,7 +346,7 @@ export const listMenuUI: IMenuType[] = [
 export const listMenuServer: { key: string; needaccess: boolean }[] = [
   {
     key: "/dashboard",
-    needaccess: false,
+    needaccess: true,
   },
   {
     key: "/dashboardbis",
@@ -399,6 +406,10 @@ export const listMenuServer: { key: string; needaccess: boolean }[] = [
   },
   {
     key: "/nominatif",
+    needaccess: true,
+  },
+  {
+    key: "/tmftb",
     needaccess: true,
   },
   {

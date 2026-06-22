@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import prisma from "@/libs/Prisma";
 import { getSession, signIn, signOut } from "@/libs/Auth";
+import { IPermission } from "@/libs/IInterfaces";
 
 export const POST = async (req: NextRequest) => {
   const { username, password } = await req.json();
@@ -44,7 +45,11 @@ export const POST = async (req: NextRequest) => {
       password: userPass,
       Role: { ...Role, permission: "[]" },
     });
-    return NextResponse.json({ msg: "OK", status: 200 }, { status: 200 });
+    const access = JSON.parse(Role.permission) as IPermission[];
+    if (access.some((a) => a.path === "/dashboard")) {
+      return NextResponse.json({ msg: "OK", status: 200 }, { status: 200 });
+    }
+    return NextResponse.json({ msg: "OK", status: 201 }, { status: 201 });
   } catch (err) {
     console.log(err);
     return NextResponse.json(

@@ -417,6 +417,11 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                         currency: true,
                       },
                       {
+                        key: `BOP Pembiayaan`,
+                        value: `${IDRFormat(data.c_bop)}`,
+                        currency: true,
+                      },
+                      {
                         key: "TOTAL BIAYA",
                         value: IDRFormat(dapem.biaya),
                         currency: true,
@@ -447,24 +452,20 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                       //   value: IDRFormat(retensi),
                       //   currency: true,
                       // },
-                      {
-                        key: `BOP Pembiayaan`,
-                        value: `${IDRFormat(data.c_bop)}`,
-                        currency: true,
-                      },
+
                       {
                         key: "Nominal Takeover",
                         value: `${IDRFormat(data.c_takeover)}`,
-                        style: {
-                          borderBottom: "1px solid #aaa",
-                          borderStyle: "dashed",
-                        },
                         currency: true,
                       },
                       {
                         key: `Blokir Angsuran (${data.c_blokir}x)`,
-                        value: IDRFormat(data.c_blokir * angsSumdan),
+                        value: IDRFormat(data.c_blokir * angs),
                         currency: true,
+                        style: {
+                          borderBottom: "1px solid #aaa",
+                          borderStyle: "dashed",
+                        },
                       },
                       {
                         key: "TERIMA BERSIH",

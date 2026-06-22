@@ -30,6 +30,11 @@ export default function Home() {
         if (typeof window !== "undefined") {
           window.location.replace("/dashboard");
         }
+      } else if (data.status === 201) {
+        message.success("Akses diberikan! Mengalihkan ke sistem...");
+        if (typeof window !== "undefined") {
+          window.location.replace("/simulasi");
+        }
       } else {
         message.error(data.msg || "Kombinasi pengguna atau sandi tidak cocok.");
       }

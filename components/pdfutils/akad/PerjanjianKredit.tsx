@@ -160,7 +160,6 @@ export const PerjanjianKredit = (record: IDapem) => {
       <p class="w-4">:</p>
       <p class="flex-1">${record.used_for}</p>
     </div>
-
   </div>
 
   <div class="my-7">

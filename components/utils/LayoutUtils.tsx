@@ -1083,6 +1083,13 @@ export const DetailDapem = ({
                   {IDRFormat(data.c_mutasi)}
                 </div>
               </div> */}
+              <div className="my-1 flex border-b border-dashed">
+                <div className="w-[40%]">BOP Pembiayaan</div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(data.c_bop)}
+                </div>
+              </div>
               <div className="my-1 flex border-b border-dashed text-red-500 font-bold mt-2">
                 <div className="w-[40%]">Total Biaya</div>
                 <div className="w-[5%]">:</div>
@@ -1095,13 +1102,6 @@ export const DetailDapem = ({
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
                   {IDRFormat(data.plafond - GetDapem(data).biaya)}
-                </div>
-              </div>
-              <div className="my-1 flex border-b border-dashed">
-                <div className="w-[40%]">BOP Pembiayaan</div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.c_bop)}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed">
