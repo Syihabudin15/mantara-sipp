@@ -78,8 +78,14 @@ export const GET = async (req: NextRequest) => {
         Dapems: {
           include: {
             Debitur: true,
-            ProdukPembiayaan: true,
+            ProdukPembiayaan: { include: { Sumdan: true } },
             JenisPembiayaan: true,
+            AO: { include: { Cabang: { include: { Area: true } } } },
+            AOCabang: { include: { Cabang: { include: { Area: true } } } },
+            AOArea: { include: { Cabang: { include: { Area: true } } } },
+            User: { include: { Cabang: { include: { Area: true } } } },
+            PayOffice: true,
+            Insurance: true,
           },
         },
       },

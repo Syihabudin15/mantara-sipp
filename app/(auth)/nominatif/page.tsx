@@ -101,7 +101,7 @@ export default function Page() {
     const params = new URLSearchParams();
     params.append("page", pageProps.page.toString());
     params.append("limit", pageProps.limit.toString());
-    params.append("nominatif", "APPROVED");
+    params.append("approv_status", "DISETUJUI");
     if (pageProps.search) params.append("search", pageProps.search);
 
     if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
@@ -447,11 +447,7 @@ export default function Page() {
           record.rounded,
           record.c_ned,
         ).angsuran;
-        const biaya =
-          GetDapem(record).biaya +
-          record.c_takeover +
-          record.c_bop +
-          record.c_blokir * angs;
+        const tb = GetDapem(record).tb;
         return (
           <div>
             <div className="flex gap-1">
@@ -471,9 +467,8 @@ export default function Page() {
                 }
               ></Button>
               <span className="text-xs opacity-80">
-                {IDRFormat(total)}/{IDRFormat(record.plafond - biaya)} (
-                {((total / (record.plafond - biaya)) * 100).toFixed(2)}%) (
-                {IDRFormat(record.plafond - biaya - total)})
+                {IDRFormat(total)}/{IDRFormat(tb)} (
+                {((total / tb) * 100).toFixed(2)}%) ({IDRFormat(tb - total)})
               </span>
             </div>
             <Paragraph
@@ -485,8 +480,8 @@ export default function Page() {
             >
               {desc.map((d, i) => (
                 <div key={i}>
-                  {d.desc} {moment(d.date).format("DD/MM/YYYY HH:mm")}(
-                  {IDRFormat(d.amount)}){/* <br /> */}
+                  {d.desc} {moment(d.date).format("DD/MM/YYYY HH:mm")}( Rp.{" "}
+                  {IDRFormat(d.amount)}) ({((d.amount / tb) * 100).toFixed(2)});
                 </div>
               ))}
             </Paragraph>

@@ -2,6 +2,7 @@
 
 import { FormInput, ViewFiles } from "@/components";
 import { printSIStandar } from "@/components/pdfutils/si/SIStandar";
+import { printSIVima } from "@/components/pdfutils/si/SIVima";
 import { FilterData } from "@/components/utils/CompUtils";
 import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
@@ -239,7 +240,11 @@ export default function Page() {
                 icon={<PrinterOutlined />}
                 size="small"
                 type="primary"
-                onClick={() => printSIStandar(record)}
+                onClick={() =>
+                  record.Sumdan.code.includes("VIMA")
+                    ? printSIVima(record)
+                    : printSIStandar(record)
+                }
               ></Button>
             </Tooltip>
             <Tooltip title="Berkas Akad & Dropping">
