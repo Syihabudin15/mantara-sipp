@@ -25,15 +25,10 @@ export default function Home() {
 
       const data = await res.json();
 
-      if (data.status === 200) {
+      if (data.status === 200 || data.status === 201) {
         message.success("Akses diberikan! Mengalihkan ke sistem...");
         if (typeof window !== "undefined") {
-          window.location.replace("/dashboard");
-        }
-      } else if (data.status === 201) {
-        message.success("Akses diberikan! Mengalihkan ke sistem...");
-        if (typeof window !== "undefined") {
-          window.location.replace("/profile");
+          window.location.replace("/dash");
         }
       } else {
         message.error(data.msg || "Kombinasi pengguna atau sandi tidak cocok.");
@@ -50,7 +45,7 @@ export default function Home() {
 
   return (
     // LATAR BELAKANG BARU: Menggunakan gradasi Slate terang ke Teal yang tenang dan profesional
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-teal-50/30 to-slate-100 p-4 sm:p-6 relative overflow-hidden">
+    <div className="flex items-center justify-center min-h-screen bg-linear-to-br from-slate-50 via-teal-50/30 to-slate-100 p-4 sm:p-6 relative overflow-hidden">
       {/* Dekorasi Bentuk Geometris Abstrak Ringan (Bukan lagi lingkaran blur pasaran) */}
       <div className="absolute -top-20 -left-20 w-80 h-80 bg-emerald-500/5 rounded-full border border-emerald-500/10 pointer-events-none" />
       <div className="absolute -bottom-40 -right-20 w-120 h-120 bg-amber-500/5 rounded-full border border-amber-500/10 pointer-events-none" />

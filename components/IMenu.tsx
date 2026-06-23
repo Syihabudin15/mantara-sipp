@@ -345,6 +345,10 @@ export const listMenuUI: IMenuType[] = [
 
 export const listMenuServer: { key: string; needaccess: boolean }[] = [
   {
+    key: "/dash",
+    needaccess: false,
+  },
+  {
     key: "/dashboard",
     needaccess: true,
   },
