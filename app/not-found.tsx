@@ -6,7 +6,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
       {/* Glow Effect */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-[30%] left-[50%] h-[500px] w-[500px] -translate-x-[50%] rounded-full bg-emerald-100/50 blur-3xl" />
+        <div className="absolute -top-[30%] left-[50%] h-125 w-125 -translate-x-[50%] rounded-full bg-emerald-100/50 blur-3xl" />
       </div>
 
       <div className="max-w-md space-y-6 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">

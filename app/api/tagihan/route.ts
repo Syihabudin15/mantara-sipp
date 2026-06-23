@@ -18,7 +18,10 @@ export const GET = async (req: NextRequest) => {
   const session = await getSession();
   if (!session)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-  const user = await prisma.user.findFirst({ where: { id: session.user.id } });
+  const user = await prisma.user.findFirst({
+    where: { id: session.user.id },
+    include: { Role: true, Cabang: true },
+  });
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
@@ -41,9 +44,26 @@ export const GET = async (req: NextRequest) => {
         },
       ],
     }),
+    ...(sumdanId && { ProdukPembiayaan: { sumdanId: sumdanId } }),
     ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
-    ...(!user.sumdanId &&
-      sumdanId && { ProdukPembiayaan: { sumdanId: sumdanId } }),
+    ...(user.Role.data_status === "AREA" && {
+      AO: { Cabang: { areaId: user.Cabang.areaId } },
+      AOCabang: { Cabang: { areaId: user.Cabang.areaId } },
+      AOArea: { Cabang: { areaId: user.Cabang.areaId } },
+      User: { Cabang: { areaId: user.Cabang.areaId } },
+    }),
+    ...(user.Role.data_status === "CABANG" && {
+      AO: { cabangId: user.cabangId },
+      AOCabang: { cabangId: user.cabangId },
+      AOArea: { cabangId: user.cabangId },
+      User: { cabangId: user.cabangId },
+    }),
+    ...(user.Role.data_status === "USER" && {
+      AO: { id: user.id },
+      AOCabang: { id: user.id },
+      AOArea: { id: user.id },
+      User: { id: user.id },
+    }),
     Angsurans: {
       some: {
         date_pay: {

@@ -109,7 +109,7 @@ export const SIPage1Vima = (record: IDropping) => {
           },
           {
             key: `Blokir Angsuran ${dapem.c_blokir} Bulan`,
-            value: IDRFormat(angsSumdan * dapem.c_blokir),
+            value: IDRFormat(angs * dapem.c_blokir),
             currency: true,
             classStyle: "font-bold",
           },
@@ -118,14 +118,6 @@ export const SIPage1Vima = (record: IDropping) => {
 
       <p class="mt-4">Selanjutnya kami mohon :</p>
         <div class="ml-6">
-          <div class="flex gap-2 font-bold">
-            <p class="w-44">Blokir Angsuran ${dapem.c_blokir} Bulan</p>
-            <p class="w-4">:</p>
-            <div class="w-28 flex justify-between gap-2">
-              <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(admAngsuran * dapem.c_blokir)}</p>
-            </div>
-          </div>
           <div class="flex gap-2 font-bold">
             <p class="w-44">Total Biaya</p>
             <p class="w-4">:</p>
@@ -136,20 +128,20 @@ export const SIPage1Vima = (record: IDropping) => {
           </div>
           <div class="flex gap-2 ml-2">
             <p class="w-4">A. </p>
-            <p class="w-36">Administrasi</p>
-            <p class="w-4">:</p>
-            <div class="w-28 flex justify-between gap-2">
-              <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(adm)}</p>
-            </div>
-          </div>
-          <div class="flex gap-2 ml-2">
-            <p class="w-4">B. </p>
             <p class="w-36">Asuransi</p>
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
               <p class="w-4 flex-1 text-right">${IDRFormat(asuransi)}</p>
+            </div>
+          </div>
+          <div class="flex gap-2 ml-2">
+            <p class="w-4">B. </p>
+            <p class="w-36">Administrasi</p>
+            <p class="w-4">:</p>
+            <div class="w-28 flex justify-between gap-2">
+              <p class="w-4">Rp. </p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(adm + provisi)}</p>
             </div>
           </div>
           <div class="flex gap-2 ml-2">
@@ -161,15 +153,6 @@ export const SIPage1Vima = (record: IDropping) => {
               <p class="w-4 flex-1 text-right">${IDRFormat(tatalaksana)}</p>
             </div>
           </div>
-          <div class="flex gap-2 ml-2">
-            <p class="w-4">D. </p>
-            <p class="w-36">Provisi</p>
-            <p class="w-4">:</p>
-            <div class="w-28 flex justify-between gap-2">
-              <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(provisi)}</p>
-            </div>
-          </div>
         </div>
     </div>
 
@@ -178,8 +161,8 @@ export const SIPage1Vima = (record: IDropping) => {
       <div class="flex-1">
         <p>Hormat kami,</p>
         <div class="h-28"></div>
-        <p class="border-b">${process.env.NEXT_PUBLIC_APP_AKAD_NAME}</p>
-        <p>${process.env.NEXT_PUBLIC_APP_AKAD_POSITION}</p>
+        <p class="border-b">${""}</p>
+        <p>${""}</p>
       </div>
     </div>
   </div>

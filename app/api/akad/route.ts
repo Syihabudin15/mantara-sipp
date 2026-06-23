@@ -155,10 +155,11 @@ function GenerateAnuitas(dapem: Dapem): Angsuran[] {
 
   for (let i = 1; i <= dapem.tenor; i++) {
     const newId = `${prefix}${String(i).padStart(padLength, "0")}`;
-    const bungaBulan = Math.round(
-      sisa * ((dapem.c_margin + dapem.c_margin_sumdan) / 12 / 100),
-    );
-    const pokok = angsuran - bungaBulan;
+    // const bungaBulan = Math.ceil(
+    //   sisa * ((dapem.c_margin + dapem.c_margin_sumdan) / 12 / 100),
+    // );
+    const bungaBulan = Math.ceil(sisa * (dapem.c_margin_sumdan / 12 / 100));
+    const pokok = angsudan - bungaBulan;
     sisa -= pokok;
 
     if (sisa < 0) sisa = 0;

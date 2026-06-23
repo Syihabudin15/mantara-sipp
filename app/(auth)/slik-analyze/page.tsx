@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Upload,
-  Button,
   Card,
   Typography,
   Tag,
@@ -72,70 +71,6 @@ interface CreditResult {
     data: CreditItem[];
   };
 }
-
-const dummyResult: CreditResult = {
-  msg: "OK",
-  status: 200,
-  data: {
-    score: 100,
-    risk_level: "LOW",
-    collect: 1,
-    recommendation: "APPROVE",
-    recommendation_reason:
-      "Debitur memiliki kolektibilitas lancar tanpa tunggakan dan tidak ada indikasi risiko kredit bermasalah.",
-    summary:
-      "Debitur memiliki 1 fasilitas kredit aktif dengan kolektibilitas lancar dan outstanding sebesar 6579032. Tidak ditemukan tunggakan maupun indikasi kredit bermasalah.",
-    metrics: {
-      total_lender: 3,
-      active_loan: 1,
-      closed_loan: 2,
-      active_loan_value: 6579032,
-      active_loan_os: 6579032,
-      total_overdue: 0,
-      worst_collect_history: 1,
-      has_write_off: false,
-      has_restructured_loan: false,
-      utilization_ratio: 100,
-    },
-    risks: [],
-    data: [
-      {
-        instansi: "PT Akulaku Finance Indonesia",
-        loan_status: "CLOSED",
-        collect: 1,
-        loan_value: 200000,
-        loan_os: 0,
-        overdue_amount: 0,
-        start_date: "2022-02-05",
-        end_date: "2022-03-25",
-        risk_note: "Fasilitas telah lunas tanpa tunggakan.",
-      },
-      {
-        instansi: "PT Topas Multi Finance",
-        loan_status: "CLOSED",
-        collect: 1,
-        loan_value: 9500000,
-        loan_os: 0,
-        overdue_amount: 0,
-        start_date: "2024-12-20",
-        end_date: "2025-01-09",
-        risk_note: "Fasilitas dialihkan ke pelapor lain tanpa tunggakan.",
-      },
-      {
-        instansi: "PT Bank Mayapada Internasional Tbk",
-        loan_status: "ACTIVE",
-        collect: 1,
-        loan_value: 6579032,
-        loan_os: 6579032,
-        overdue_amount: 0,
-        start_date: "2025-01-09",
-        end_date: null,
-        risk_note:
-          "Fasilitas aktif dengan kolektibilitas lancar dan tanpa tunggakan.",
-      },
-    ],
-  },
-};
 
 const formatRupiah = (value: number) => {
   return new Intl.NumberFormat("id-ID", {
@@ -309,7 +244,7 @@ export default function CreditCheckPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 p-8 text-white shadow-xl">
+        <div className="mb-8 overflow-hidden rounded-3xl bg-linear-to-r from-blue-700 via-indigo-700 to-slate-900 p-8 text-white shadow-xl">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-sm backdrop-blur">
@@ -317,11 +252,11 @@ export default function CreditCheckPage() {
                 Sistem Analisis Kredit PDF
               </div>
 
-              <Title level={2} className="!mb-2 !text-white">
+              <Title level={2} className="mb-2! text-white!">
                 Credit Risk Analyzer
               </Title>
 
-              <Paragraph className="!mb-0 max-w-2xl !text-slate-100">
+              <Paragraph className="mb-0! max-w-2xl text-slate-100!">
                 Upload file PDF debitur, lalu sistem akan menampilkan skor,
                 rekomendasi, kolektibilitas, outstanding, tunggakan, dan riwayat
                 fasilitas kredit secara ringkas.
@@ -329,7 +264,7 @@ export default function CreditCheckPage() {
             </div>
 
             <div className="rounded-2xl bg-white/10 px-5 py-4 text-center backdrop-blur">
-              <Text className="!text-slate-200">Format</Text>
+              <Text className="text-slate-200!">Format</Text>
               <div className="mt-1 flex items-center justify-center gap-2 text-xl font-semibold">
                 <FilePdfOutlined />
                 PDF
@@ -349,12 +284,12 @@ export default function CreditCheckPage() {
               <div className="mt-5">
                 <Dragger
                   {...uploadProps}
-                  className="!rounded-2xl !border-dashed !border-blue-300 !bg-blue-50/40"
+                  className="rounded-2xl! border-dashed! border-blue-300! bg-blue-50/40!"
                 >
                   <p className="ant-upload-drag-icon">
-                    <InboxOutlined className="!text-blue-600" />
+                    <InboxOutlined className="text-blue-600!" />
                   </p>
-                  <p className="ant-upload-text !font-semibold">
+                  <p className="ant-upload-text font-semibold!">
                     Klik atau tarik file PDF ke sini
                   </p>
                   <p className="ant-upload-hint">
@@ -386,10 +321,10 @@ export default function CreditCheckPage() {
 
           <Col xs={24} lg={16}>
             {loading ? (
-              <Card className="flex min-h-[360px] items-center justify-center rounded-3xl border-0 shadow-sm">
+              <Card className="flex min-h-90 items-center justify-center rounded-3xl border-0 shadow-sm">
                 <div className="text-center">
                   <Spin size="large" />
-                  <Title level={4} className="!mt-5">
+                  <Title level={4} className="mt-5!">
                     Menganalisis PDF...
                   </Title>
                   <Text type="secondary">
@@ -398,7 +333,7 @@ export default function CreditCheckPage() {
                 </div>
               </Card>
             ) : !result ? (
-              <Card className="flex min-h-[360px] items-center justify-center rounded-3xl border-0 shadow-sm">
+              <Card className="flex min-h-90 items-center justify-center rounded-3xl border-0 shadow-sm">
                 <Empty
                   description={
                     <span>
@@ -420,7 +355,7 @@ export default function CreditCheckPage() {
                           size={170}
                         />
 
-                        <Title level={3} className="!mb-1">
+                        <Title level={3} className="mb-1!">
                           Score {result.data.score}
                         </Title>
 
@@ -470,7 +405,7 @@ export default function CreditCheckPage() {
 
                         <div className="rounded-2xl bg-slate-50 p-4">
                           <Text type="secondary">Ringkasan</Text>
-                          <Paragraph className="!mb-0 !mt-1">
+                          <Paragraph className="mb-0! mt-1!">
                             {result.data.summary}
                           </Paragraph>
                         </div>
@@ -556,7 +491,7 @@ export default function CreditCheckPage() {
                 <Card className="rounded-3xl border-0 shadow-sm">
                   <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <Title level={4} className="!mb-1">
+                      <Title level={4} className="mb-1!">
                         Riwayat Fasilitas Kredit
                       </Title>
                       <Text type="secondary">
@@ -593,7 +528,7 @@ export default function CreditCheckPage() {
                       expandedRowRender: (record) => (
                         <div className="rounded-xl bg-slate-50 p-4">
                           <Text strong>Catatan Risiko:</Text>
-                          <Paragraph className="!mb-0 !mt-1">
+                          <Paragraph className="mb-0! mt-1!">
                             {record.risk_note}
                           </Paragraph>
                         </div>

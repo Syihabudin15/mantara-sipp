@@ -165,7 +165,8 @@ export const AnalisaPerhitungan = (record: IDapem) => {
             key: "Biaya Administrasi",
             value: IDRFormat(
               record.plafond *
-                ((record.c_adm +
+                ((record.c_provisi_sumdan +
+                  record.c_adm +
                   record.c_adm_sumdan +
                   record.c_adm_mitra +
                   record.c_adm_ff) /
@@ -187,8 +188,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
             key: "Biaya Provisi",
             value: IDRFormat(
               record.plafond *
-                ((record.c_provisi_sumdan +
-                  record.c_fee_ao +
+                ((record.c_fee_ao +
                   record.c_fee_cabang +
                   record.c_fee_area +
                   record.c_fee_bpp +

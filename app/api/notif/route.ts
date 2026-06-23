@@ -26,6 +26,7 @@ export const GET = async (req: NextRequest) => {
           { AO: { Cabang: { areaId: user.Cabang.areaId } } },
           { AOCabang: { Cabang: { areaId: user.Cabang.areaId } } },
           { AOArea: { Cabang: { areaId: user.Cabang.areaId } } },
+          { User: { Cabang: { areaId: user.Cabang.areaId } } },
         ],
       }),
       ...(user.Role.data_status === "CABANG" && {
@@ -33,6 +34,7 @@ export const GET = async (req: NextRequest) => {
           { AO: { cabangId: user.cabangId } },
           { AOCabang: { cabangId: user.cabangId } },
           { AOArea: { cabangId: user.cabangId } },
+          { User: { cabangId: user.cabangId } },
         ],
       }),
       ...(user.Role.data_status === "USER" && {
@@ -40,6 +42,7 @@ export const GET = async (req: NextRequest) => {
           { AO: { id: user.id } },
           { AOCabang: { id: user.id } },
           { AOArea: { id: user.id } },
+          { User: { id: user.id } },
         ],
       }),
     };

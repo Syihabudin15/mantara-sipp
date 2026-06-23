@@ -1,7 +1,5 @@
 import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import prisma from "@/libs/Prisma";
-import { Prisma } from "@prisma/client";
-import { Col } from "antd";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";

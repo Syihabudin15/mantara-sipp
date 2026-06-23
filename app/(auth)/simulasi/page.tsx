@@ -44,7 +44,9 @@ export default function Page() {
   const [sumdanAv, setSumdanAv] = useState<ISumdan[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const { hasAccess } = useAccess(window.location.pathname);
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/simulasi",
+  );
   const { message } = App.useApp();
 
   useEffect(() => {
@@ -362,79 +364,54 @@ export default function Page() {
           <div className="w-full bg-gray-800 text-gray-50 p-2 rounded">
             Rekomendasi Pembiayaan
           </div>
-          <div className="flex gap-2 ">
-            <FormInput
-              data={{
-                label: "Tenor",
-                type: "number",
-                mode: "vertical",
-                class: "flex-1",
-                value: data.tenor,
-                onChange: (e: string) => setData({ ...data, tenor: Number(e) }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "Max Tenor",
-                type: "number",
-                mode: "vertical",
-                class: "flex-1",
-                disabled: true,
-                value: data.max_tenor,
-              }}
-            />
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <div>Tenor</div>
+              <Input
+                value={data.tenor || 0}
+                type="number"
+                onChange={(e) =>
+                  setData({ ...data, tenor: Number(e.target.value || 0) })
+                }
+              />
+            </div>
+            <div className="flex-1">
+              <div>Max Tenor</div>
+              <Input value={data.max_tenor} type="number" disabled />
+            </div>
           </div>
           <div className="flex gap-2">
-            <FormInput
-              data={{
-                label: "Plafond",
-                type: "text",
-                mode: "vertical",
-                class: "flex-1",
-                value: IDRFormat(data.plafond || 0),
-                onChange: (e: string) =>
-                  setData({ ...data, plafond: IDRToNumber(e || "0") }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "Max Plafond",
-                type: "text",
-                mode: "vertical",
-                class: "flex-1",
-                disabled: true,
-                value: IDRFormat(data.max_plafond || 0),
-              }}
-            />
-          </div>
-          <div className="flex  gap-2">
-            <FormInput
-              data={{
-                label: "Angsuran",
-                type: "text",
-                mode: "vertical",
-                class: "flex-1",
-                disabled: true,
-                value: IDRFormat(data.angsuran || 0),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "Max Angsuran",
-                type: "text",
-                mode: "vertical",
-                class: "flex-1",
-                disabled: true,
-                value: IDRFormat(
-                  (data.Debitur.salary * data.Sumdan.dsr) / 100 || 0,
-                ),
-                onChange: (e: string) =>
+            <div className="flex-1">
+              <div>Plafond</div>
+              <Input
+                value={IDRFormat(data.plafond || 0)}
+                onChange={(e) =>
                   setData({
                     ...data,
-                    Debitur: { ...data.Debitur, salary: IDRToNumber(e || "0") },
-                  }),
-              }}
-            />
+                    plafond: IDRToNumber(e.target.value || "0"),
+                  })
+                }
+              />
+            </div>
+            <div className="flex-1">
+              <div>Max Plafond</div>
+              <Input value={IDRFormat(data.max_plafond || 0)} disabled />
+            </div>
+          </div>
+          <div className="flex-1 flex gap-2">
+            <div className="flex-1">
+              <div>Angsuran</div>
+              <Input value={IDRFormat(data.angsuran || 0)} disabled />
+            </div>
+            <div className="flex-1">
+              <div>Max Angsuran</div>
+              <Input
+                value={IDRFormat(
+                  (data.Debitur.salary * data.Sumdan.dsr) / 100 || 0,
+                )}
+                disabled
+              />
+            </div>
           </div>
         </div>
       </Card>

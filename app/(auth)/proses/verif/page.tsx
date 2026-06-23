@@ -69,21 +69,27 @@ export default function Page() {
   const [sumdans, setSumdans] = useState<Sumdan[]>([]);
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/proses/verif");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/proses/verif",
+  );
   const user = useUser();
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      verif_status: pageProps.verif_status || "all",
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.jenisPembiayaanId && {
+        jenisPembiayaanId: pageProps.jenisPembiayaanId,
+      }),
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+    });
     params.append("page", pageProps.page.toString());
     params.append("limit", pageProps.limit.toString());
     params.append("verif_status", pageProps.verif_status || "all");
-
-    if (pageProps.search) params.append("search", pageProps.search);
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.jenisPembiayaanId)
-      params.append("jenisPembiayaanId", pageProps.jenisPembiayaanId);
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
     const json = await res.json();
@@ -112,12 +118,14 @@ export default function Page() {
 
   useEffect(() => {
     (async () => {
-      await fetch("/api/sumdan")
-        .then((res) => res.json())
-        .then((res) => setSumdans(res.data));
-      await fetch("/api/jenis")
-        .then((res) => res.json())
-        .then((res) => setJeniss(res.data));
+      await Promise.all([
+        fetch("/api/sumdan?limit=500")
+          .then((res) => res.json())
+          .then((res) => setSumdans(res.data)),
+        fetch("/api/jenis?limit=50")
+          .then((res) => res.json())
+          .then((res) => setJeniss(res.data)),
+      ]);
     })();
   }, []);
 
@@ -335,14 +343,24 @@ export default function Page() {
       <div className="flex justify-between my-1 gap-2 overflow-auto">
         <div className="flex gap-2">
           <FilterData
+            clearfilter={() =>
+              setPageProps((prev) => ({
+                ...prev,
+                sumdanId: "",
+                jenisPembiayaanId: "",
+                slik_status: "all",
+                backdate: "",
+              }))
+            }
             children={
               <>
                 <div className="my-2">
                   <p>Periode :</p>
                   <RangePicker
                     size="small"
+                    value={pageProps.backdate}
                     onChange={(date, dateStr) =>
-                      setPageProps({ ...pageProps, backdate: dateStr })
+                      setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
                     }
                     style={{ width: "100%" }}
                   />
@@ -357,8 +375,9 @@ export default function Page() {
                         label: s.code,
                         value: s.id,
                       }))}
+                      value={pageProps.sumdanId}
                       onChange={(e) =>
-                        setPageProps({ ...pageProps, sumdanId: e })
+                        setPageProps({ ...pageProps, sumdanId: e, page: 1 })
                       }
                       allowClear
                       style={{ width: "100%" }}
@@ -370,19 +389,24 @@ export default function Page() {
                   <Select
                     size="small"
                     placeholder="Pilih Jenis..."
+                    value={pageProps.jenisPembiayaanId}
                     options={jeniss.map((s) => ({
                       label: s.name,
                       value: s.id,
                     }))}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, jenisPembiayaanId: e })
+                      setPageProps({
+                        ...pageProps,
+                        jenisPembiayaanId: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
                   />
                 </div>
                 <div className="my-2">
-                  <p>Status pembiayaan</p>
+                  <p>Status Pembiayaan</p>
                   <Select
                     size="small"
                     placeholder="Pilih Status..."
@@ -391,8 +415,9 @@ export default function Page() {
                       { label: "SETUJU", value: "DISETUJUI" },
                       { label: "TOLAK", value: "DITOLAK" },
                     ]}
+                    value={pageProps.verif_status}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, verif_status: e })
+                      setPageProps({ ...pageProps, verif_status: e, page: 1 })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -504,6 +529,7 @@ export default function Page() {
               ).angsuran,
             0,
           );
+          const admAngsuran = Math.ceil(angsuran - angssudan);
 
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
@@ -519,7 +545,7 @@ export default function Page() {
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} className="text-center font-bold">
                 <div>
-                  {IDRFormat(angsuran)} + {IDRFormat(angsuran - angssudan)}
+                  {IDRFormat(angssudan)} + {IDRFormat(admAngsuran)}
                 </div>
                 <div className="border-t border-gray-500">
                   {IDRFormat(angsuran)}

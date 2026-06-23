@@ -82,32 +82,35 @@ export default function Page() {
   const [sumdans, setSumdans] = useState<Sumdan[]>([]);
   const [dapems, setDapems] = useState<IDapem[]>([]);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/pelunasan");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/pelunasan",
+  );
   const user = useUser();
 
   useEffect(() => {
     (async () => {
-      await fetch("/api/pelunasan", { method: "PATCH" })
-        .then((res) => res.json())
-        .then((res) => setDapems(res.data));
-      await fetch("/api/sumdan?limit=1000")
-        .then((res) => res.json())
-        .then((res) => setSumdans(res.data));
+      await Promise.all([
+        fetch("/api/pelunasan", { method: "PATCH" })
+          .then((res) => res.json())
+          .then((res) => setDapems(res.data)),
+        fetch("/api/sumdan?limit=1000")
+          .then((res) => res.json())
+          .then((res) => setSumdans(res.data)),
+      ]);
     })();
   }, []);
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.type) params.append("type", pageProps.type);
-    if (pageProps.status_paid)
-      params.append("status_paid", pageProps.status_paid);
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.type && { type: pageProps.type }),
+      ...(pageProps.status_paid && { status_paid: pageProps.status_paid }),
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+    });
 
     const res = await fetch(`/api/pelunasan?${params.toString()}`);
     const json = await res.json();
@@ -453,14 +456,24 @@ export default function Page() {
             </Button>
           )}
           <FilterData
+            clearfilter={() =>
+              setPageProps((prev) => ({
+                ...prev,
+                sumdanId: "",
+                type: "",
+                status_paid: "",
+                backdate: "",
+              }))
+            }
             children={
               <>
                 <div className="my-2">
                   <p>Periode : </p>
                   <RangePicker
                     size="small"
+                    value={pageProps.backdate}
                     onChange={(date, dateStr) =>
-                      setPageProps({ ...pageProps, backdate: dateStr })
+                      setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
                     }
                     style={{ width: "100%" }}
                   />
@@ -475,8 +488,9 @@ export default function Page() {
                         label: s.code,
                         value: s.id,
                       }))}
+                      value={pageProps.sumdanId}
                       onChange={(e) =>
-                        setPageProps({ ...pageProps, sumdanId: e })
+                        setPageProps({ ...pageProps, sumdanId: e, page: 1 })
                       }
                       allowClear
                       style={{ width: "100%" }}
@@ -494,7 +508,10 @@ export default function Page() {
                       { label: "TOPUP", value: "TOPUP" },
                       { label: "LEPAS", value: "LEPAS" },
                     ]}
-                    onChange={(e) => setPageProps({ ...pageProps, type: e })}
+                    value={pageProps.type}
+                    onChange={(e) =>
+                      setPageProps({ ...pageProps, type: e, page: 1 })
+                    }
                     allowClear
                     style={{ width: "100%" }}
                   />
@@ -509,8 +526,9 @@ export default function Page() {
                       { label: "Disetujui (APPROVED)", value: "DISETUJUI" },
                       { label: "Ditolak (REJECTED)", value: "DITOLAK" },
                     ]}
+                    value={pageProps.status_paid}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, status_paid: e })
+                      setPageProps({ ...pageProps, status_paid: e, page: 1 })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -524,6 +542,7 @@ export default function Page() {
           size="small"
           style={{ width: 170 }}
           placeholder="Cari nama..."
+          value={pageProps.search}
           onChange={(e) =>
             setPageProps({ ...pageProps, search: e.target.value })
           }
@@ -551,7 +570,7 @@ export default function Page() {
           pageSizeOptions: [50, 100, 500, 1000],
           showSizeChanger: true,
         }}
-        summary={(pageData) => {
+        summary={(pageData: readonly IPelunasan[]) => {
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
               <Table.Summary.Cell index={0} colSpan={2} className="text-center">

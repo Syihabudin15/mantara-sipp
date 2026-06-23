@@ -20,7 +20,6 @@ export const SIPage2Vima = (record: IDropping) => {
     dapem.margin_type,
     dapem.rounded,
   ).angsuran;
-  const admAngsuran = Math.ceil(angs - angsSumdan);
 
   const adm =
     dapem.plafond * ((dapem.c_adm + dapem.c_adm_mitra + dapem.c_adm_ff) / 100);
@@ -32,6 +31,8 @@ export const SIPage2Vima = (record: IDropping) => {
       dapem.c_fee_bpp +
       dapem.c_fee_bpb) /
       100);
+  const provisi_admsumdan =
+    dapem.plafond * ((dapem.c_adm_sumdan + dapem.c_provisi_sumdan) / 100);
   const asuransi = dapem.plafond * (dapem.c_insurance / 100);
   const tatalaksana =
     dapem.c_gov +
@@ -40,8 +41,16 @@ export const SIPage2Vima = (record: IDropping) => {
     dapem.c_stamp +
     dapem.c_bop +
     dapem.c_mutasi;
-  const biaya = adm + provisi + asuransi + tatalaksana + dapem.c_account;
-  const tb = dapem.plafond - (biaya + dapem.c_takeover);
+  const biaya =
+    adm +
+    provisi +
+    provisi_admsumdan +
+    dapem.c_account_sumdan +
+    asuransi +
+    tatalaksana +
+    dapem.c_account;
+  const blokir = dapem.c_blokir * angs;
+  const tb = dapem.plafond - (biaya + dapem.c_takeover + blokir);
   const ao = dapem.AO || dapem.AOCabang || dapem.AOArea;
 
   return `
@@ -76,17 +85,17 @@ export const SIPage2Vima = (record: IDropping) => {
           classStyle: "font-bold",
           value: `Rp. ${IDRFormat(dapem.plafond)}`,
         },
-        { key: "Administrasi", value: `Rp. ${IDRFormat(adm)}` },
+        { key: "Administrasi", value: `Rp. ${IDRFormat(adm + provisi)}` },
         { key: "Asuransi", value: `Rp. ${IDRFormat(asuransi)}` },
         { key: "Tata Laksana", value: `Rp. ${IDRFormat(tatalaksana)}` },
-        { key: "Provisi", value: `Rp. ${IDRFormat(provisi)}` },
+        { key: "Provisi", value: `Rp. ${IDRFormat(provisi_admsumdan)}` },
         {
           key: "Pembukaan Tabungan",
-          value: `Rp. ${IDRFormat(dapem.c_account)}`,
+          value: `Rp. ${IDRFormat(dapem.c_account_sumdan)}`,
         },
         {
           key: `Blokir Angsuran di muka ${dapem.c_blokir} Angsuran`,
-          value: `Rp. ${IDRFormat(dapem.c_blokir * admAngsuran)}`,
+          value: `Rp. ${IDRFormat(dapem.c_blokir * angs)}`,
         },
         {
           key: "Nominal Pelunasan",
@@ -124,8 +133,8 @@ export const SIPage2Vima = (record: IDropping) => {
       <div class="flex-1">
         <p>Hormat kami,</p>
         <div class="h-28"></div>
-        <p class="border-b">${process.env.NEXT_PUBLIC_APP_AKAD_NAME}</p>
-        <p>${process.env.NEXT_PUBLIC_APP_AKAD_POSITION}</p>
+        <p class="border-b">${""}</p>
+        <p>${""}</p>
       </div>
     </div>
 `;

@@ -8,7 +8,7 @@ import {
   IPageProps,
   ISumdanDropping,
 } from "@/libs/IInterfaces";
-// import { useAccess } from "@/libs/Permission";
+import { useAccess } from "@/libs/Permission";
 import {
   PrinterOutlined,
   RobotOutlined,
@@ -32,13 +32,16 @@ export default function Page() {
   const [dropping, setdropping] = useState<IDropping>(defaultDropping);
   const [open, setOpen] = useState(false);
   const { modal } = App.useApp();
-  // const { hasAccess } = useAccess("/pencairan/print");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/pencairan/print",
+  );
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+    });
     const res = await fetch(`/api/dropping/print?${params.toString()}`);
     const json = await res.json();
     setPageProps((prev) => ({
@@ -79,6 +82,7 @@ export default function Page() {
     const sumdan = selecteds[selecteds.length - 1].ProdukPembiayaan.Sumdan;
     await fetch("/api/dropping/print?id=" + sumdan.id, {
       method: "PATCH",
+      body: JSON.stringify({ created_at: dropping.created_at }),
     })
       .then((res) => res.json())
       .then((res) => {
@@ -111,17 +115,17 @@ export default function Page() {
         styles={{ body: { padding: 5 } }}
       >
         <div className="my-1">
-          {/* {hasAccess("write") && ( */}
-          <Button
-            size="small"
-            icon={<PrinterOutlined />}
-            type="primary"
-            onClick={() => setOpen(true)}
-            disabled={selecteds.length === 0}
-          >
-            Cetak SI
-          </Button>
-          {/* )} */}
+          {hasAccess("write") && (
+            <Button
+              size="small"
+              icon={<PrinterOutlined />}
+              type="primary"
+              onClick={() => setOpen(true)}
+              disabled={selecteds.length === 0}
+            >
+              Cetak SI
+            </Button>
+          )}
         </div>
         <Table
           columns={columnSumdan}

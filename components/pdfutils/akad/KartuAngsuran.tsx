@@ -105,7 +105,7 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
           <tr>
             <td class="border border-gray-400 border-dashed p-1 text-center">${r.counter}</td>
             <td class="border border-gray-400 border-dashed p-1 text-center">${moment(r.date_pay).format("DD-MM-YYYY")}</td>
-            <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal + r.margin)}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${r.counter === 0 ? "0" : IDRFormat(r.principal + r.margin + r.c_ned + admAngsuran)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.margin)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${r.counter === 0 ? "0" : IDRFormat(admAngsuran)}</td>

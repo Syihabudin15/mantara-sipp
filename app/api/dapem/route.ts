@@ -31,7 +31,6 @@ export const GET = async (request: NextRequest) => {
     mutasi_status,
     cash_status,
     flagging_status,
-    // paid_status,
     currmonth,
     backdate,
     agentFrontingId,
@@ -116,9 +115,6 @@ export const GET = async (request: NextRequest) => {
     ...(agentFrontingId && { agentFrontingId: agentFrontingId }),
     ...(payOfficeId && { payOfficeId: payOfficeId }),
     ...(insuranceId && { insuranceId: insuranceId }),
-    // ...(paid_status && {
-    //   Pelunasan: { status_paid: paid_status as ESubmissionStatus },
-    // }),
     ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
     ...(user.Role.data_status === "AREA" && {
       OR: [

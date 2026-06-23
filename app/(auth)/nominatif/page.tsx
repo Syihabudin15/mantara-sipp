@@ -20,6 +20,7 @@ import {
   ICashDesc,
   IDapem,
   IPageProps,
+  IPayOffice,
   IViewFiles,
 } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
@@ -37,7 +38,6 @@ import {
 } from "@ant-design/icons";
 import { EDapemStatus, JenisPembiayaan, Sumdan } from "@prisma/client";
 import {
-  App,
   Button,
   Card,
   DatePicker,
@@ -70,6 +70,7 @@ export default function Page() {
     cash_status: "",
     document_status: "",
     guarantee_status: "",
+    payOfficeId: "",
     agentFrontingId: "",
     backdate: "",
   });
@@ -82,9 +83,11 @@ export default function Page() {
   });
   const [sumdans, setSumdans] = useState<Sumdan[]>([]);
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
+  const [pays, setPays] = useState<IPayOffice[]>([]);
   const [agents, setAgents] = useState<IAgentFronting[]>([]);
-  const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/nominatif");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/nominatif",
+  );
   const user = useUser();
   const [views, setViews] = useState<IViewFiles>({
     open: false,
@@ -93,30 +96,27 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    params.append("approv_status", "DISETUJUI");
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.jenisPembiayaanId)
-      params.append("jenisPembiayaanId", pageProps.jenisPembiayaanId);
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
-    if (pageProps.takeover_status)
-      params.append("takeover_status", pageProps.takeover_status);
-    if (pageProps.mutasi_status)
-      params.append("mutasi_status", pageProps.mutasi_status);
-    if (pageProps.flagging_status)
-      params.append("flagging_status", pageProps.flagging_status);
-    if (pageProps.cash_status)
-      params.append("cash_status", pageProps.cash_status);
-    if (pageProps.document_status)
-      params.append("document_status", pageProps.document_status);
-    if (pageProps.guarantee_status)
-      params.append("guarantee_status", pageProps.guarantee_status);
-    if (pageProps.agentFrontingId)
-      params.append("agentFrontingId", pageProps.agentFrontingId);
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      approv_status: "DISETUJUI",
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.jenisPembiayaanId && {
+        jenisPembiayaanId: pageProps.jenisPembiayaanId,
+      }),
+      ...(pageProps.document_status && {
+        document_status: pageProps.document_status,
+      }),
+      ...(pageProps.guarantee_status && {
+        guarantee_status: pageProps.guarantee_status,
+      }),
+      ...(pageProps.agentFrontingId && {
+        agentFrontingId: pageProps.agentFrontingId,
+      }),
+      ...(pageProps.payOfficeId && { payOfficeId: pageProps.payOfficeId }),
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+    });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
     const json = await res.json();
@@ -146,23 +146,26 @@ export default function Page() {
     pageProps.cash_status,
     pageProps.document_status,
     pageProps.guarantee_status,
+    pageProps.payOfficeId,
     pageProps.agentFrontingId,
   ]);
 
   useEffect(() => {
     (async () => {
-      await fetch("/api/sumdan")
-        .then((res) => res.json())
-        .then((res) => setSumdans(res.data));
-      await fetch("/api/jenis")
-        .then((res) => res.json())
-        .then((res) => setJeniss(res.data));
-      await fetch("/api/jenis")
-        .then((res) => res.json())
-        .then((res) => setJeniss(res.data));
-      await fetch("/api/agent")
-        .then((res) => res.json())
-        .then((res) => setAgents(res.data));
+      await Promise.all([
+        fetch("/api/sumdan?limit=500")
+          .then((res) => res.json())
+          .then((res) => setSumdans(res.data)),
+        fetch("/api/jenis?limit=500")
+          .then((res) => res.json())
+          .then((res) => setJeniss(res.data)),
+        fetch("/api/pay_office?limit=500")
+          .then((res) => res.json())
+          .then((res) => setPays(res.data)),
+        fetch("/api/agent?limit=500")
+          .then((res) => res.json())
+          .then((res) => setAgents(res.data)),
+      ]);
     })();
   }, []);
 
@@ -577,14 +580,27 @@ export default function Page() {
       <div className="flex justify-between my-1 gap-2 overflow-auto">
         <div className="flex gap-2">
           <FilterData
+            clearfilter={() =>
+              setPageProps((prev) => ({
+                ...prev,
+                sumdanId: "",
+                jenisPembiayaanId: "",
+                agentFrontingId: "",
+                payOfficeId: "",
+                document_status: "",
+                guarantee_status: "",
+                backdate: "",
+              }))
+            }
             children={
               <>
                 <div className="my-2">
                   <p>Periode :</p>
                   <RangePicker
                     size="small"
+                    value={pageProps.backdate}
                     onChange={(date, dateStr) =>
-                      setPageProps({ ...pageProps, backdate: dateStr })
+                      setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
                     }
                     style={{ width: "100%" }}
                   />
@@ -599,8 +615,9 @@ export default function Page() {
                         label: s.code,
                         value: s.id,
                       }))}
+                      value={pageProps.sumdanId}
                       onChange={(e) =>
-                        setPageProps({ ...pageProps, sumdanId: e })
+                        setPageProps({ ...pageProps, sumdanId: e, page: 1 })
                       }
                       allowClear
                       style={{ width: "100%" }}
@@ -616,8 +633,13 @@ export default function Page() {
                       label: s.name,
                       value: s.id,
                     }))}
+                    value={pageProps.jenisPembiayaanId}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, jenisPembiayaanId: e })
+                      setPageProps({
+                        ...pageProps,
+                        jenisPembiayaanId: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -632,80 +654,34 @@ export default function Page() {
                       label: s.name,
                       value: s.id,
                     }))}
+                    value={pageProps.agentFrontingId}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, agentFrontingId: e })
+                      setPageProps({
+                        ...pageProps,
+                        agentFrontingId: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
                   />
                 </div>
                 <div className="my-2">
-                  <p>Status Takeover :</p>
+                  <p>Kantor Bayar :</p>
                   <Select
                     size="small"
-                    placeholder="Status Takeover..."
-                    options={[
-                      { label: "DRAFT", value: "DRAFT" },
-                      { label: "PENDING", value: "PENDING" },
-                      { label: "PROSES", value: "PROSES" },
-                      { label: "SELESAI", value: "DISETUJUI" },
-                    ]}
+                    placeholder="Pilih Kantor Bayar..."
+                    options={agents.map((s) => ({
+                      label: s.name,
+                      value: s.id,
+                    }))}
+                    value={pageProps.payOfficeId}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, takeover_status: e })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status Mutasi :</p>
-                  <Select
-                    size="small"
-                    placeholder="Status Mutasi..."
-                    options={[
-                      { label: "DRAFT", value: "DRAFT" },
-                      { label: "PENDING", value: "PENDING" },
-                      { label: "PROSES", value: "PROSES" },
-                      { label: "SELESAI", value: "DISETUJUI" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, mutasi_status: e })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status Flagging : </p>
-                  <Select
-                    size="small"
-                    placeholder="Status Flagging..."
-                    options={[
-                      { label: "DRAFT", value: "DRAFT" },
-                      { label: "PENDING", value: "PENDING" },
-                      { label: "PROSES", value: "PROSES" },
-                      { label: "SELESAI", value: "DISETUJUI" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, flagging_status: e })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status Terima Bersih : </p>
-                  <Select
-                    size="small"
-                    placeholder="Status TB..."
-                    options={[
-                      { label: "DRAFT", value: "DRAFT" },
-                      { label: "PENDING", value: "PENDING" },
-                      { label: "PROSES", value: "PROSES" },
-                      { label: "SELESAI", value: "DISETUJUI" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, cash_status: e })
+                      setPageProps({
+                        ...pageProps,
+                        payOfficeId: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -722,8 +698,13 @@ export default function Page() {
                       { label: "DELIVERY", value: "DELIVERY" },
                       { label: "MITRA", value: "MITRA" },
                     ]}
+                    value={pageProps.document_status}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, document_status: e })
+                      setPageProps({
+                        ...pageProps,
+                        document_status: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -741,8 +722,13 @@ export default function Page() {
                       { label: "DELIVERY", value: "DELIVERY" },
                       { label: "MITRA", value: "MITRA" },
                     ]}
+                    value={pageProps.guarantee_status}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, guarantee_status: e })
+                      setPageProps({
+                        ...pageProps,
+                        guarantee_status: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}

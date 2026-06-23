@@ -89,7 +89,9 @@ export default function Page() {
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
   const [agents, setAgents] = useState<IAgentFronting[]>([]);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/monitoring");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/pendingdata",
+  );
   const user = useUser();
   const [views, setViews] = useState<IViewFiles>({
     open: false,
@@ -98,17 +100,19 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    params.append("dropping_status", "PENDING");
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.jenisPembiayaanId)
-      params.append("jenisPembiayaanId", pageProps.jenisPembiayaanId);
-    if (pageProps.agentFrontingId)
-      params.append("agentFrontingId", pageProps.agentFrontingId);
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      dropping_status: "PENDING",
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.jenisPembiayaanId && {
+        jenisPembiayaanId: pageProps.jenisPembiayaanId,
+      }),
+      ...(pageProps.agentFrontingId && {
+        agentFrontingId: pageProps.agentFrontingId,
+      }),
+    });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
     const json = await res.json();
@@ -136,15 +140,17 @@ export default function Page() {
 
   useEffect(() => {
     (async () => {
-      await fetch("/api/sumdan")
-        .then((res) => res.json())
-        .then((res) => setSumdans(res.data));
-      await fetch("/api/jenis")
-        .then((res) => res.json())
-        .then((res) => setJeniss(res.data));
-      await fetch("/api/agent")
-        .then((res) => res.json())
-        .then((res) => setAgents(res.data));
+      await Promise.all([
+        fetch("/api/sumdan?limit=500")
+          .then((res) => res.json())
+          .then((res) => setSumdans(res.data)),
+        fetch("/api/jenis?limit=50")
+          .then((res) => res.json())
+          .then((res) => setJeniss(res.data)),
+        fetch("/api/agent?limit=100")
+          .then((res) => res.json())
+          .then((res) => setAgents(res.data)),
+      ]);
     })();
   }, []);
 
@@ -520,7 +526,7 @@ export default function Page() {
               onClick={() =>
                 setSelected({ ...selected, delete: true, selected: record })
               }
-              disabled={["APPROVED", "PAID_OFF"].includes(
+              disabled={["DISETUJUI", "PAID_OFF"].includes(
                 record.dropping_status,
               )}
             ></Button>
@@ -554,6 +560,14 @@ export default function Page() {
       <div className="flex justify-between my-1 gap-2 overflow-auto">
         <div className="flex gap-2">
           <FilterData
+            clearfilter={() =>
+              setPageProps((prev) => ({
+                ...prev,
+                sumdanId: "",
+                jenisPembiayaanId: "",
+                agentFrontingId: "",
+              }))
+            }
             children={
               <>
                 {user && !user.sumdanId && (
@@ -566,8 +580,9 @@ export default function Page() {
                         label: s.code,
                         value: s.id,
                       }))}
+                      value={pageProps.sumdanId}
                       onChange={(e) =>
-                        setPageProps({ ...pageProps, sumdanId: e })
+                        setPageProps({ ...pageProps, sumdanId: e, page: 1 })
                       }
                       allowClear
                       style={{ width: "100%" }}
@@ -583,8 +598,13 @@ export default function Page() {
                       label: s.name,
                       value: s.id,
                     }))}
+                    value={pageProps.jenisPembiayaanId}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, jenisPembiayaanId: e })
+                      setPageProps({
+                        ...pageProps,
+                        jenisPembiayaanId: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -599,8 +619,13 @@ export default function Page() {
                       label: s.name,
                       value: s.id,
                     }))}
+                    value={pageProps.agentFrontingId}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, agentFrontingId: e })
+                      setPageProps({
+                        ...pageProps,
+                        agentFrontingId: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -653,6 +678,7 @@ export default function Page() {
             size="small"
             style={{ width: 170 }}
             placeholder="Cari nama..."
+            value={pageProps.search}
             onChange={(e) =>
               setPageProps({ ...pageProps, search: e.target.value })
             }

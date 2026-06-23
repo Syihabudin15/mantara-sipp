@@ -69,7 +69,9 @@ export default function Page() {
   const [sumdans, setSumdans] = useState<Sumdan[]>([]);
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/proses/approv");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/proses/approv",
+  );
   const user = useUser();
 
   const getData = async () => {
@@ -417,14 +419,24 @@ export default function Page() {
       <div className="flex justify-between my-1 gap-2 overflow-auto">
         <div className="flex gap-2">
           <FilterData
+            clearfilter={() =>
+              setPageProps((prev) => ({
+                ...prev,
+                sumdanId: "",
+                jenisPembiayaanId: "",
+                approv_status: "all",
+                backdate: "",
+              }))
+            }
             children={
               <>
                 <div className="my-2">
                   <p>Periode :</p>
                   <RangePicker
                     size="small"
+                    value={pageProps.backdate}
                     onChange={(date, dateStr) =>
-                      setPageProps({ ...pageProps, backdate: dateStr })
+                      setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
                     }
                     style={{ width: "100%" }}
                   />
@@ -439,8 +451,9 @@ export default function Page() {
                         label: s.code,
                         value: s.id,
                       }))}
+                      value={pageProps.sumdanId}
                       onChange={(e) =>
-                        setPageProps({ ...pageProps, sumdanId: e })
+                        setPageProps({ ...pageProps, sumdanId: e, page: 1 })
                       }
                       allowClear
                       style={{ width: "100%" }}
@@ -456,8 +469,13 @@ export default function Page() {
                       label: s.name,
                       value: s.id,
                     }))}
+                    value={pageProps.jenisPembiayaanId}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, jenisPembiayaanId: e })
+                      setPageProps({
+                        ...pageProps,
+                        jenisPembiayaanId: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -473,8 +491,9 @@ export default function Page() {
                       { label: "SETUJU", value: "DISETUJUI" },
                       { label: "TOLAK", value: "DITOLAK" },
                     ]}
+                    value={pageProps.approv_status}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, approv_status: e })
+                      setPageProps({ ...pageProps, approv_status: e, page: 1 })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -531,6 +550,7 @@ export default function Page() {
             size="small"
             style={{ width: 170 }}
             placeholder="Cari nama..."
+            value={pageProps.search}
             onChange={(e) =>
               setPageProps({ ...pageProps, search: e.target.value })
             }
@@ -586,7 +606,7 @@ export default function Page() {
               ).angsuran,
             0,
           );
-
+          const admAngsuran = Math.ceil(angsuran - angssudan);
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
               <Table.Summary.Cell index={0} colSpan={2} className="text-center">
@@ -601,7 +621,7 @@ export default function Page() {
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} className="text-center font-bold">
                 <div>
-                  {IDRFormat(angsuran)} + {IDRFormat(angsuran - angssudan)}
+                  {IDRFormat(angssudan)} + {IDRFormat(admAngsuran)}
                 </div>
                 <div className="border-t border-gray-500">
                   {IDRFormat(angsuran)}

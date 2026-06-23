@@ -2,6 +2,7 @@
 
 import { FormInput, ViewFiles } from "@/components";
 import { printSDStandar } from "@/components/pdfutils/si/SDStandar";
+import { useUser } from "@/components/UserContext";
 import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
   IActionTable,
@@ -61,19 +62,22 @@ export default function Page() {
     open: false,
     data: [],
   });
-  const { hasAccess } = useAccess("/ttpb/dropping");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/ttpb/dropping",
+  );
+  const user = useUser();
   const { modal } = App.useApp();
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
-    if (pageProps.status) params.append("status", pageProps.status);
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.status && { status: pageProps.status }),
+      ...(pageProps.backdate && { backdate: pageProps.status }),
+    });
 
     const res = await fetch(`/api/ttpb?${params.toString()}`);
     const json = await res.json();
@@ -307,19 +311,20 @@ export default function Page() {
               { label: "MITRA", value: "MITRA" },
             ]}
             style={{ width: 170 }}
-            onChange={(e) => setPageProps({ ...pageProps, status: e })}
+            onChange={(e) => setPageProps({ ...pageProps, status: e, page: 1 })}
             allowClear
           />
-          {hasAccess("update") && (
+          {user && !user.sumdanId && (
             <Select
               size="small"
-              onChange={(e: string) =>
-                setPageProps({ ...pageProps, sumdanId: e })
+              placeholder="Pilih Mitra..."
+              options={sumdans.map((d) => ({ label: d.code, value: d.id }))}
+              value={pageProps.sumdanId}
+              style={{ width: 170 }}
+              onChange={(e) =>
+                setPageProps({ ...pageProps, sumdanId: e, page: 1 })
               }
               allowClear
-              placeholder="Pilih Sumdan..."
-              options={sumdans.map((s) => ({ label: s.code, value: s.id }))}
-              style={{ width: 170 }}
             />
           )}
         </div>

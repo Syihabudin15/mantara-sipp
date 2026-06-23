@@ -48,6 +48,7 @@ export default function Page() {
     sumdanId: "",
     backdate: "",
     status: "",
+    tbo_date: "",
   });
   const [loading, setLoading] = useState(false);
   const [sumdans, setSumdans] = useState<Sumdan[]>([]);
@@ -61,19 +62,21 @@ export default function Page() {
     open: false,
     data: [],
   });
-  const { hasAccess } = useAccess("/ttpj/dropping");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/ttpj/dropping",
+  );
   const { modal } = App.useApp();
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
-    if (pageProps.status) params.append("status", pageProps.status);
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.status && { status: pageProps.status }),
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+    });
 
     const res = await fetch(`/api/ttpj?${params.toString()}`);
     const json = await res.json();
@@ -293,7 +296,7 @@ export default function Page() {
           <RangePicker
             size="small"
             onChange={(date, dateStr) =>
-              setPageProps({ ...pageProps, backdate: dateStr })
+              setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
             }
             style={{ width: 170 }}
           />
@@ -306,14 +309,14 @@ export default function Page() {
               { label: "MITRA", value: "MITRA" },
             ]}
             style={{ width: 170 }}
-            onChange={(e) => setPageProps({ ...pageProps, status: e })}
+            onChange={(e) => setPageProps({ ...pageProps, status: e, page: 1 })}
             allowClear
           />
           {hasAccess("update") && (
             <Select
               size="small"
               onChange={(e: string) =>
-                setPageProps({ ...pageProps, sumdanId: e })
+                setPageProps({ ...pageProps, sumdanId: e, page: 1 })
               }
               allowClear
               placeholder="Pilih Sumdan..."
@@ -703,25 +706,20 @@ const TableDapem = ({ data }: { data: IDapem[] }) => {
       key: "tbo",
       dataIndex: "tbo",
       render(value, record, index) {
-        const created = moment(record.date_contract).add(record.tbo, "month");
-        const isTbo = moment().isAfter(created, "date");
+        const isTbo = moment().isAfter(record.tbo_date, "date");
         return (
-          <>
-            {record.guarantee_status !== "MITRA" && (
-              <div className="flex gap-1">
-                <Tag color={isTbo ? "red" : "blue"} variant="solid">
-                  {isTbo ? "LEWAT TBO" : "MASA TBO"}
-                </Tag>
-                <div className="italic text-xs opacity-70">
-                  <div>
-                    Akad {moment(record.date_contract).format("DD/MM/YYYY")}
-                  </div>
-                  <div>TBO Month ({record.tbo} Bln)</div>
-                  <div>Tgl TBO {created.format("DD/MM/YYYY")}</div>
-                </div>
+          <div className="flex gap-1">
+            <Tag color={isTbo ? "red" : "blue"} variant="solid">
+              {isTbo ? "LEWAT TBO" : "MASA TBO"}
+            </Tag>
+            <div className="text-xs opacity-80">
+              <div>
+                Akad {moment(record.date_contract).format("DD/MM/YYYY")}
               </div>
-            )}
-          </>
+              <div>TBO Month ({record.tbo} Bln)</div>
+              <div>Tgl TBO {moment(record.tbo_date).format("DD/MM/YYYY")}</div>
+            </div>
+          </div>
         );
       },
     },

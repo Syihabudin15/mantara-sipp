@@ -10,22 +10,22 @@ export const SIPage4Vima = (
   cash: ICashDesc,
   firstdata: boolean,
 ) => {
-  const angs = GetAngsuran(
-    dapem.plafond,
-    dapem.tenor,
-    dapem.c_margin + dapem.c_margin_sumdan,
-    dapem.margin_type,
-    dapem.rounded,
-    dapem.c_ned,
-  ).angsuran;
-  const angsSumdan = GetAngsuran(
-    dapem.plafond,
-    dapem.tenor,
-    dapem.c_margin_sumdan,
-    dapem.margin_type,
-    dapem.rounded,
-  ).angsuran;
-
+  // const angs = GetAngsuran(
+  //   dapem.plafond,
+  //   dapem.tenor,
+  //   dapem.c_margin + dapem.c_margin_sumdan,
+  //   dapem.margin_type,
+  //   dapem.rounded,
+  //   dapem.c_ned,
+  // ).angsuran;
+  // const angsSumdan = GetAngsuran(
+  //   dapem.plafond,
+  //   dapem.tenor,
+  //   dapem.c_margin_sumdan,
+  //   dapem.margin_type,
+  //   dapem.rounded,
+  // ).angsuran;
+  // const admAngsuran = Math.ceil(angs - angsSumdan);
   const adm =
     dapem.plafond * ((dapem.c_adm + dapem.c_adm_mitra + dapem.c_adm_ff) / 100);
   const provisi =
@@ -45,7 +45,8 @@ export const SIPage4Vima = (
     dapem.c_bop +
     dapem.c_mutasi;
   const biaya = adm + provisi + asuransi + tatalaksana + dapem.c_account;
-  const tb = dapem.plafond - (biaya + dapem.c_takeover);
+  // const blokir = dapem.c_blokir * admAngsuran;
+  const tb = biaya;
 
   return `
     <div class="page-header flex items-center mb-6 border-b pb-4">
@@ -171,7 +172,10 @@ export const SIPage4Vima = (
       </div>
     </div>
 
-    <div class="my-2">
+    ${
+      dapem.c_takeover > 0
+        ? `
+      <div class="my-2">
       <div class="flex gap-2 font-bold">
         <p class="w-4">3.</p>
         <p class="w-60">Take Over (T.O) : </p>
@@ -215,6 +219,9 @@ export const SIPage4Vima = (
       `
         : ""
     }
+      `
+        : ""
+    }
 
     <div class="my-2">
       <p >Biaya transfer atau pemindah bukuan harap dibebankan ke rekening pihak pertama. Standing Instruction ini (SI) akan berakhir pada saat maksud pemberian kuasa ini telah terpenuhi.</p>
@@ -228,7 +235,7 @@ export const SIPage4Vima = (
             <p >Materai 10.000</p>
           </div>
           <div>
-            <p class="w-full border-b">(${dapem.Debitur.fullname})</p>
+            <p class="w-full border-b">${dapem.Debitur.fullname}</p>
           </div>
         </div>
         <div class="flex-1 text-center">
@@ -236,7 +243,7 @@ export const SIPage4Vima = (
           <p>${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</p>
           <div class="h-28">
           </div>
-          <p class="w-full border-b">${process.env.NEXT_PUBLIC_APP_AKAD_NAME}</p>
+          <p class="w-full border-b">${""}</p>
         </div>
       </div>
 `;

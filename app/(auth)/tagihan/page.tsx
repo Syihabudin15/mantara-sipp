@@ -21,6 +21,7 @@ import {
 } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
+  BankOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   CloudUploadOutlined,
@@ -33,7 +34,7 @@ import {
   PayCircleOutlined,
   PrinterOutlined,
 } from "@ant-design/icons";
-import { Angsuran, ESettleStatus, Sumdan } from "@prisma/client";
+import { Angsuran, ESettleStatus, PayOffice, Sumdan } from "@prisma/client";
 import {
   App,
   Button,
@@ -64,6 +65,7 @@ export default function Page() {
     search: "",
     sumdanId: "",
     paid_status: "",
+    payOfficeId: "",
     backdate: "",
   });
   const [action, setAction] = useState<IActionTable<IDapem>>({
@@ -78,8 +80,11 @@ export default function Page() {
   });
   const [loading, setLoading] = useState(false);
   const [sumdans, setSumdans] = useState<Sumdan[]>([]);
+  const [payoffices, setPayoffices] = useState<PayOffice[]>([]);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/tagihan");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/tagihan",
+  );
   const user = useUser();
   const [selecteds, setSelecteds] = useState<IDapem[]>([]);
   const rowSelection: TableProps<IDapem>["rowSelection"] = {
@@ -100,24 +105,28 @@ export default function Page() {
 
   useEffect(() => {
     (async () => {
-      await fetch("/api/sumdan?limit=1000")
-        .then((res) => res.json())
-        .then((res) => setSumdans(res.data));
+      await Promise.all([
+        fetch("/api/sumdan?limit=500")
+          .then((res) => res.json())
+          .then((res) => setSumdans(res.data)),
+        fetch("/api/pay_office?limit=500")
+          .then((res) => res.json())
+          .then((res) => setSumdans(res.data)),
+      ]);
     })();
   }, []);
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.paid_status)
-      params.append("paid_status", pageProps.paid_status);
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
-
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.paid_status && { paid_status: pageProps.paid_status }),
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+      ...(pageProps.payOfficeId && { payOfficeId: pageProps.payOfficeId }),
+    });
     const res = await fetch(`/api/tagihan?${params.toString()}`);
     const json = await res.json();
     setPageProps((prev) => ({
@@ -139,6 +148,7 @@ export default function Page() {
     pageProps.search,
     pageProps.sumdanId,
     pageProps.paid_status,
+    pageProps.payOfficeId,
     pageProps.backdate,
   ]);
 
@@ -208,7 +218,7 @@ export default function Page() {
       dataIndex: "angsuran",
       key: "angsuran",
       render(value, record, index) {
-        const angs = GetAngsuran(
+        const total = GetAngsuran(
           record.plafond,
           record.tenor,
           record.c_margin + record.c_margin_sumdan,
@@ -216,26 +226,25 @@ export default function Page() {
           record.rounded,
           record.c_ned,
         ).angsuran;
-        const angssumdan = GetAngsuran(
+        const mitra = GetAngsuran(
           record.plafond,
           record.tenor,
           record.c_margin_sumdan,
           record.margin_type,
           record.rounded_sumdan,
         ).angsuran;
-        const find = record.Angsurans.find((f) =>
-          moment(f.date_pay).isSame(pageProps.backdate || new Date(), "month"),
-        );
+        const admAngsuran = Math.ceil(total - mitra);
         return (
-          <div className="flex flex-col gap-1">
-            <div className="flex gap-1">
-              <Tag color={"blue"}>{IDRFormat(angs)}</Tag>
-              <Tag color={"blue"}>{IDRFormat(angssumdan)}</Tag>
+          <div className="text-xs">
+            <div className="flex gap-2 items-center">
+              <Tag color={"blue"}>
+                <BankOutlined /> {IDRFormat(mitra)}
+              </Tag>
+              <Tag color={"blue"}>{IDRFormat(admAngsuran)}</Tag>
             </div>
-            <Tag color={"blue"} style={{ marginLeft: 2 }}>
-              Ke {find ? find.counter : 0} |{" "}
-              {IDRFormat(find ? find.remaining : 0)}
-            </Tag>
+            <div className="flex justify-center">
+              <Tag color={"blue"}> {IDRFormat(total)}</Tag>
+            </div>
           </div>
         );
       },
@@ -422,6 +431,15 @@ export default function Page() {
             </Button>
           )}
           <FilterData
+            clearfilter={() =>
+              setPageProps((prev) => ({
+                ...prev,
+                backdate: "",
+                sumdanId: "",
+                paid_status: "",
+                payOfficeId: "",
+              }))
+            }
             children={
               <>
                 <div className="my-2">
@@ -429,8 +447,9 @@ export default function Page() {
                   <DatePicker
                     size="small"
                     picker="month"
+                    value={pageProps.backdate}
                     onChange={(date, dateStr) =>
-                      setPageProps({ ...pageProps, backdate: dateStr })
+                      setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
                     }
                     style={{ width: "100%" }}
                   />
@@ -441,12 +460,13 @@ export default function Page() {
                     <Select
                       size="small"
                       placeholder="Pilih Mitra..."
+                      value={pageProps.sumdanId}
                       options={sumdans.map((s) => ({
                         label: s.code,
                         value: s.id,
                       }))}
                       onChange={(e) =>
-                        setPageProps({ ...pageProps, sumdanId: e })
+                        setPageProps({ ...pageProps, sumdanId: e, page: 1 })
                       }
                       allowClear
                       style={{ width: "100%" }}
@@ -458,12 +478,30 @@ export default function Page() {
                   <Select
                     size="small"
                     placeholder="Pilih Status..."
+                    value={pageProps.paid_status}
                     options={[
                       { label: "Tertagih", value: "paid" },
                       { label: "Tidak Tertagih", value: "unpaid" },
                     ]}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, paid_status: e })
+                      setPageProps({ ...pageProps, paid_status: e, page: 1 })
+                    }
+                    allowClear
+                    style={{ width: "100%" }}
+                  />
+                </div>
+                <div>
+                  <p>Kantor Bayar :</p>
+                  <Select
+                    size="small"
+                    placeholder="Pilih Kantor Bayar..."
+                    value={pageProps.payOfficeId}
+                    options={payoffices.map((p) => ({
+                      label: p.code || p.name,
+                      value: p.id,
+                    }))}
+                    onChange={(e) =>
+                      setPageProps({ ...pageProps, payOfficeId: e, page: 1 })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -496,6 +534,7 @@ export default function Page() {
             size="small"
             style={{ width: 170 }}
             placeholder="Cari nama..."
+            value={pageProps.search}
             onChange={(e) =>
               setPageProps({ ...pageProps, search: e.target.value })
             }

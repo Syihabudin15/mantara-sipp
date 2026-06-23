@@ -22,6 +22,7 @@ import {
   ICashDesc,
   IDapem,
   IPageProps,
+  IPayOffice,
   IViewFiles,
 } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
@@ -69,12 +70,12 @@ export default function Page() {
     search: "",
     sumdanId: "",
     jenisPembiayaanId: "",
+    dropping_status: "",
     takeover_status: "",
-    mutasi_status: "",
     flagging_status: "",
+    mutasi_status: "",
     cash_status: "",
-    document_status: "",
-    guarantee_status: "",
+    payOfficeId: "",
     agentFrontingId: "",
     backdate: "",
   });
@@ -88,8 +89,9 @@ export default function Page() {
   const [sumdans, setSumdans] = useState<Sumdan[]>([]);
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
   const [agents, setAgents] = useState<IAgentFronting[]>([]);
+  const [pays, setPays] = useState<IPayOffice[]>([]);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/tmftb");
+  const { hasAccess } = useAccess(window ? window.location.pathname : "/tmftb");
   const user = useUser();
   const [views, setViews] = useState<IViewFiles>({
     open: false,
@@ -98,30 +100,38 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    params.append("approv_status", "DISETUJUI");
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.jenisPembiayaanId)
-      params.append("jenisPembiayaanId", pageProps.jenisPembiayaanId);
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
-    if (pageProps.takeover_status)
-      params.append("takeover_status", pageProps.takeover_status);
-    if (pageProps.mutasi_status)
-      params.append("mutasi_status", pageProps.mutasi_status);
-    if (pageProps.flagging_status)
-      params.append("flagging_status", pageProps.flagging_status);
-    if (pageProps.cash_status)
-      params.append("cash_status", pageProps.cash_status);
-    if (pageProps.document_status)
-      params.append("document_status", pageProps.document_status);
-    if (pageProps.guarantee_status)
-      params.append("guarantee_status", pageProps.guarantee_status);
-    if (pageProps.agentFrontingId)
-      params.append("agentFrontingId", pageProps.agentFrontingId);
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      approv_status: "DISETUJUI",
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+      ...(pageProps.jenisPembiayaanId && {
+        jenisPembiayaanId: pageProps.jenisPembiayaanId,
+      }),
+      ...(pageProps.takeover_status && {
+        takeover_status: pageProps.takeover_status,
+      }),
+      ...(pageProps.mutasi_status && {
+        mutasi_status: pageProps.mutasi_status,
+      }),
+      ...(pageProps.flagging_status && {
+        flagging_status: pageProps.flagging_status,
+      }),
+      ...(pageProps.cash_status && {
+        cash_status: pageProps.cash_status,
+      }),
+      ...(pageProps.payOfficeId && {
+        payOfficeId: pageProps.payOfficeId,
+      }),
+      ...(pageProps.agentFrontingId && {
+        agentFrontingId: pageProps.agentFrontingId,
+      }),
+      ...(pageProps.dropping_status && {
+        dropping_status: pageProps.dropping_status,
+      }),
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+    });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
     const json = await res.json();
@@ -144,30 +154,32 @@ export default function Page() {
     pageProps.search,
     pageProps.sumdanId,
     pageProps.jenisPembiayaanId,
-    pageProps.backdate,
+    pageProps.dropping_status,
     pageProps.takeover_status,
     pageProps.mutasi_status,
-    pageProps.flagging_status,
     pageProps.cash_status,
-    pageProps.document_status,
-    pageProps.guarantee_status,
+    pageProps.flagging_status,
     pageProps.agentFrontingId,
+    pageProps.payOfficeId,
+    pageProps.backdate,
   ]);
 
   useEffect(() => {
     (async () => {
-      await fetch("/api/sumdan")
-        .then((res) => res.json())
-        .then((res) => setSumdans(res.data));
-      await fetch("/api/jenis")
-        .then((res) => res.json())
-        .then((res) => setJeniss(res.data));
-      await fetch("/api/jenis")
-        .then((res) => res.json())
-        .then((res) => setJeniss(res.data));
-      await fetch("/api/agent")
-        .then((res) => res.json())
-        .then((res) => setAgents(res.data));
+      await Promise.all([
+        fetch("/api/sumdan?limit=500")
+          .then((res) => res.json())
+          .then((res) => setSumdans(res.data)),
+        fetch("/api/jenis?limit=50")
+          .then((res) => res.json())
+          .then((res) => setJeniss(res.data)),
+        fetch("/api/pay_office?limit=500")
+          .then((res) => res.json())
+          .then((res) => setPays(res.data)),
+        fetch("/api/agent?limit=500")
+          .then((res) => res.json())
+          .then((res) => setAgents(res.data)),
+      ]);
     })();
   }, []);
 
@@ -440,14 +452,6 @@ export default function Page() {
           ? (JSON.parse(record.cash_desc) as ICashDesc[])
           : [];
         const total = desc.reduce((acc, curr) => acc + curr.amount, 0);
-        const angs = GetAngsuran(
-          record.plafond,
-          record.tenor,
-          record.c_margin + record.c_margin_sumdan,
-          record.margin_type,
-          record.rounded,
-          record.c_ned,
-        ).angsuran;
         const tb = GetDapem(record).tb;
         return (
           <div>
@@ -481,8 +485,9 @@ export default function Page() {
             >
               {desc.map((d, i) => (
                 <div key={i}>
-                  {d.desc} {moment(d.date).format("DD/MM/YYYY HH:mm")}( Rp.{" "}
-                  {IDRFormat(d.amount)}) ({((d.amount / tb) * 100).toFixed(2)});
+                  {d.desc} {moment(d.date).format("DD/MM/YY HH:mm")}( Rp.{" "}
+                  {IDRFormat(d.amount)}) ({((d.amount / tb) * 100).toFixed(2)}
+                  %);
                 </div>
               ))}
             </Paragraph>
@@ -545,9 +550,8 @@ export default function Page() {
       key: "Jaminan_status",
       width: 350,
       render: (_, record, i) => {
-        const created = moment(record.tbo_date);
         const isTbo =
-          moment().isAfter(created, "date") &&
+          moment().isAfter(record.tbo_date, "date") &&
           (!record.Jaminan || !record.Jaminan.status);
         return (
           <div>
@@ -577,12 +581,7 @@ export default function Page() {
                 }
               ></Button>
               <div className="text-xs opacity-80">
-                <div>
-                  TBO :{" "}
-                  {moment(record.date_contract)
-                    .add(record.tbo, "month")
-                    .format("DD/MM/YYYY")}
-                </div>
+                <div>TBO : {moment(record.tbo_date).format("DD/MM/YYYY")}</div>
                 {record.Jaminan && record.Jaminan.process_at && (
                   <div>
                     Send :{" "}
@@ -766,14 +765,31 @@ export default function Page() {
       <div className="flex justify-between my-1 gap-2 overflow-auto">
         <div className="flex gap-2">
           <FilterData
+            clearfilter={() =>
+              setPageProps((prev) => ({
+                ...prev,
+                search: "",
+                sumdanId: "",
+                jenisPembiayaanId: "",
+                dropping_status: "",
+                takeover_status: "",
+                mutasi_status: "",
+                flagging_status: "",
+                cash_status: "",
+                payOfficeId: "",
+                agentFrontingId: "",
+                backdate: "",
+              }))
+            }
             children={
               <>
                 <div className="my-2">
                   <p>Periode :</p>
                   <RangePicker
                     size="small"
+                    value={pageProps.backdate}
                     onChange={(date, dateStr) =>
-                      setPageProps({ ...pageProps, backdate: dateStr })
+                      setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
                     }
                     style={{ width: "100%" }}
                   />
@@ -788,8 +804,9 @@ export default function Page() {
                         label: s.code,
                         value: s.id,
                       }))}
+                      value={pageProps.sumdanId}
                       onChange={(e) =>
-                        setPageProps({ ...pageProps, sumdanId: e })
+                        setPageProps({ ...pageProps, sumdanId: e, page: 1 })
                       }
                       allowClear
                       style={{ width: "100%" }}
@@ -805,8 +822,34 @@ export default function Page() {
                       label: s.name,
                       value: s.id,
                     }))}
+                    value={pageProps.jenisPembiayaanId}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, jenisPembiayaanId: e })
+                      setPageProps({
+                        ...pageProps,
+                        jenisPembiayaanId: e,
+                        page: 1,
+                      })
+                    }
+                    allowClear
+                    style={{ width: "100%" }}
+                  />
+                </div>
+                <div className="my-2">
+                  <p>Kantor Bayar :</p>
+                  <Select
+                    size="small"
+                    placeholder="Pilih Kantor Bayar..."
+                    options={pays.map((s) => ({
+                      label: s.code || s.name,
+                      value: s.id,
+                    }))}
+                    value={pageProps.payOfficeId}
+                    onChange={(e) =>
+                      setPageProps({
+                        ...pageProps,
+                        payOfficeId: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -821,8 +864,35 @@ export default function Page() {
                       label: s.name,
                       value: s.id,
                     }))}
+                    value={pageProps.agentFrontingId}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, agentFrontingId: e })
+                      setPageProps({
+                        ...pageProps,
+                        agentFrontingId: e,
+                        page: 1,
+                      })
+                    }
+                    allowClear
+                    style={{ width: "100%" }}
+                  />
+                </div>
+                <div className="my-2">
+                  <p>Status Dropping :</p>
+                  <Select
+                    size="small"
+                    placeholder="Status Dropping..."
+                    value={pageProps.dropping_status}
+                    options={[
+                      { label: "PENDING", value: "PENDING" },
+                      { label: "TRANSFER", value: "DISETUJUI" },
+                      { label: "LUNAS", value: "LUNAS" },
+                    ]}
+                    onChange={(e) =>
+                      setPageProps({
+                        ...pageProps,
+                        dropping_status: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -833,6 +903,7 @@ export default function Page() {
                   <Select
                     size="small"
                     placeholder="Status Takeover..."
+                    value={pageProps.takeover_status}
                     options={[
                       { label: "DRAFT", value: "DRAFT" },
                       { label: "PENDING", value: "PENDING" },
@@ -840,7 +911,11 @@ export default function Page() {
                       { label: "SELESAI", value: "DISETUJUI" },
                     ]}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, takeover_status: e })
+                      setPageProps({
+                        ...pageProps,
+                        takeover_status: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -851,6 +926,7 @@ export default function Page() {
                   <Select
                     size="small"
                     placeholder="Status Mutasi..."
+                    value={pageProps.mutasi_status}
                     options={[
                       { label: "DRAFT", value: "DRAFT" },
                       { label: "PENDING", value: "PENDING" },
@@ -858,7 +934,7 @@ export default function Page() {
                       { label: "SELESAI", value: "DISETUJUI" },
                     ]}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, mutasi_status: e })
+                      setPageProps({ ...pageProps, mutasi_status: e, page: 1 })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -875,8 +951,13 @@ export default function Page() {
                       { label: "PROSES", value: "PROSES" },
                       { label: "SELESAI", value: "DISETUJUI" },
                     ]}
+                    value={pageProps.flagging_status}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, flagging_status: e })
+                      setPageProps({
+                        ...pageProps,
+                        flagging_status: e,
+                        page: 1,
+                      })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -887,6 +968,7 @@ export default function Page() {
                   <Select
                     size="small"
                     placeholder="Status TB..."
+                    value={pageProps.cash_status}
                     options={[
                       { label: "DRAFT", value: "DRAFT" },
                       { label: "PENDING", value: "PENDING" },
@@ -894,44 +976,7 @@ export default function Page() {
                       { label: "SELESAI", value: "DISETUJUI" },
                     ]}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, cash_status: e })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status Penyerahan Berkas : </p>
-                  <Select
-                    size="small"
-                    placeholder="Status Berkas..."
-                    options={[
-                      { label: "UNIT", value: "UNIT" },
-                      { label: "PUSAT", value: "PUSAT" },
-                      { label: "DELIVERY", value: "DELIVERY" },
-                      { label: "MITRA", value: "MITRA" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, document_status: e })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-
-                <div className="my-2">
-                  <p>Status Penyerahan Jaminan : </p>
-                  <Select
-                    size="small"
-                    placeholder="Status Jaminan..."
-                    options={[
-                      { label: "UNIT", value: "UNIT" },
-                      { label: "PUSAT", value: "PUSAT" },
-                      { label: "DELIVERY", value: "DELIVERY" },
-                      { label: "MITRA", value: "MITRA" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, guarantee_status: e })
+                      setPageProps({ ...pageProps, cash_status: e, page: 1 })
                     }
                     allowClear
                     style={{ width: "100%" }}
@@ -964,6 +1009,7 @@ export default function Page() {
             size="small"
             style={{ width: 170 }}
             placeholder="Cari nama..."
+            value={pageProps.search}
             onChange={(e) =>
               setPageProps({ ...pageProps, search: e.target.value })
             }

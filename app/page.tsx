@@ -51,11 +51,11 @@ export default function Home() {
       <div className="absolute -bottom-40 -right-20 w-120 h-120 bg-amber-500/5 rounded-full border border-amber-500/10 pointer-events-none" />
 
       {/* Container Utama dengan Bayangan Tajam Tipis (Soft Clean Edge Card) */}
-      <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-[0_20px_50px_rgba(15,23,42,0.06)] border border-slate-100 overflow-hidden flex flex-col md:flex-row min-h-[500px] transition-all duration-300">
+      <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-[0_20px_50px_rgba(15,23,42,0.06)] border border-slate-100 overflow-hidden flex flex-col md:flex-row min-h-125 transition-all duration-300">
         {/* SISI KIRI: Desain Premium Monokromatik Hijau-Emas */}
-        <div className="w-full md:w-5/12 bg-slate-900 p-8 flex flex-col justify-between items-center text-center relative overflow-hidden min-h-[220px] md:min-h-[520px]">
+        <div className="w-full md:w-5/12 bg-slate-900 p-8 flex flex-col justify-between items-center text-center relative overflow-hidden min-h-55 md:min-h-130">
           {/* Aksen Garis Modern Ringkas */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-size-[24px_24px] pointer-events-none" />
           <div className="absolute -right-16 top-1/4 w-32 h-32 bg-emerald-500/20 blur-2xl rounded-full" />
 
           <div className="hidden md:block"></div>
@@ -72,8 +72,8 @@ export default function Home() {
             <h1 className="text-lg md:text-xl font-extrabold text-white tracking-wider uppercase">
               {process.env.NEXT_PUBLIC_APP_FULLNAME ?? "KOPJAS / SYREL"}
             </h1>
-            <div className="w-8 h-[2px] bg-gradient-to-r from-emerald-400 to-amber-400 my-3 rounded-full"></div>
-            <p className="text-xs text-slate-400/90 max-w-[220px] leading-relaxed tracking-wide hidden md:block">
+            <div className="w-8 h-0.5 bg-linear-to-r from-emerald-400 to-amber-400 my-3 rounded-full"></div>
+            <p className="text-xs text-slate-400/90 max-w-55 leading-relaxed tracking-wide hidden md:block">
               Sistem manajemen terintegrasi penjamin akurasi, keamanan, dan
               efisiensi data.
             </p>

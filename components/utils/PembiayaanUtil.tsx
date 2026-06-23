@@ -74,7 +74,7 @@ export const GetAngsuran = (
       pokok,
       margin,
       ned: ned || 0,
-      angsuran: angs + (ned || 0),
+      angsuran: angsuran + (ned || 0),
     };
   } else if (type === "ANUITAS") {
     const r = bunga / 12 / 100;
@@ -91,7 +91,7 @@ export const GetAngsuran = (
         ? Math.ceil(angs / rounded) * rounded
         : 0;
     return {
-      angsuran: angs + (ned || 0),
+      angsuran: angsuran + (ned || 0),
       pokok,
       ned: ned || 0,
       margin,

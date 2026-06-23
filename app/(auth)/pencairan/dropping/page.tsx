@@ -63,19 +63,20 @@ export default function Page() {
     open: false,
     data: [],
   });
-  const { hasAccess } = useAccess("/pencairan/dropping");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/pencairan/dropping",
+  );
   const { modal } = App.useApp();
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    if (pageProps.search) params.append("search", pageProps.search);
-
-    if (pageProps.sumdanId) params.append("sumdanId", pageProps.sumdanId);
-    if (pageProps.backdate) params.append("backdate", pageProps.backdate);
-    if (pageProps.status) params.append("status", pageProps.status);
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.search && { search: pageProps.search }),
+      ...(pageProps.status && { status: pageProps.status }),
+      ...(pageProps.backdate && { backdate: pageProps.backdate }),
+    });
 
     const res = await fetch(`/api/dropping?${params.toString()}`);
     const json = await res.json();
@@ -142,6 +143,7 @@ export default function Page() {
           (acc, curr) =>
             acc +
             (curr.plafond * (curr.c_adm_sumdan / 100) +
+              curr.plafond * (curr.c_provisi_sumdan / 100) +
               curr.c_account_sumdan +
               curr.c_blokir *
                 GetAngsuran(
@@ -197,6 +199,33 @@ export default function Page() {
             <div className="flex justify-between gap-4">
               <span className="w-20">Rek :</span>
               <span>{IDRFormat(rek)}</span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Blokir Angsuran",
+      key: "blokir",
+      dataIndex: "blokir",
+      render(value, record, index) {
+        const blokir = record.Dapems.reduce(
+          (acc, curr) =>
+            acc +
+            curr.c_blokir *
+              GetAngsuran(
+                curr.plafond,
+                curr.tenor,
+                curr.c_margin_sumdan,
+                curr.margin_type,
+                curr.rounded_sumdan,
+              ).angsuran,
+          0,
+        );
+        return (
+          <div className="text-xs">
+            <div className="flex justify-between gap-4 text-right">
+              <span>{IDRFormat(blokir)}</span>
             </div>
           </div>
         );
@@ -439,6 +468,22 @@ export default function Page() {
             .flatMap((p) => p.Dapems)
             .reduce((acc, curr) => acc + curr.c_account_sumdan, 0);
 
+          const blokir = pageData
+            .flatMap((p) => p.Dapems)
+            .reduce(
+              (acc, curr) =>
+                acc +
+                curr.c_blokir *
+                  GetAngsuran(
+                    curr.plafond,
+                    curr.tenor,
+                    curr.c_margin_sumdan,
+                    curr.margin_type,
+                    curr.rounded_sumdan,
+                  ).angsuran,
+              0,
+            );
+
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
               <Table.Summary.Cell index={0} colSpan={4} className="text-center">
@@ -463,6 +508,11 @@ export default function Page() {
                 </div>
                 <div className="border-t border-dashed">
                   {IDRFormat(adm + provisi + rek)}
+                </div>
+              </Table.Summary.Cell>
+              <Table.Summary.Cell index={7} className="text-right font-bold">
+                <div className="flex justify-between gap-2">
+                  <div className="text-right">{IDRFormat(blokir)}</div>
                 </div>
               </Table.Summary.Cell>
             </Table.Summary.Row>

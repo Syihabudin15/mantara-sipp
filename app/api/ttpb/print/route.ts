@@ -3,6 +3,7 @@ import { getSession } from "@/libs/Auth";
 import { IDocument } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
 import { Prisma } from "@prisma/client";
+import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
@@ -16,7 +17,10 @@ export const GET = async (req: NextRequest) => {
       { data: [], total: 0, status: 200 },
       { status: 200 },
     );
-  const user = await prisma.user.findFirst({ where: { id: session.user.id } });
+  const user = await prisma.user.findFirst({
+    where: { id: session.user.id },
+    include: { Role: true, Cabang: true },
+  });
   if (!user)
     return NextResponse.json(
       { data: [], total: 0, status: 200 },
@@ -26,6 +30,48 @@ export const GET = async (req: NextRequest) => {
   const where: Prisma.SumdanWhereInput = {
     status: true,
     ...(user.sumdanId && { id: user.sumdanId }),
+    ...(user.Role.data_status === "AREA" && {
+      ProdukPembiayaans: {
+        some: {
+          Dapems: {
+            some: {
+              AO: { Cabang: { areaId: user.Cabang.areaId } },
+              AOCabang: { Cabang: { areaId: user.Cabang.areaId } },
+              AOArea: { Cabang: { areaId: user.Cabang.areaId } },
+              User: { Cabang: { areaId: user.Cabang.areaId } },
+            },
+          },
+        },
+      },
+    }),
+    ...(user.Role.data_status === "CABANG" && {
+      ProdukPembiayaans: {
+        some: {
+          Dapems: {
+            some: {
+              AO: { cabangId: user.cabangId },
+              AOCabang: { cabangId: user.cabangId },
+              AOArea: { cabangId: user.cabangId },
+              User: { cabangId: user.cabangId },
+            },
+          },
+        },
+      },
+    }),
+    ...(user.Role.data_status === "USER" && {
+      ProdukPembiayaans: {
+        some: {
+          Dapems: {
+            some: {
+              AO: { id: user.id },
+              AOCabang: { id: user.id },
+              AOArea: { id: user.id },
+              User: { id: user.id },
+            },
+          },
+        },
+      },
+    }),
   };
 
   const [data, total] = await Promise.all([
@@ -104,6 +150,7 @@ export const POST = async (req: NextRequest) => {
 
 export const PATCH = async (req: NextRequest) => {
   const id = req.nextUrl.searchParams.get("id") || "id";
+  const { created_at } = await req.json();
   const count = await prisma.berkas.count({ where: { sumdanId: id } });
   const sumdan = await prisma.sumdan.findFirst({ where: { id } });
   if (!sumdan)
@@ -112,7 +159,7 @@ export const PATCH = async (req: NextRequest) => {
       { status: 400 },
     );
 
-  const nomor = `${String(count + 1).padStart(3, "0")}/${process.env.NEXT_PUBLIC_APP_CODE_FILE}/SD-${sumdan.code.replace("BPR", "").replace(" ", "").replace(" ", "")}/${GetRoman(new Date().getMonth() + 1)}/${new Date().getFullYear()}`;
+  const nomor = `${String(count + 1).padStart(3, "0")}/${process.env.NEXT_PUBLIC_APP_CODE_FILE}/SD-${sumdan.code.replace("BPR", "").replace("BANK", "").replace(" ", "")}/${GetRoman(moment(created_at || new Date()).month() + 1)}/${moment(created_at || new Date()).year()}`;
 
   return NextResponse.json({ data: nomor, status: 200 }, { status: 200 });
 };

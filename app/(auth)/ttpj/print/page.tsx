@@ -8,7 +8,7 @@ import {
   IPageProps,
   ISumdanDropping,
 } from "@/libs/IInterfaces";
-// import { useAccess } from "@/libs/Permission";
+import { useAccess } from "@/libs/Permission";
 import {
   PrinterOutlined,
   RobotOutlined,
@@ -26,19 +26,26 @@ export default function Page() {
     data: [],
     total: 0,
     search: "",
+    tbo_status: "",
+    tbo_date: "",
   });
   const [loading, setLoading] = useState(false);
   const [selecteds, setSelecteds] = useState<IDapem[]>([]);
   const [dropping, setdropping] = useState<IDocument>(defaultData);
   const [open, setOpen] = useState(false);
   const { modal } = App.useApp();
-  // const { hasAccess } = useAccess("/ttpj/print");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/ttpj/print",
+  );
 
   const getData = async () => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
+    const params = new URLSearchParams({
+      page: pageProps.page.toString(),
+      limit: pageProps.limit.toString(),
+      ...(pageProps.tbo_date && { tbo_date: pageProps.tbo_date }),
+      ...(pageProps.tbo_status && { tbo_status: pageProps.tbo_status }),
+    });
     const res = await fetch(`/api/ttpj/print?${params.toString()}`);
     const json = await res.json();
     setPageProps((prev) => ({
@@ -79,6 +86,7 @@ export default function Page() {
     const sumdan = selecteds[selecteds.length - 1].ProdukPembiayaan.Sumdan;
     await fetch("/api/ttpj/print?id=" + sumdan.id, {
       method: "PATCH",
+      body: JSON.stringify({ created_at: dropping.created_at }),
     })
       .then((res) => res.json())
       .then((res) => {
@@ -98,7 +106,12 @@ export default function Page() {
       await getData();
     }, 200);
     return () => clearTimeout(timeout);
-  }, [pageProps.page, pageProps.limit]);
+  }, [
+    pageProps.page,
+    pageProps.limit,
+    pageProps.tbo_date,
+    pageProps.tbo_status,
+  ]);
 
   return (
     <div>
@@ -111,17 +124,17 @@ export default function Page() {
         styles={{ body: { padding: 5 } }}
       >
         <div className="my-1">
-          {/* {hasAccess("write") && ( */}
-          <Button
-            size="small"
-            icon={<PrinterOutlined />}
-            type="primary"
-            onClick={() => setOpen(true)}
-            disabled={selecteds.length === 0}
-          >
-            Cetak TTPJ
-          </Button>
-          {/* )} */}
+          {hasAccess("write") && (
+            <Button
+              size="small"
+              icon={<PrinterOutlined />}
+              type="primary"
+              onClick={() => setOpen(true)}
+              disabled={selecteds.length === 0}
+            >
+              Cetak TTPJ
+            </Button>
+          )}
         </div>
         <Table
           columns={columnSumdan}
@@ -129,7 +142,7 @@ export default function Page() {
           size="small"
           rowKey={"id"}
           bordered
-          scroll={{ x: "max-content", y: "60vh" }}
+          scroll={{ x: "max-content", y: "48vh" }}
           pagination={{
             current: pageProps.page,
             pageSize: pageProps.limit,
@@ -142,6 +155,7 @@ export default function Page() {
               }));
             },
             pageSizeOptions: [50, 100, 500, 1000],
+            showSizeChanger: true,
           }}
           loading={loading}
           expandable={{
@@ -331,8 +345,7 @@ const columnDapem: TableProps<IDapem>["columns"] = [
     key: "tbo",
     dataIndex: "tbo",
     render(value, record, index) {
-      const created = moment(record.date_contract).add(record.tbo, "month");
-      const isTbo = moment().isAfter(created, "date");
+      const isTbo = moment().isAfter(record.tbo_date, "date");
       return (
         <div className="flex gap-1">
           <Tag color={isTbo ? "red" : "blue"} variant="solid">
@@ -341,7 +354,7 @@ const columnDapem: TableProps<IDapem>["columns"] = [
           <div className="text-xs opacity-80">
             <div>Akad {moment(record.date_contract).format("DD/MM/YYYY")}</div>
             <div>TBO Month ({record.tbo} Bln)</div>
-            <div>Tgl TBO {created.format("DD/MM/YYYY")}</div>
+            <div>Tgl TBO {moment(record.tbo_date).format("DD/MM/YYYY")}</div>
           </div>
         </div>
       );
