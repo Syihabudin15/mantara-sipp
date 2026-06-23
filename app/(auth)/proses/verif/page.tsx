@@ -9,7 +9,7 @@ import {
   ProsesPembiayaan,
 } from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
-import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
+import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
   IActionTable,
   IDapem,
@@ -21,6 +21,7 @@ import { useAccess } from "@/libs/Permission";
 
 import {
   ArrowRightOutlined,
+  BankOutlined,
   FileProtectOutlined,
   FolderOutlined,
   FormOutlined,
@@ -170,6 +171,29 @@ export default function Page() {
             </div>
             <div>
               Tenor : <Tag color={"blue"}>{record.tenor} Bulan</Tag>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Angsuran",
+      dataIndex: "angsuran",
+      key: "angsuran",
+      render(value, record, index) {
+        const temp = GetDetailDapem(record);
+        return (
+          <div className="text-xs">
+            <div className="flex gap-2 items-center">
+              <Tag color={"blue"}>
+                <BankOutlined /> {IDRFormat(temp.detail.angsuran_sumdan)}
+              </Tag>
+              <Tag color={"blue"}>
+                {IDRFormat(temp.angsuran - temp.detail.angsuran_sumdan)}
+              </Tag>
+            </div>
+            <div className="flex justify-center">
+              <Tag color={"blue"}> {IDRFormat(temp.angsuran)}</Tag>
             </div>
           </div>
         );
@@ -504,32 +528,16 @@ export default function Page() {
           showSizeChanger: true,
         }}
         summary={(pageData) => {
-          const angsuran = pageData.reduce(
-            (acc, item) =>
-              acc +
-              GetAngsuran(
-                item.plafond,
-                item.tenor,
-                item.c_margin + item.c_margin_sumdan,
-                item.margin_type,
-                item.rounded,
-                item.c_ned,
-              ).angsuran,
-            0,
-          );
-          const angssudan = pageData.reduce(
-            (acc, item) =>
-              acc +
-              GetAngsuran(
-                item.plafond,
-                item.tenor,
-                item.c_margin_sumdan,
-                item.margin_type,
-                item.rounded_sumdan,
-              ).angsuran,
-            0,
-          );
-          const admAngsuran = Math.ceil(angsuran - angssudan);
+          let angsuran = 0;
+          let angsuran_sumdan = 0;
+          let plafond = 0;
+
+          pageData.forEach((d) => {
+            const angs = GetDetailDapem(d);
+            angsuran += angs.angsuran;
+            angsuran_sumdan += angs.detail.angsuran_sumdan;
+            plafond += d.plafond;
+          });
 
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
@@ -537,15 +545,12 @@ export default function Page() {
                 <b>SUMMARY</b>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={3} className="text-center">
-                <b>
-                  {IDRFormat(
-                    pageData.reduce((acc, item) => acc + item.plafond, 0),
-                  )}{" "}
-                </b>
+                <b>{IDRFormat(plafond)}</b>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} className="text-center font-bold">
                 <div>
-                  {IDRFormat(angssudan)} + {IDRFormat(admAngsuran)}
+                  {IDRFormat(angsuran_sumdan)} +{" "}
+                  {IDRFormat(angsuran - angsuran_sumdan)}
                 </div>
                 <div className="border-t border-gray-500">
                   {IDRFormat(angsuran)}

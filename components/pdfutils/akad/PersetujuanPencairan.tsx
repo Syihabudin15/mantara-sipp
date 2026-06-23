@@ -1,6 +1,6 @@
 import {
-  GetAngsuran,
   GetDapem,
+  GetDetailDapem,
   IDRFormat,
 } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
@@ -9,22 +9,7 @@ import { ListNonStyle, NumberToWordsID } from "../utils";
 moment.locale("id");
 
 export const PersetujuanPencairan = (record: IDapem) => {
-  const angsuran = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin + record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded,
-    record.c_ned,
-  ).angsuran;
-  const angsSumdan = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded_sumdan,
-  ).angsuran;
-  const admAngsuran = Math.ceil(angsuran - angsSumdan);
+  const detail = GetDetailDapem(record);
   const dapem = GetDapem(record);
 
   return `
@@ -136,7 +121,7 @@ export const PersetujuanPencairan = (record: IDapem) => {
       },
       {
         key: `Angsuran Dimuka (${record.c_blokir}x)`,
-        value: IDRFormat(record.c_blokir * angsuran),
+        value: IDRFormat(record.c_blokir * detail.angsuran),
         currency: true,
       },
       {
@@ -161,23 +146,23 @@ export const PersetujuanPencairan = (record: IDapem) => {
       },
       {
         key: `Angsuran`,
-        value: IDRFormat(angsSumdan),
+        value: IDRFormat(detail.detail.angsuran_sumdan),
         currency: true,
       },
       {
         key: `Biaya Adm Angsuran`,
-        value: IDRFormat(admAngsuran),
+        value: IDRFormat(detail.angsuran - detail.detail.angsuran_sumdan),
         currency: true,
       },
       {
         key: `Total Angsuran`,
-        value: IDRFormat(angsuran),
+        value: IDRFormat(detail.angsuran),
         currency: true,
         classStyle: "border-t font-bold",
       },
       {
         key: ``,
-        value: `( ${NumberToWordsID(angsuran)} Rupiah )`,
+        value: `( ${NumberToWordsID(detail.angsuran)} Rupiah )`,
         classStyle: " font-bold",
       },
     ])}

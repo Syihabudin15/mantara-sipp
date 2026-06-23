@@ -5,7 +5,12 @@ import Link from "next/link";
 import moment from "moment";
 import { IDapem, IViewFiles } from "@/libs/IInterfaces";
 import { FormInput } from "..";
-import { GetAngsuran, GetDapem, GetFullAge, IDRFormat } from "./PembiayaanUtil";
+import {
+  GetDapem,
+  GetDetailDapem,
+  GetFullAge,
+  IDRFormat,
+} from "./PembiayaanUtil";
 import {
   DollarCircleOutlined,
   FolderOpenOutlined,
@@ -195,21 +200,7 @@ export const DetailDapem = ({
   data: IDapem;
   allowprogres?: boolean;
 }) => {
-  const angsRound = GetAngsuran(
-    data.plafond,
-    data.tenor,
-    data.c_margin + data.c_margin_sumdan,
-    data.margin_type,
-    data.rounded,
-    data.c_ned,
-  ).angsuran;
-  const angsMitra = GetAngsuran(
-    data.plafond,
-    data.tenor,
-    data.c_margin_sumdan,
-    data.margin_type,
-    data.rounded_sumdan,
-  ).angsuran;
+  const detail = GetDetailDapem(data);
 
   return (
     <Modal
@@ -859,7 +850,7 @@ export const DetailDapem = ({
                 type: "text",
                 class: "flex-1",
                 disabled: true,
-                value: `${data.takeover_from} (${data.takeover_date ? moment(data.takeover_date).format("DD/MM/YYYY") : ""})`,
+                value: `${data.takeover_from || ""} (${data.takeover_date ? moment(data.takeover_date).format("DD/MM/YYYY") : ""})`,
               }}
             />
             <FormInput
@@ -932,29 +923,30 @@ export const DetailDapem = ({
                 <div className="w-[40%]">Angsuran</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(angsRound)}
+                  {IDRFormat(detail.angsuran)}
                 </div>
               </div>
               <div className="my-1 flex">
                 <div className="w-[40%]">Angsuran Mitra</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(angsMitra)}
+                  {IDRFormat(detail.detail.angsuran_sumdan)}
                 </div>
               </div>
               <div className="my-1 flex italic text-xs text-blue-500 opacity-70">
                 <div className="w-[40%]"></div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-xs text-right">
-                  Selisih {IDRFormat(angsRound - angsMitra)}
+                  Selisih{" "}
+                  {IDRFormat(detail.angsuran - detail.detail.angsuran_sumdan)}
                 </div>
               </div>
               <div className="my-1 flex">
                 <div className="w-[40%]">Debt Service Ratio</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {((angsRound / data.Debitur.salary) * 100).toFixed(2)}% /{" "}
-                  {data.ProdukPembiayaan.Sumdan.dsr}%
+                  {((detail.angsuran / data.Debitur.salary) * 100).toFixed(2)}%
+                  / {data.ProdukPembiayaan.Sumdan.dsr}%
                 </div>
               </div>
             </div>
@@ -1123,7 +1115,7 @@ export const DetailDapem = ({
                 </div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(angsRound * data.c_blokir)}
+                  {IDRFormat(detail.angsuran * data.c_blokir)}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed text-green-500 font-bold">

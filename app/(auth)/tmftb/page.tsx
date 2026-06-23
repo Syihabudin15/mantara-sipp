@@ -11,8 +11,8 @@ import {
 } from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
 import {
-  GetAngsuran,
   GetDapem,
+  GetDetailDapem,
   IDRFormat,
   IDRToNumber,
 } from "@/components/utils/PembiayaanUtil";
@@ -235,32 +235,19 @@ export default function Page() {
       dataIndex: "angsuran",
       key: "angsuran",
       render(value, record, index) {
-        const total = GetAngsuran(
-          record.plafond,
-          record.tenor,
-          record.c_margin + record.c_margin_sumdan,
-          record.margin_type,
-          record.rounded,
-          record.c_ned,
-        ).angsuran;
-        const mitra = GetAngsuran(
-          record.plafond,
-          record.tenor,
-          record.c_margin_sumdan,
-          record.margin_type,
-          record.rounded_sumdan,
-        ).angsuran;
-        const admAngsuran = Math.ceil(total - mitra);
+        const detail = GetDetailDapem(record);
         return (
           <div className="text-xs">
             <div className="flex gap-2 items-center">
               <Tag color={"blue"}>
-                <BankOutlined /> {IDRFormat(mitra)}
+                <BankOutlined /> {IDRFormat(detail.detail.angsuran_sumdan)}
               </Tag>
-              <Tag color={"blue"}>{IDRFormat(admAngsuran)}</Tag>
+              <Tag color={"blue"}>
+                {IDRFormat(detail.angsuran - detail.detail.angsuran_sumdan)}
+              </Tag>
             </div>
             <div className="flex justify-center">
-              <Tag color={"blue"}> {IDRFormat(total)}</Tag>
+              <Tag color={"blue"}> {IDRFormat(detail.angsuran)}</Tag>
             </div>
           </div>
         );
@@ -1041,28 +1028,11 @@ export default function Page() {
         }}
         summary={(pageData) => {
           const angs = pageData.reduce(
-            (acc, item) =>
-              acc +
-              GetAngsuran(
-                item.plafond,
-                item.tenor,
-                item.c_margin + item.c_margin_sumdan,
-                item.margin_type,
-                item.rounded,
-                item.c_ned,
-              ).angsuran,
+            (acc, item) => acc + GetDetailDapem(item).angsuran,
             0,
           );
           const angsSumdan = pageData.reduce(
-            (acc, item) =>
-              acc +
-              GetAngsuran(
-                item.plafond,
-                item.tenor,
-                item.c_margin_sumdan,
-                item.margin_type,
-                item.rounded_sumdan,
-              ).angsuran,
+            (acc, item) => acc + GetDetailDapem(item).detail.angsuran_sumdan,
             0,
           );
           const admAngsuran = Math.ceil(angs - angsSumdan);

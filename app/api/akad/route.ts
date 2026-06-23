@@ -1,4 +1,9 @@
-import { GetAngsuran, GetRoman } from "@/components/utils/PembiayaanUtil";
+import {
+  GetAngsuran,
+  GetDetailDapem,
+  GetRoman,
+} from "@/components/utils/PembiayaanUtil";
+import { IDapem } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
 import { Angsuran, Dapem } from "@prisma/client";
 import moment from "moment";
@@ -78,6 +83,7 @@ export const POST = async (req: NextRequest) => {
 
 export const PATCH = async (req: NextRequest) => {
   const id = req.nextUrl.searchParams.get("id");
+  const { created_at } = await req.json();
   if (!id)
     return NextResponse.json(
       { msg: "Dapem ID tidak ditemukan!", status: 404 },
@@ -103,7 +109,7 @@ export const PATCH = async (req: NextRequest) => {
         date_contract: { not: null },
       },
     });
-    const datecontract = moment(find.date_contract || new Date());
+    const datecontract = moment(created_at || find.date_contract || new Date());
     return NextResponse.json(
       {
         msg: "Berhasil memperbarui data akad!",
@@ -137,29 +143,16 @@ function GenerateAnuitas(dapem: Dapem): Angsuran[] {
 
   let angsurans: Angsuran[] = [];
 
-  const angsuran = GetAngsuran(
-    dapem.plafond,
-    dapem.tenor,
-    dapem.c_margin + dapem.c_margin_sumdan,
-    dapem.margin_type,
-    dapem.rounded,
-  ).angsuran;
-  const angsudan = GetAngsuran(
-    dapem.plafond,
-    dapem.tenor,
-    dapem.c_margin_sumdan,
-    dapem.margin_type,
-    dapem.rounded_sumdan,
-  ).angsuran;
   let sisa = dapem.plafond;
+  const detail = GetDetailDapem(dapem as IDapem);
 
   for (let i = 1; i <= dapem.tenor; i++) {
     const newId = `${prefix}${String(i).padStart(padLength, "0")}`;
     // const bungaBulan = Math.ceil(
     //   sisa * ((dapem.c_margin + dapem.c_margin_sumdan) / 12 / 100),
     // );
-    const bungaBulan = Math.ceil(sisa * (dapem.c_margin_sumdan / 12 / 100));
-    const pokok = angsudan - bungaBulan;
+    const bungaBulan = Math.round(sisa * (dapem.c_margin_sumdan / 12 / 100));
+    const pokok = detail.detail.angsuran_sumdan - bungaBulan;
     sisa -= pokok;
 
     if (sisa < 0) sisa = 0;
@@ -174,7 +167,7 @@ function GenerateAnuitas(dapem: Dapem): Angsuran[] {
       margin: bungaBulan,
       remaining: sisa,
       dapemId: dapem.id,
-      inst_sumdan: angsudan,
+      inst_sumdan: detail.detail.angsuran_sumdan,
       c_ned: dapem.c_ned,
       fee_banpot: 0,
     });

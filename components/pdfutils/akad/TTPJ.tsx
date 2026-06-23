@@ -4,7 +4,7 @@ moment.locale("id");
 
 export const TTPJ = (record: IDapem) => {
   return `
-  <div class="flex items-center justify-between border-b pb-2">
+  <div class="flex items-center justify-between border-b pb-2" style="margin-top: -20px">
     <div class="flex-1">
       <img src="${record.ProdukPembiayaan.Sumdan.logo}" alt="Logo" class="h-16 mr-4" />
     </div>
@@ -62,8 +62,8 @@ export const TTPJ = (record: IDapem) => {
     </div>
   </div>
 
-  <div class="my-4 text-center">
-    <p class="my-3">Diserahkan Tanggal</p>
+  <div class="my-2 text-center">
+    <p class="my-2">Diserahkan Tanggal</p>
     <div class="flex gap-10 justify-around items-end">
       <div class="flex-1">
         <div class="h-12"></div>
@@ -77,7 +77,7 @@ export const TTPJ = (record: IDapem) => {
     </div>
   </div>
   <div class="text-center">
-    <p class="my-3">Dikembalikan Tanggal</p>
+    <p class="my-2">Dikembalikan Tanggal</p>
     <div class="flex gap-10 justify-around my-8 items-end">
       <div class="flex-1">
         <div class="h-12"></div>
@@ -151,8 +151,8 @@ export const TTPJ = (record: IDapem) => {
     </div>
   </div>
 
-  <div class="my-4 text-center">
-    <p class="my-3">Diserahkan Tanggal</p>
+  <div class="my-2 text-center">
+    <p class="my-2">Diserahkan Tanggal</p>
     <div class="flex gap-10 justify-around items-end">
       <div class="flex-1">
         <div class="h-12"></div>
@@ -166,7 +166,7 @@ export const TTPJ = (record: IDapem) => {
     </div>
   </div>
   <div class="text-center">
-    <p class="my-3">Dikembalikan Tanggal</p>
+    <p class="my-2">Dikembalikan Tanggal</p>
     <div class="flex gap-10 justify-around my-8 items-end">
       <div class="flex-1">
         <div class="h-12"></div>

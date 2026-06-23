@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  GetAngsuran,
   GetDapem,
+  GetDetailDapem,
   GetRoman,
   IDRFormat,
 } from "@/components/utils/PembiayaanUtil";
@@ -19,28 +19,7 @@ import moment from "moment";
 import { ListKeyValue, styles } from "./RendererUtils";
 
 export const MAUKStandar = ({ data }: { data: IDapem }) => {
-  const angsasli = GetAngsuran(
-    data.plafond,
-    data.tenor,
-    data.c_margin + data.c_margin_sumdan,
-    data.margin_type,
-    1,
-  ).angsuran;
-  const angs = GetAngsuran(
-    data.plafond,
-    data.tenor,
-    data.c_margin + data.c_margin_sumdan,
-    data.margin_type,
-    data.rounded,
-  ).angsuran;
-  const angsSumdan = GetAngsuran(
-    data.plafond,
-    data.tenor,
-    data.c_margin_sumdan,
-    data.margin_type,
-    data.rounded_sumdan,
-  ).angsuran;
-  const admAngsuran = Math.ceil(angs - angsSumdan);
+  const detail = GetDetailDapem(data);
 
   const dapem = GetDapem(data);
 
@@ -283,36 +262,36 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                       },
                       {
                         key: "Angsuran Mitra",
-                        value: `${IDRFormat(angsSumdan)}`,
+                        value: `${IDRFormat(detail.detail.angsuran_sumdan)}`,
                         currency: true,
                       },
                       {
                         key: "Adm Angsuran",
-                        value: `${IDRFormat(admAngsuran)}`,
+                        value: `${IDRFormat(detail.angsuran - detail.detail.angsuran_sumdan)}`,
                         currency: true,
                       },
                       {
                         key: "Total Angsuran",
-                        value: `${IDRFormat(angs)}`,
+                        value: `${IDRFormat(detail.angsuran)}`,
                         currency: true,
                       },
                       {
                         key: "Sisa Gaji",
-                        value: `${IDRFormat(data.Debitur.salary - angs)}`,
+                        value: `${IDRFormat(data.Debitur.salary - detail.angsuran)}`,
                         currency: true,
                       },
                       {
                         key: "DBR/DSR",
-                        value: `${((angs / data.Debitur.salary) * 100).toFixed(2)}%`,
+                        value: `${((detail.angsuran / data.Debitur.salary) * 100).toFixed(2)}%`,
                       },
                       {
                         key: "Angsuran Asli",
-                        value: `${IDRFormat(angsasli)}`,
+                        value: `${IDRFormat(detail.angsuran)}`,
                         currency: true,
                       },
                       {
                         key: "Pembulatan",
-                        value: `${IDRFormat(data.rounded)} (Rp. ${angs - angsasli})`,
+                        value: `${IDRFormat(data.rounded)} (Rp. ${detail.angsuran - detail.detail.angsuran})`,
                         currency: true,
                       },
                     ]}
@@ -434,7 +413,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                       },
                       {
                         key: `Blokir Angsuran (${data.c_blokir}x)`,
-                        value: IDRFormat(data.c_blokir * angs),
+                        value: IDRFormat(data.c_blokir * detail.angsuran),
                         currency: true,
                         style: {
                           borderBottom: "1px solid #aaa",

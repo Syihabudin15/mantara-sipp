@@ -1,6 +1,6 @@
 import {
-  GetAngsuran,
   GetDapem,
+  GetDetailDapem,
   GetFullAge,
   IDRFormat,
 } from "@/components/utils/PembiayaanUtil";
@@ -15,19 +15,12 @@ export const AnalisaPerhitungan = (record: IDapem) => {
     record.date_contract || record.created_at,
   );
   const ageLunas = GetFullAge(
-    record.date_contract || record.created_at,
+    record.Debitur.birthdate,
     moment(record.date_contract || record.created_at)
       .add(record.tenor, "month")
       .toDate(),
   );
-  const angsuran = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin + record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded,
-    record.c_ned,
-  ).angsuran;
+  const detail = GetDetailDapem(record);
 
   const dapem = GetDapem(record);
   const ao = record.AO || record.AOCabang || record.AOArea;
@@ -92,7 +85,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
         },
         {
           key: "Angsuran",
-          value: IDRFormat(angsuran - record.c_ned),
+          value: IDRFormat(detail.angsuran - record.c_ned),
           currency: true,
         },
         {
@@ -101,18 +94,18 @@ export const AnalisaPerhitungan = (record: IDapem) => {
           currency: true,
         },
         {
-          key: "Jumlah Angsuran Perulan",
-          value: IDRFormat(angsuran),
+          key: "Jumlah Angsuran Perbulan",
+          value: IDRFormat(detail.angsuran),
           currency: true,
         },
         {
           key: "Sisa Gaji",
-          value: IDRFormat(record.Debitur.salary - angsuran),
+          value: IDRFormat(record.Debitur.salary - detail.angsuran),
           currency: true,
         },
         {
           key: "Debt Service Ratio",
-          value: `${((angsuran / record.Debitur.salary) * 100).toFixed(2)}% / ${record.ProdukPembiayaan.Sumdan.dsr.toFixed(2)}%`,
+          value: `${((detail.angsuran / record.Debitur.salary) * 100).toFixed(2)}% / ${record.ProdukPembiayaan.Sumdan.dsr.toFixed(2)}%`,
         },
       ])}
     </div>

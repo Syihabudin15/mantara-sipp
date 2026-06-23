@@ -1,6 +1,6 @@
 import { ICashDesc, IDapem, IDropping } from "@/libs/IInterfaces";
 import moment from "moment";
-import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
+import { IDRFormat } from "@/components/utils/PembiayaanUtil";
 import { ListNonStyle, NumberToWordsID } from "../../utils";
 moment.locale("id");
 
@@ -10,22 +10,6 @@ export const SIPage4Vima = (
   cash: ICashDesc,
   firstdata: boolean,
 ) => {
-  // const angs = GetAngsuran(
-  //   dapem.plafond,
-  //   dapem.tenor,
-  //   dapem.c_margin + dapem.c_margin_sumdan,
-  //   dapem.margin_type,
-  //   dapem.rounded,
-  //   dapem.c_ned,
-  // ).angsuran;
-  // const angsSumdan = GetAngsuran(
-  //   dapem.plafond,
-  //   dapem.tenor,
-  //   dapem.c_margin_sumdan,
-  //   dapem.margin_type,
-  //   dapem.rounded,
-  // ).angsuran;
-  // const admAngsuran = Math.ceil(angs - angsSumdan);
   const adm =
     dapem.plafond * ((dapem.c_adm + dapem.c_adm_mitra + dapem.c_adm_ff) / 100);
   const provisi =
@@ -45,7 +29,6 @@ export const SIPage4Vima = (
     dapem.c_bop +
     dapem.c_mutasi;
   const biaya = adm + provisi + asuransi + tatalaksana + dapem.c_account;
-  // const blokir = dapem.c_blokir * admAngsuran;
   const tb = biaya;
 
   return `
@@ -94,9 +77,7 @@ export const SIPage4Vima = (
     <div class="my-2">
       <div class="flex gap-2 font-bold">
         <p class="w-4">1.</p>
-        <p class="w-44">Transfer ke Rekening Tujuan : </p>
-        <p class="w-4">:</p>
-        <p class="w-40"></>
+        <p class="flex-1">Transfer ke Rekening Tujuan : </p>
       </div>
       <div class="flex gap-2">
         <p class="w-4"></p>
@@ -133,9 +114,7 @@ export const SIPage4Vima = (
       <div class="my-2">
       <div class="flex gap-2 font-bold">
         <p class="w-4">2.</p>
-        <p class="w-60">Pindah Buku Rekening Tujuan  : </p>
-        <p class="w-4">:</p>
-        <p class="w-40"></>
+        <p class="flex-1">Pindah Buku Rekening Tujuan  : </p>
       </div>
       <div class="flex gap-2">
         <p class="w-4"></p>

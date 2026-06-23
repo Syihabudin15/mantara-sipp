@@ -1,26 +1,11 @@
-import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
+import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header } from "../utils";
 moment.locale("id");
 
 export const JadwalAngsuran = (record: IDapem, sub?: string) => {
-  const angs = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin + record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded,
-    record.c_ned,
-  ).angsuran;
-  const angsSumdan = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded_sumdan,
-  ).angsuran;
-  const admAngsuran = Math.ceil(angs - angsSumdan);
+  const detail = GetDetailDapem(record);
   const ao = record.AO || record.AOCabang || record.AOArea;
 
   return `
@@ -58,12 +43,12 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
       <div class="flex gap-2">
         <div class="w-32">Suku Bunga</div>
         <div class="w-4">:</div>
-        <div>${(record.c_margin + record.c_margin_sumdan).toFixed(2)}% /tahun</div>
+        <div>${((sub === "DEBITUR" ? record.c_margin : 0) + record.c_margin_sumdan).toFixed(2)}% /tahun</div>
       </div>
       <div class="flex gap-2">
         <div class="w-32">Angsuran</div>
         <div class="w-4">:</div>
-        <div>Rp. ${IDRFormat(angs)}</div>
+        <div>Rp. ${IDRFormat(sub === "DEBITUR" ? detail.angsuran : detail.detail.angsuran_sumdan)}</div>
       </div>
       <div class="flex gap-2">
         <div class="w-32">Account Officer</div>
@@ -105,10 +90,10 @@ export const JadwalAngsuran = (record: IDapem, sub?: string) => {
           <tr>
             <td class="border border-gray-400 border-dashed p-1 text-center">${r.counter}</td>
             <td class="border border-gray-400 border-dashed p-1 text-center">${moment(r.date_pay).format("DD-MM-YYYY")}</td>
-            <td class="border border-gray-400 border-dashed p-1 text-right">${r.counter === 0 ? "0" : IDRFormat(r.principal + r.margin + r.c_ned + admAngsuran)}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${r.counter === 0 ? "0" : sub === "DEBITUR" ? IDRFormat(detail.angsuran) : IDRFormat(detail.detail.angsuran_sumdan)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.principal)}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.margin)}</td>
-            <td class="border border-gray-400 border-dashed p-1 text-right">${r.counter === 0 ? "0" : IDRFormat(admAngsuran)}</td>
+            <td class="border border-gray-400 border-dashed p-1 text-right">${r.counter === 0 ? "0" : sub === "DEBITUR" ? IDRFormat(detail.angsuran - detail.detail.angsuran_sumdan) : "0"}</td>
             <td class="border border-gray-400 border-dashed p-1 text-right">${IDRFormat(r.remaining)}</td>
           </tr>
         `,

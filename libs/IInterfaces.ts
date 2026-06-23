@@ -200,3 +200,30 @@ export interface IFiles {
   name: string;
   url: string;
 }
+
+export interface IOutputDapemDetail {
+  detail: {
+    adm_sumdan: number;
+    provisi_sumdan: number;
+    asuransi: number;
+    adm: number;
+    adm_ff: number;
+    adm_mita: number;
+    fee_ao: number;
+    fee_cabang: number;
+    fee_area: number;
+    fee_bpp: number;
+    fee_bpb: number;
+    angsuran: number;
+    angsuran_sumdan: number;
+  };
+  angsuran: number;
+  tatalaksana: number;
+  provisi: number;
+  administrasi: number;
+  asuransi: number;
+  by_sumdan: number;
+  biaya: number;
+  tk: number;
+  tb: number;
+}

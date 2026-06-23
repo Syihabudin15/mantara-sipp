@@ -1,7 +1,7 @@
 import moment from "moment";
 import { PV } from "@formulajs/formulajs";
 import { EMarginType } from "@prisma/client";
-import { IDapem } from "@/libs/IInterfaces";
+import { IDapem, IOutputDapemDetail } from "@/libs/IInterfaces";
 
 export const IDRFormat = (number: number) => {
   const temp = new Intl.NumberFormat("de-DE", {
@@ -147,6 +147,100 @@ export const GetDapem = (data: IDapem) => {
   return { biaya, blok, lastbiaya, tb };
 };
 
+export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
+  const adm_sumdan = dapem.plafond * (dapem.c_adm_sumdan / 100);
+  const provisi_sumdan = dapem.plafond * (dapem.c_provisi_sumdan / 100);
+  const asuransi = dapem.plafond * (dapem.c_insurance / 100);
+  const adm = dapem.plafond * (dapem.c_adm / 100);
+  const adm_mita = dapem.plafond * (dapem.c_adm_mitra / 100);
+  const adm_ff = dapem.plafond * (dapem.c_adm_ff / 100);
+  const fee_ao = dapem.plafond * (dapem.c_fee_ao / 100);
+  const fee_cabang = dapem.plafond * (dapem.c_fee_cabang / 100);
+  const fee_area = dapem.plafond * (dapem.c_fee_area / 100);
+  const fee_bpp = dapem.plafond * (dapem.c_fee_bpp / 100);
+  const fee_bpb = dapem.plafond * (dapem.c_fee_bpb / 100);
+  const provisi = fee_ao + fee_cabang + fee_area + fee_bpp + fee_bpb;
+  const administrasi = adm + adm_mita + adm_ff;
+  const tatalaksana =
+    dapem.c_gov +
+    dapem.c_flagging +
+    dapem.c_infomation +
+    dapem.c_stamp +
+    dapem.c_account +
+    dapem.c_mutasi +
+    dapem.c_bop;
+  const angsuran = ValidateAngsuran(dapem);
+  const angsuran_sumdan = ValidateAngsuran(dapem, true);
+  const biaya =
+    administrasi +
+    provisi +
+    tatalaksana +
+    asuransi +
+    adm_sumdan +
+    provisi_sumdan +
+    dapem.c_account_sumdan;
+
+  return {
+    detail: {
+      adm_sumdan,
+      provisi_sumdan,
+      asuransi,
+      adm,
+      adm_ff,
+      adm_mita,
+      fee_ao,
+      fee_cabang,
+      fee_area,
+      fee_bpp,
+      fee_bpb,
+      angsuran,
+      angsuran_sumdan,
+    },
+    angsuran: Math.ceil(angsuran / dapem.rounded) * dapem.rounded + dapem.c_ned,
+    tatalaksana,
+    provisi,
+    administrasi: adm + adm_mita + adm_ff,
+    asuransi,
+    by_sumdan: adm_sumdan + provisi_sumdan + dapem.c_account_sumdan,
+    biaya,
+    tk: dapem.plafond - biaya,
+    tb:
+      dapem.plafond -
+      (biaya + dapem.c_takeover + dapem.c_blokir * angsuran + dapem.c_ned),
+  };
+};
+
+const ValidateAngsuran = (dapem: IDapem, sumdan?: boolean) => {
+  if (dapem.margin_type === "ANUITAS") return AngsuranAnuitas(dapem, sumdan);
+  if (dapem.margin_type === "FLAT") return AngsuranFlat(dapem, sumdan);
+  return AngsuranAnuitas(dapem);
+};
+
+const AngsuranAnuitas = (dapem: IDapem, sumdan?: boolean) => {
+  const rate = sumdan
+    ? dapem.c_margin_sumdan
+    : dapem.c_margin + dapem.c_margin_sumdan;
+  const r = rate / 12 / 100;
+
+  const angs =
+    (dapem.plafond * (r * Math.pow(1 + r, dapem.tenor))) /
+    (Math.pow(1 + r, dapem.tenor) - 1);
+  // const rounded = sumdan ? dapem.rounded_sumdan : dapem.rounded;
+  // return Math.ceil(angs / rounded) * rounded;
+  return angs;
+};
+
+const AngsuranFlat = (dapem: IDapem, sumdan?: boolean) => {
+  const pokok = dapem.plafond / dapem.tenor;
+  const r = sumdan
+    ? dapem.c_margin_sumdan
+    : dapem.c_margin + dapem.c_margin_sumdan;
+  const margin = (dapem.plafond * (r / 100)) / 12;
+  const angs = pokok + margin;
+  const rounded = sumdan ? dapem.rounded_sumdan : dapem.rounded;
+  return Math.ceil(angs / rounded) * rounded;
+};
+
 export const GetSisaPokokMargin = (data: IDapem) => {
   const periode = data.Angsurans.find((d) =>
     moment(d.date_pay).isSame(moment().toDate(), "month"),
@@ -213,35 +307,29 @@ export function serializeForApi<T>(data: T): T {
   );
 }
 
-export const GetInsurance = (
-  birthdate: Date,
-  startdate: Date,
-  tenor: number,
-  insType?: string,
-) => {
-  switch (insType) {
-    case "BUMI PUTERA": {
-      return GetBumiPutera(birthdate, startdate, tenor);
-    }
-    default: {
-      return GetBumiPutera(birthdate, startdate, tenor);
-    }
-  }
-};
-
-const GetBumiPutera = (birthdate: Date, startdate: Date, tenor: number) => {
-  const birth = moment(birthdate);
-  const start = moment(startdate).set("date", 1).add(1, "month");
-  const end = moment(start).add(tenor, "month").subtract(1, "day");
-
-  const daysdif = start.diff(birth, "day");
-  const ageround = Math.round(daysdif / 365.25);
-
-  const monthsdiff = end.diff(start, "months");
-  const jkround = Math.round(monthsdiff / 12);
-
-  const year = ageround + jkround;
-  const rate = tenor < 181 && ageround > 54 ? 0.9 : 0;
-  // const premi = year > 85 ? 0 : rate * jkround * plafond;
-  return year > 85 ? 0 : rate * jkround;
-};
+export const getInitialDapemDetail = (): IOutputDapemDetail => ({
+  detail: {
+    adm_sumdan: 0,
+    provisi_sumdan: 0,
+    asuransi: 0,
+    adm: 0,
+    adm_ff: 0,
+    adm_mita: 0,
+    fee_ao: 0,
+    fee_cabang: 0,
+    fee_area: 0,
+    fee_bpp: 0,
+    fee_bpb: 0,
+    angsuran: 0,
+    angsuran_sumdan: 0,
+  },
+  angsuran: 0,
+  tatalaksana: 0,
+  provisi: 0,
+  administrasi: 0,
+  asuransi: 0,
+  by_sumdan: 0,
+  biaya: 0,
+  tk: 0,
+  tb: 0,
+});

@@ -2,15 +2,21 @@
 
 import { FormInput } from "@/components";
 import {
-  GetAngsuran,
   GetDapem,
+  GetDetailDapem,
   GetFullAge,
+  getInitialDapemDetail,
   GetMaxPlafond,
   GetMaxTenor,
   IDRFormat,
   IDRToNumber,
 } from "@/components/utils/PembiayaanUtil";
-import { IDapem, IDebitur, ISumdan } from "@/libs/IInterfaces";
+import {
+  IDapem,
+  IDebitur,
+  IOutputDapemDetail,
+  ISumdan,
+} from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
   HistoryOutlined,
@@ -42,6 +48,9 @@ export default function Page() {
   const [jenis, setJenis] = useState<JenisPembiayaan[]>([]);
   const [sumdan, setSumdan] = useState<ISumdan[]>([]);
   const [sumdanAv, setSumdanAv] = useState<ISumdan[]>([]);
+  const [details, setDetails] = useState<IOutputDapemDetail>(
+    getInitialDapemDetail,
+  );
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const { hasAccess } = useAccess(
@@ -92,15 +101,11 @@ export default function Page() {
       maxPlaff > data.ProdukPembiayaan.max_plafond
         ? data.ProdukPembiayaan.max_plafond
         : maxPlaff;
-    const angs = GetAngsuran(
-      data.plafond,
-      data.tenor,
-      data.c_margin + data.c_margin_sumdan,
-      data.margin_type,
-      data.Sumdan.rounded,
-      data.c_ned,
-    ).angsuran;
-    if (angs > data.Debitur.salary * (data.Sumdan.dsr / 100)) {
+
+    const detailDapem = GetDetailDapem(data);
+    setDetails(detailDapem);
+
+    if (detailDapem.angsuran > data.Debitur.salary * (data.Sumdan.dsr / 100)) {
       message.error(
         "Angsuran lebih dari 95%, mohon sesuaikan kembali pembiayaan!",
       );
@@ -111,7 +116,6 @@ export default function Page() {
       ...prev,
       max_tenor: maxTen,
       max_plafond: maxPlaf,
-      angsuran: angs,
       tenor: prev.tenor > maxTen ? maxTen : prev.tenor,
       plafon: prev.plafond > maxPlaf ? maxPlaf : prev.plafond,
     }));
@@ -401,7 +405,7 @@ export default function Page() {
           <div className="flex-1 flex gap-2">
             <div className="flex-1">
               <div>Angsuran</div>
-              <Input value={IDRFormat(data.angsuran || 0)} disabled />
+              <Input value={IDRFormat(details.angsuran || 0)} disabled />
             </div>
             <div className="flex-1">
               <div>Max Angsuran</div>
@@ -450,12 +454,7 @@ export default function Page() {
               size="small"
               disabled
               value={IDRFormat(
-                (data.plafond *
-                  (data.c_adm_sumdan +
-                    data.c_adm +
-                    data.c_adm_mitra +
-                    data.c_adm_ff)) /
-                  100 || 0,
+                details.administrasi + details.detail.adm_sumdan,
               )}
               style={{ textAlign: "right", color: "black" }}
             />
@@ -481,7 +480,7 @@ export default function Page() {
             <Input
               size="small"
               disabled
-              value={IDRFormat((data.plafond * data.c_insurance) / 100 || 0)}
+              value={IDRFormat(details.asuransi)}
               style={{ textAlign: "right", color: "black" }}
             />
           </div>
@@ -511,16 +510,7 @@ export default function Page() {
             <Input
               size="small"
               disabled
-              value={IDRFormat(
-                (data.plafond *
-                  (data.c_provisi_sumdan +
-                    data.c_fee_ao +
-                    data.c_fee_cabang +
-                    data.c_fee_area +
-                    data.c_fee_bpp +
-                    data.c_fee_bpb)) /
-                  100 || 0,
-              )}
+              value={IDRFormat(details.provisi + details.detail.provisi_sumdan)}
               style={{ textAlign: "right", color: "black" }}
             />
           </div>
@@ -647,20 +637,14 @@ export default function Page() {
         </div>
         <div className="flex gap-2 justify-between items-center my-1 font-bold text-red-500 border-t mt-2">
           <div className="flex-1">Total Biaya</div>
-          <div className="text-right">
-            {IDRFormat(GetDapem(data as unknown as IDapem).biaya || 0)}
-          </div>
+          <div className="text-right">{IDRFormat(details.biaya)}</div>
         </div>
         <div className="w-full bg-blue-800 text-gray-50 p-2 rounded mb-1">
           Rincian Pembiayaan
         </div>
         <div className="flex gap-2 justify-between items-center my-1 font-bold text-blue-500 border-b border-dashed">
           <div className="flex-1">Terima Kotor</div>
-          <div className="text-right">
-            {IDRFormat(
-              data.plafond - GetDapem(data as unknown as IDapem).biaya || 0,
-            )}
-          </div>
+          <div className="text-right">{IDRFormat(details.tk)}</div>
         </div>
         <div className="flex gap-2 justify-between items-center my-1 text-red-500 border-b border-dashed">
           <div className="flex-1">Nominal Takeover</div>
@@ -697,28 +681,26 @@ export default function Page() {
             <Input
               size="small"
               disabled
-              value={IDRFormat(data.c_blokir * data.angsuran || 0)}
+              value={IDRFormat(data.c_blokir * details.angsuran || 0)}
               style={{ textAlign: "right", color: "black" }}
             />
           </div>
         </div>
         <div className="flex gap-2 justify-between items-center my-1 font-bold text-green-500 border-t mt-2">
           <div className="flex-1">Terima Bersih</div>
-          <div className="text-right">
-            {IDRFormat(GetDapem(data as unknown as IDapem).tb || 0)}
-          </div>
+          <div className="text-right">{IDRFormat(details.tb)}</div>
         </div>
         <Divider style={{ marginBottom: 5 }}>Informasi Tambahan</Divider>
         <div className="italic">
           <div className="flex justify-between border-b border-dashed">
             <div>Sisa Gaji</div>
-            <div>{IDRFormat(data.Debitur.salary - data.angsuran)}</div>
+            <div>{IDRFormat(data.Debitur.salary - details.angsuran)}</div>
           </div>
           <div className="flex justify-between border-b border-dashed">
             <div>Debt Service Ratio</div>
             <div>
-              {((data.angsuran / data.Debitur.salary) * 100 || 0).toFixed(2)} %
-              / {data.Sumdan.dsr} %
+              {((details.angsuran / data.Debitur.salary) * 100 || 0).toFixed(2)}{" "}
+              % / {data.Sumdan.dsr} %
             </div>
           </div>
         </div>
@@ -739,7 +721,12 @@ export default function Page() {
           </Button>
         </div>
       </Card>
-      <ModalDetailPembiayaan data={data} setOpen={setOpen} open={open} />
+      <ModalDetailPembiayaan
+        data={data}
+        setOpen={setOpen}
+        open={open}
+        detail={details}
+      />
     </div>
   );
 }
@@ -748,10 +735,12 @@ const ModalDetailPembiayaan = ({
   data,
   open,
   setOpen,
+  detail,
 }: {
   data: IDapemSimulasi;
   open: boolean;
   setOpen: Function;
+  detail: IOutputDapemDetail;
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -863,14 +852,7 @@ const ModalDetailPembiayaan = ({
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Administrasi</span>
                 <span>
-                  {IDRFormat(
-                    (data.plafond *
-                      (data.c_adm_sumdan +
-                        data.c_adm +
-                        data.c_adm_mitra +
-                        data.c_adm_ff)) /
-                      100,
-                  )}
+                  {IDRFormat(detail.administrasi + detail.detail.adm_sumdan)}
                 </span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
@@ -882,31 +864,12 @@ const ModalDetailPembiayaan = ({
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Provisi</span>
                 <span>
-                  {IDRFormat(
-                    (data.plafond *
-                      (data.c_provisi_sumdan +
-                        data.c_fee_ao +
-                        data.c_fee_cabang +
-                        data.c_fee_area +
-                        data.c_fee_bpp +
-                        data.c_fee_bpb)) /
-                      100,
-                  )}
+                  {IDRFormat(detail.provisi + detail.detail.provisi_sumdan)}
                 </span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Tatalaksana</span>
-                <span>
-                  {IDRFormat(
-                    data.c_gov +
-                      data.c_flagging +
-                      data.c_infomation +
-                      data.c_mutasi +
-                      data.c_account +
-                      data.c_stamp +
-                      data.c_bop,
-                  )}
-                </span>
+                <span>{IDRFormat(detail.tatalaksana)}</span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Buka Rekening</span>
@@ -914,9 +877,7 @@ const ModalDetailPembiayaan = ({
               </div>
               <div className="flex justify-between gap-2 font-bold text-red-500 border-t mt-2">
                 <span>TOTAL BIAYA</span>
-                <span>
-                  {IDRFormat(GetDapem(data as unknown as IDapem).biaya)}
-                </span>
+                <span>{IDRFormat(detail.biaya)}</span>
               </div>
             </div>
           </div>
@@ -924,17 +885,17 @@ const ModalDetailPembiayaan = ({
             <div className="italic mb-1 border-b rounded p-1">
               <div className="flex justify-between border-b border-dashed">
                 <div>Angsuran</div>
-                <div>{IDRFormat(data.angsuran)}</div>
+                <div>{IDRFormat(detail.angsuran)}</div>
               </div>
               <div className="flex justify-between border-b border-dashed">
                 <div>Sisa Gaji</div>
-                <div>{IDRFormat(data.Debitur.salary - data.angsuran)}</div>
+                <div>{IDRFormat(data.Debitur.salary - detail.angsuran)}</div>
               </div>
               <div className="flex justify-between">
                 <div>Debt Service Ratio</div>
                 <div>
-                  {((data.angsuran / data.Debitur.salary) * 100).toFixed(2)}% /{" "}
-                  {data.Sumdan.dsr}%
+                  {((detail.angsuran / data.Debitur.salary) * 100).toFixed(2)}%
+                  / {data.Sumdan.dsr}%
                 </div>
               </div>
             </div>
@@ -946,9 +907,7 @@ const ModalDetailPembiayaan = ({
               styles={{ header: { marginBottom: 2 } }}
             >
               <Descriptions.Item label="Terima Kotor" style={{ padding: 5 }}>
-                {IDRFormat(
-                  data.plafond - GetDapem(data as unknown as IDapem).biaya,
-                )}
+                {IDRFormat(detail.tk)}
               </Descriptions.Item>
               <Descriptions.Item
                 label="Nominal Takeover"
@@ -960,20 +919,13 @@ const ModalDetailPembiayaan = ({
                 label={`Blokir Angsuran ${data.c_blokir}X`}
                 style={{ padding: 5 }}
               >
-                {IDRFormat(data.c_blokir * data.angsuran)}
+                {IDRFormat(data.c_blokir * detail.angsuran)}
               </Descriptions.Item>
-              {/* <Descriptions.Item
-                label={`Retensi Angsuran ${data.c_retensi}X`}
-                style={{ padding: 5 }}
-              >
-                {IDRFormat(data.c_retensi * data.angsuran)}
-              </Descriptions.Item> */}
-
               <Descriptions.Item
                 label="Terima Bersih"
                 style={{ fontWeight: "bold", color: "green", padding: 5 }}
               >
-                {IDRFormat(GetDapem(data as unknown as IDapem).tb)}
+                {IDRFormat(detail.tb)}
               </Descriptions.Item>
             </Descriptions>
           </div>
@@ -994,7 +946,6 @@ const ModalDetailPembiayaan = ({
 
 interface IDapemSimulasi extends IDapem {
   Sumdan: Sumdan;
-  angsuran: number;
   angsuran_sumdan: number;
   max_plafond: number;
   max_tenor: number;
@@ -1027,7 +978,6 @@ const defaultData: IDapemSimulasi = {
   c_infomation: 0,
   c_takeover: 0,
   c_bop: 0,
-  angsuran: 0,
   max_plafond: 0,
   max_tenor: 0,
   c_ned: 0,

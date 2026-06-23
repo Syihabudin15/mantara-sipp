@@ -1,6 +1,6 @@
 import {
-  GetAngsuran,
   GetDapem,
+  GetDetailDapem,
   IDRFormat,
 } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
@@ -9,22 +9,7 @@ import { Header, ListNonStyle, NumberToWordsID } from "../utils";
 moment.locale("id");
 
 export const BPK = (record: IDapem) => {
-  const angsuran = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin + record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded,
-    record.c_ned,
-  ).angsuran;
-  const angsSumdan = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded_sumdan,
-  ).angsuran;
-  const admAngsuran = Math.ceil(angsuran - angsSumdan);
+  const detail = GetDetailDapem(record);
   const dapem = GetDapem(record);
   const ao = record.AO || record.AOCabang || record.AOArea;
 
@@ -137,7 +122,7 @@ export const BPK = (record: IDapem) => {
       },
       {
         key: `Angsuran Dimuka (${record.c_blokir}x)`,
-        value: IDRFormat(record.c_blokir * angsuran),
+        value: IDRFormat(record.c_blokir * detail.angsuran),
         currency: true,
       },
       {
@@ -162,23 +147,23 @@ export const BPK = (record: IDapem) => {
       },
       {
         key: `Angsuran`,
-        value: IDRFormat(angsSumdan),
+        value: IDRFormat(detail.detail.angsuran_sumdan),
         currency: true,
       },
       {
         key: `Biaya Adm Angsuran`,
-        value: IDRFormat(admAngsuran),
+        value: IDRFormat(detail.angsuran - detail.detail.angsuran_sumdan),
         currency: true,
       },
       {
         key: `Total Angsuran`,
-        value: IDRFormat(angsuran),
+        value: IDRFormat(detail.angsuran),
         currency: true,
         classStyle: "border-t font-bold",
       },
       {
         key: ``,
-        value: `(${NumberToWordsID(angsuran)} Rupiah)`,
+        value: `(${NumberToWordsID(detail.angsuran)} Rupiah)`,
         classStyle: " font-bold",
       },
     ])}
@@ -199,7 +184,7 @@ export const BPK = (record: IDapem) => {
       <p>Diterima Oleh</p>
       <div class="h-28"></div>
       <p class="border-b">${record.Debitur.fullname}</p>
-      <p>DEBITUR</p>
+      <p class="h-4">DEBITUR</p>
     </div>
   </div>
   <div class="my-5 flex justify-around gap-10 items-end text-center">
@@ -207,19 +192,19 @@ export const BPK = (record: IDapem) => {
       <p>Diproses oleh</p>
       <div class="h-28"></div>
       <p class="border-b font-bold">${ao?.fullname}</p>
-      <p>${ao?.position}</p>
+      <p class="h-4">${ao?.position}</p>
     </div>
     <div class="flex-1">
       <p>Diperiksa oleh</p>
       <div class="h-28"></div>
       <p class="border-b font-bold">${process.env.NEXT_PUBLIC_APP_SI_NAME}</p>
-      <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
+      <p class="h-4">${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
     </div>
     <div class="flex-1">
       <p>Diotorisasi oleh</p>
       <div class="h-28"></div>
       <p class="border-b font-bold">${process.env.NEXT_PUBLIC_APP_OPS_NAME || ""}</p>
-      <p>${process.env.NEXT_PUBLIC_APP_OPS_NAME || ""}</p>
+      <p class="h-4">${process.env.NEXT_PUBLIC_APP_OPS_NAME || ""}</p>
     </div>
   </div>
 

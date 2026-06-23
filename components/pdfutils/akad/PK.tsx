@@ -34,7 +34,7 @@ export const PK = (record: IDapem) => {
   <p>Perjanjian Kredit ini (Selanjutnya disebut "PERJANJIAN") di buat di Pekalongan pada hari Senin, tanggal 11 Mei 2026 oleh dan antara sebagai berikut :</p>
   <div class="my-2 ml-2 flex gap-2">
     <div class="w-5">I.</div>
-    <p>Nama <span class="font-bold">${process.env.NEXT_PUBLIC_APP_AKAD_NAME || "-"}</span>, dengan jabatan Ketua <span class="font-bold">${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</span> (<span class="font-bold">${process.env.NEXT_PUBLIC_APP_SHORTNAME || "-"}</span>), bertindak berdasarkan Surat Kuasa Substitusi No. ${record.ProdukPembiayaan.Sumdan.sk_no || "-"} tanggal ${moment(record.ProdukPembiayaan.Sumdan.sk_date || new Date()).format("DD-MM-YYYY")} dalam perjanjian ini bertindak untuk dan atas nama <span class="font-bold">${record.ProdukPembiayaan.Sumdan.name}</span> yang berkedudukan di ${record.ProdukPembiayaan.Sumdan.address}, berdasarkan Perjanjian Kerjasama Penerusan Pinjaman Nomor ${record.ProdukPembiayaan.Sumdan.contract_no} dan Nomor ${record.ProdukPembiayaan.Sumdan.contract_no2} tanggal ${moment(record.ProdukPembiayaan.Sumdan.contract_date || new Date()).format("DD-MM-YYYY")} (Selanjutnya disebut <span class="font-bold">"KREDITUR"</span>)</p>
+    <p>Nama <span class="font-bold">ARIF FIRMANSYAH</span>, dengan jabatan Ketua <span class="font-bold">${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</span> (<span class="font-bold">${process.env.NEXT_PUBLIC_APP_SHORTNAME || "-"}</span>), bertindak berdasarkan Surat Kuasa Substitusi No. ${record.ProdukPembiayaan.Sumdan.sk_no || "-"} tanggal ${moment(record.ProdukPembiayaan.Sumdan.sk_date || new Date()).format("DD-MM-YYYY")} dalam perjanjian ini bertindak untuk dan atas nama <span class="font-bold">${record.ProdukPembiayaan.Sumdan.name}</span> yang berkedudukan di ${record.ProdukPembiayaan.Sumdan.address}, berdasarkan Perjanjian Kerjasama Penerusan Pinjaman Nomor ${record.ProdukPembiayaan.Sumdan.contract_no} dan Nomor ${record.ProdukPembiayaan.Sumdan.contract_no2} tanggal ${moment(record.ProdukPembiayaan.Sumdan.contract_date || new Date()).format("DD-MM-YYYY")} (Selanjutnya disebut <span class="font-bold">"KREDITUR"</span>)</p>
   </div>
   <div class="my-2 ml-2 flex gap-2">
     <div class="w-5">II.</div>
@@ -226,7 +226,7 @@ export const PK = (record: IDapem) => {
     <div>
       ${ListStyle(
         [
-          `Jangka waktu fasilitas kredit <span class="font-bold">${record.tenor}</span> bulan terhitung sejak tanggal <span class="font-bold">${moment(record.date_contract).format("DD-MM-YYYY")}</span> sampai dengan berakhir <span class="font-bold">${moment(record.date_contract).add(record.tenor).format("DD-MM-YYYY")}</span>.`,
+          `Jangka waktu fasilitas kredit <span class="font-bold">${record.tenor}</span> bulan terhitung sejak tanggal <span class="font-bold">${moment(record.date_contract).format("DD-MM-YYYY")}</span> sampai dengan berakhir <span class="font-bold">${moment(record.date_contract).add(record.tenor, "month").format("DD-MM-YYYY")}</span>.`,
           `Angsuran bulanan sebesar <span class="font-bold">Rp. ${IDRFormat(angsuran)} ( ${NumberToWordsID(angsuran)} Rupiah )</span> / bulan sesuai jadwal angsuran yang telah disepakati para pihak.`,
           `Pembayaran angsuran dilakukan dalam <span class="font-bold">${record.tenor}</span> kali angsuran yang harus di bayar tiap tanggal <span class="font-bold">${moment(record.date_contract).date()}</span> dan harus sudah lunas selambatlambatnya <span class="font-bold">${moment(record.date_contract).format("DD-MM-YYYY")}</span>`,
           `Denda keterlambatan pembayaran angsuran 4.00% perbulan dan harus di bayar dengan seketika dan sekaligus lunas bersamaan dengan pembayaran angsuran tertunggak.`,
@@ -419,10 +419,19 @@ export const PK = (record: IDapem) => {
     <p>Demikian Perjanjian ini dibuat dan ditandatangani oleh Para Pihak pada hari ini dan tanggal sebagaimana disebutkan diawal Perjanjian ini.</p>
   </div>
 
-  <div class="mt-15">
+  <div class="mt-10">
     <div class="flex justify-between gap-6 items-end">
       <div class="flex-1 text-center">
         <p >${(record.Debitur.city || "KOTA BANDUNG").toLowerCase().replace("kota", "").replace("kabupaten", "").toUpperCase()}, ${moment(record.date_contract).format("DD-MM-YYYY")}</p>
+        <p class="font-bold">${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</p>
+        <div class="h-28 flex items-center justify-center opacity-50">
+        </div>
+        <div>
+          <p class="w-full border-b">ARIF FIRMANSYAH</p>
+          <p>KETUA KOPERASI</p>
+        </div>
+      </div>
+      <div class="flex-1 text-center">
         <p class="font-bold">DEBITUR</p>
         <div class="h-28 flex items-center justify-center opacity-50">
           <p >Materai 10.000</p>
