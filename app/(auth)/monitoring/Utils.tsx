@@ -1404,13 +1404,15 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <p>Produk Pembiayaan</p>
                 <Select
                   className="w-full"
-                  options={sumdanAv.map((j) => ({
-                    label: j.name,
-                    options: j.ProdukPembiayaans.map((p) => ({
-                      label: `${p.name} - ${p.Sumdan?.code || ""}`,
-                      value: p.id,
-                    })),
-                  }))}
+                  options={(sumdanAv.length !== 0 ? sumdanAv : sumdan).map(
+                    (j) => ({
+                      label: j.name,
+                      options: j.ProdukPembiayaans.map((p) => ({
+                        label: `${p.name} - ${p.Sumdan?.code || ""}`,
+                        value: p.id,
+                      })),
+                    }),
+                  )}
                   value={data.produkPembiayaanId}
                   onChange={(e: string) => {
                     const find = sumdan
