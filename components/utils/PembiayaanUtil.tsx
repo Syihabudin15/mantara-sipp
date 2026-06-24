@@ -179,6 +179,8 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
     adm_sumdan +
     provisi_sumdan +
     dapem.c_account_sumdan;
+  const angs =
+    Math.ceil(angsuran / dapem.rounded) * dapem.rounded + dapem.c_ned;
 
   return {
     detail: {
@@ -196,7 +198,7 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
       angsuran,
       angsuran_sumdan,
     },
-    angsuran: Math.ceil(angsuran / dapem.rounded) * dapem.rounded + dapem.c_ned,
+    angsuran: angs,
     tatalaksana,
     provisi,
     administrasi: adm + adm_mita + adm_ff,
@@ -206,7 +208,7 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
     tk: dapem.plafond - biaya,
     tb:
       dapem.plafond -
-      (biaya + dapem.c_takeover + dapem.c_blokir * angsuran + dapem.c_ned),
+      (biaya + dapem.c_takeover + dapem.c_blokir * angs + dapem.c_ned),
   };
 };
 
