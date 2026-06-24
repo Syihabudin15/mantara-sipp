@@ -91,7 +91,9 @@ export default function Page() {
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
   const [agents, setAgents] = useState<IAgentFronting[]>([]);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/monitoring");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/monitoring",
+  );
   const user = useUser();
   const [views, setViews] = useState<IViewFiles>({
     open: false,
@@ -100,9 +102,18 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    // const includes:Prisma.DapemInclude = {
-    //   ProdukPembiayaan:{include:{Sumda}}
-    // }
+    const includes: Prisma.DapemInclude = {
+      ProdukPembiayaan: { include: { Sumdan: true } },
+      PayOffice: true,
+      JenisPembiayaan: true,
+      User: true,
+      AO: { include: { Cabang: { include: { Area: true } } } },
+      AOCabang: { include: { Cabang: { include: { Area: true } } } },
+      AOArea: { include: { Cabang: { include: { Area: true } } } },
+      Dropping: true,
+      Berkas: true,
+      Jaminan: true,
+    };
     const params = new URLSearchParams({
       page: pageProps.page.toString(),
       limit: pageProps.limit.toString(),
@@ -119,6 +130,7 @@ export default function Page() {
         agentFrontingId: pageProps.agentFrontingId,
       }),
       ...(pageProps.backdate && { backdate: pageProps.backdate }),
+      includes: JSON.stringify(includes),
     });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
@@ -1048,6 +1060,7 @@ const PrintContractSubmission = ({
     setLoading(true);
     await fetch("/api/akad?id=" + data.id, {
       method: "PATCH",
+      body: JSON.stringify({ created_at: temp.date_contract }),
     })
       .then((res) => res.json())
       .then(async (res) => {

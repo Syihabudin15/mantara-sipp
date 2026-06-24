@@ -36,6 +36,7 @@ export const GET = async (request: NextRequest) => {
     agentFrontingId,
     payOfficeId,
     insuranceId,
+    includes,
   } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -158,6 +159,7 @@ export const GET = async (request: NextRequest) => {
     status: true,
   };
 
+  const include: Prisma.DapemInclude = includes ? JSON.parse(includes) : {};
   const [data, total] = await Promise.all([
     prisma.dapem.findMany({
       where,

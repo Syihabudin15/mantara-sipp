@@ -44,6 +44,7 @@ export const GET = async (request: NextRequest) => {
     status: true,
   };
 
+  const include: Prisma.SumdanInclude = includes ? JSON.parse(includes) : {};
   const [data, total] = await Promise.all([
     prisma.sumdan.findMany({
       where,

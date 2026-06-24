@@ -26,6 +26,7 @@ import {
 import {
   Debitur,
   JenisPembiayaan,
+  Prisma,
   ProdukPembiayaan,
   Sumdan,
 } from "@prisma/client";
@@ -155,12 +156,15 @@ export default function Page() {
 
   useEffect(() => {
     (async () => {
+      const sumdanRelate: Prisma.SumdanInclude = {
+        ProdukPembiayaans: true,
+      };
       setLoading(true);
       await Promise.all([
         fetch("/api/jenis?limit=100")
           .then((res) => res.json())
           .then((res) => setJenis(res.data)),
-        fetch("/api/sumdan?limit=1000")
+        fetch("/api/sumdan?limit=1000&includes=" + JSON.stringify(sumdanRelate))
           .then((res) => res.json())
           .then((res) => setSumdan(res.data)),
       ]);
@@ -184,7 +188,7 @@ export default function Page() {
             type: "date",
             mode: "vertical",
             class: "flex-1",
-            disabled: !hasAccess("proses"),
+            disabled: !hasAccess("update"),
             value: moment(data.created_at).format("YYYY-MM-DD"),
             onChange: (e: string) =>
               setData({ ...data, created_at: new Date(e) }),
@@ -366,11 +370,9 @@ export default function Page() {
               label: "Margin",
               type: "number",
               mode: "vertical",
-              class: "flex-1",
+              class: `flex-1`,
               value: data.c_margin + data.c_margin_sumdan,
-              disabled: !hasAccess("proses"),
-              // onChange: (e: string) =>
-              //   setData({ ...data, c_margin: Number(e) }),
+              disabled: !hasAccess("update"),
             }}
           />
           <div className="w-full bg-gray-800 text-gray-50 p-2 rounded">
@@ -444,7 +446,6 @@ export default function Page() {
             <Input
               size="small"
               style={{ width: 80 }}
-              // disabled={!hasAccess("proses")}
               disabled
               suffix={<span className="text-xs italic opacity-70">%</span>}
               value={
@@ -453,10 +454,8 @@ export default function Page() {
                 data.c_adm_mitra +
                 data.c_adm_ff
               }
-              // onChange={(e) =>
-              //   setData({ ...data, c_adm: Number(e.target.value || "0") })
-              // }
               type={"number"}
+              hidden={!hasAccess("showpercent")}
             />
             <Input
               size="small"
@@ -474,7 +473,7 @@ export default function Page() {
             <Input
               size="small"
               style={{ width: 80 }}
-              disabled={!hasAccess("proses")}
+              disabled={!hasAccess("update")}
               suffix={<span className="text-xs italic opacity-70">%</span>}
               value={data.c_insurance}
               onChange={(e) =>
@@ -484,6 +483,7 @@ export default function Page() {
                 })
               }
               type={"number"}
+              hidden={!hasAccess("showpercent")}
             />
             <Input
               size="small"
@@ -499,7 +499,7 @@ export default function Page() {
             <Input
               size="small"
               style={{ width: 80 }}
-              // disabled={!hasAccess("proses")}
+              // disabled={!hasAccess("update")}
               disabled
               suffix={<span className="text-xs italic opacity-70">%</span>}
               value={
@@ -513,6 +513,7 @@ export default function Page() {
               // onChange={(e) =>
               //   setData({ ...data, c_provisi: Number(e.target.value || "0") })
               // }
+              hidden={!hasAccess("showpercent")}
               type={"number"}
             />
             <Input
@@ -528,7 +529,7 @@ export default function Page() {
           <div className="flex gap-2 flex-2">
             <Input
               size="small"
-              disabled={!hasAccess("proses")}
+              disabled={!hasAccess("update")}
               value={IDRFormat(data.c_gov)}
               style={{ textAlign: "right", color: "black" }}
               onChange={(e) =>
@@ -542,7 +543,7 @@ export default function Page() {
           <div className="flex gap-2 flex-2">
             <Input
               size="small"
-              disabled={!hasAccess("prosess")}
+              disabled={!hasAccess("update")}
               value={IDRFormat(data.c_account_sumdan)}
               style={{ textAlign: "right", color: "black" }}
               onChange={(e) =>
@@ -560,7 +561,7 @@ export default function Page() {
           <div className="flex gap-2 flex-2">
             <Input
               size="small"
-              disabled={!hasAccess("proses")}
+              disabled={!hasAccess("update")}
               value={IDRFormat(data.c_flagging)}
               style={{ textAlign: "right", color: "black" }}
               onChange={(e) =>
@@ -577,7 +578,7 @@ export default function Page() {
           <div className="flex gap-2 flex-2">
             <Input
               size="small"
-              disabled={!hasAccess("proses")}
+              disabled={!hasAccess("update")}
               value={IDRFormat(data.c_infomation)}
               style={{ textAlign: "right", color: "black" }}
               onChange={(e) =>
@@ -594,7 +595,7 @@ export default function Page() {
           <div className="flex gap-2 flex-2">
             <Input
               size="small"
-              disabled={!hasAccess("proses")}
+              disabled={!hasAccess("update")}
               value={IDRFormat(data.c_stamp)}
               style={{ textAlign: "right", color: "black" }}
               onChange={(e) =>
@@ -611,7 +612,7 @@ export default function Page() {
           <div className="flex gap-2 flex-2">
             <Input
               size="small"
-              disabled={!hasAccess("proses")}
+              disabled={!hasAccess("update")}
               value={IDRFormat(data.c_mutasi)}
               style={{ textAlign: "right", color: "black" }}
               onChange={(e) =>
@@ -630,7 +631,7 @@ export default function Page() {
               size="small"
               value={IDRFormat(data.c_bop)}
               style={{ textAlign: "right", color: "black" }}
-              disabled={!hasAccess("proses")}
+              disabled={!hasAccess("update_bop")}
               onChange={(e) =>
                 setData({
                   ...data,
