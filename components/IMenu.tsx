@@ -123,7 +123,7 @@ export const listMenuUI: IMenuType[] = [
         key: "/pencairan/print",
         icon: <DiffOutlined />,
         needaccess: true,
-        availableAccess: ["read"],
+        availableAccess: ["read", "write"],
       },
       {
         label: "Permohonan Dropping",
@@ -145,7 +145,7 @@ export const listMenuUI: IMenuType[] = [
         key: "/ttpb/print",
         icon: <DiffOutlined />,
         needaccess: true,
-        availableAccess: ["read"],
+        availableAccess: ["read", "write"],
       },
       {
         label: "Permohonan SD",
@@ -167,7 +167,7 @@ export const listMenuUI: IMenuType[] = [
         key: "/ttpj/print",
         icon: <DiffOutlined />,
         needaccess: true,
-        availableAccess: ["read"],
+        availableAccess: ["read", "write"],
       },
       {
         label: "Permohonan TTPJ",
