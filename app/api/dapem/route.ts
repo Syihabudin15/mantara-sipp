@@ -97,7 +97,7 @@ export const GET = async (request: NextRequest) => {
     ...(jenisPembiayaanId && { jenisPembiayaanId: jenisPembiayaanId }),
     ...(sumdanId && { ProdukPembiayaan: { sumdanId: sumdanId } }),
     ...(produkPembiayaanId && {
-      ProdukPembiayaan: { name: produkPembiayaanId },
+      ProdukPembiayaan: { id: produkPembiayaanId },
     }),
     ...(document_status && {
       document_status: document_status as EDocStatus,
@@ -116,30 +116,30 @@ export const GET = async (request: NextRequest) => {
     ...(payOfficeId && { payOfficeId: payOfficeId }),
     ...(insuranceId && { insuranceId: insuranceId }),
     ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
-    ...(user.Role.data_status === "AREA" && {
-      OR: [
-        { User: { Cabang: { areaId: user.Cabang.areaId } } },
-        { AO: { Cabang: { areaId: user.Cabang.areaId } } },
-        { AOCabang: { Cabang: { areaId: user.Cabang.areaId } } },
-        { AOArea: { Cabang: { areaId: user.Cabang.areaId } } },
-      ],
-    }),
-    ...(user.Role.data_status === "CABANG" && {
-      OR: [
-        { User: { cabangId: user.cabangId } },
-        { AO: { cabangId: user.cabangId } },
-        { AOCabang: { cabangId: user.cabangId } },
-        { AOArea: { cabangId: user.cabangId } },
-      ],
-    }),
-    ...(user.Role.data_status === "USER" && {
-      OR: [
-        { User: { id: user.id } },
-        { AO: { id: user.id } },
-        { AOCabang: { id: user.id } },
-        { AOArea: { id: user.id } },
-      ],
-    }),
+    // ...(user.Role.data_status === "AREA" && {
+    //   OR: [
+    //     { User: { Cabang: { areaId: user.Cabang.areaId } } },
+    //     { AO: { Cabang: { areaId: user.Cabang.areaId } } },
+    //     { AOCabang: { Cabang: { areaId: user.Cabang.areaId } } },
+    //     { AOArea: { Cabang: { areaId: user.Cabang.areaId } } },
+    //   ],
+    // }),
+    // ...(user.Role.data_status === "CABANG" && {
+    //   OR: [
+    //     { User: { cabangId: user.cabangId } },
+    //     { AO: { cabangId: user.cabangId } },
+    //     { AOCabang: { cabangId: user.cabangId } },
+    //     { AOArea: { cabangId: user.cabangId } },
+    //   ],
+    // }),
+    // ...(user.Role.data_status === "USER" && {
+    //   OR: [
+    //     { User: { id: user.id } },
+    //     { AO: { id: user.id } },
+    //     { AOCabang: { id: user.id } },
+    //     { AOArea: { id: user.id } },
+    //   ],
+    // }),
     ...(backdate
       ? {
           created_at: {
@@ -158,66 +158,124 @@ export const GET = async (request: NextRequest) => {
     status: true,
   };
 
-  const [data, total] = await Promise.all([
-    prisma.dapem.findMany({
-      where,
-      skip: skip,
-      take: parseInt(limit),
-      orderBy: {
-        created_at: "desc",
+  // const [data, total] = await Promise.all([
+  //   prisma.dapem.findMany({
+  //     where,
+  //     skip: skip,
+  //     take: parseInt(limit),
+  //     orderBy: {
+  //       created_at: "desc",
+  //     },
+  //     include: {
+  //       Debitur: true,
+  //       ProdukPembiayaan: { include: { Sumdan: true } },
+  //       JenisPembiayaan: true,
+  //       User: {
+  //         include: {
+  //           Cabang: {
+  //             include: {
+  //               Area: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //       AO: {
+  //         include: {
+  //           Cabang: {
+  //             include: {
+  //               Area: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //       AOCabang: {
+  //         include: {
+  //           Cabang: {
+  //             include: {
+  //               Area: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //       AOArea: {
+  //         include: {
+  //           Cabang: {
+  //             include: {
+  //               Area: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //       Berkas: true,
+  //       Jaminan: true,
+  //       Angsurans: true,
+  //       Dropping: true,
+  //       Pelunasan: true,
+  //       AgentFronting: true,
+  //       PayOffice: true,
+  //       Insurance: true,
+  //     },
+  //   }),
+  //   prisma.dapem.count({ where }),
+  // ]);
+  const data = await prisma.dapem.findMany({
+    where,
+    skip: skip,
+    take: parseInt(limit),
+    orderBy: {
+      created_at: "desc",
+    },
+    include: {
+      Debitur: true,
+      ProdukPembiayaan: { include: { Sumdan: true } },
+      JenisPembiayaan: true,
+      User: {
+        include: {
+          Cabang: {
+            include: {
+              Area: true,
+            },
+          },
+        },
       },
-      include: {
-        Debitur: true,
-        ProdukPembiayaan: { include: { Sumdan: true } },
-        JenisPembiayaan: true,
-        User: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
+      AO: {
+        include: {
+          Cabang: {
+            include: {
+              Area: true,
             },
           },
         },
-        AO: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        AOCabang: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        AOArea: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        Berkas: true,
-        Jaminan: true,
-        Angsurans: true,
-        Dropping: true,
-        Pelunasan: true,
-        AgentFronting: true,
-        PayOffice: true,
-        Insurance: true,
       },
-    }),
-    prisma.dapem.count({ where }),
-  ]);
+      AOCabang: {
+        include: {
+          Cabang: {
+            include: {
+              Area: true,
+            },
+          },
+        },
+      },
+      AOArea: {
+        include: {
+          Cabang: {
+            include: {
+              Area: true,
+            },
+          },
+        },
+      },
+      Berkas: true,
+      Jaminan: true,
+      Angsurans: true,
+      Dropping: true,
+      Pelunasan: true,
+      AgentFronting: true,
+      PayOffice: true,
+      Insurance: true,
+    },
+  });
+  const total = await prisma.dapem.count({ where });
 
   return NextResponse.json(
     { data: serializeForApi(data), total, status: 200 },

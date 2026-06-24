@@ -454,6 +454,7 @@ function UpsertSumdan({
     })
       .then((res) => res.json())
       .then(async (res) => {
+        console.log(res);
         if (res.status === 201 || res.status === 200) {
           modal.success({
             title: "BERHASIL",
@@ -1275,6 +1276,7 @@ function UpsertProduk({
     })
       .then((res) => res.json())
       .then(async (res) => {
+        console.log(res);
         if (res.status === 201 || res.status === 200) {
           modal.success({
             title: "BERHASIL",

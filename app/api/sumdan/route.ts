@@ -118,6 +118,7 @@ export const PUT = async (request: NextRequest) => {
       msg: "Berhasil memperbarui data.",
     });
   } catch (err) {
+    console.log(err);
     return NextResponse.json({
       status: 500,
       msg: "Gagal memperbarui data. internal server error.",
