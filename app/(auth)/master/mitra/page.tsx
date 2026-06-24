@@ -1,7 +1,6 @@
 "use client";
 
 import { FormInput } from "@/components";
-import { ParseStrToFiles } from "@/components/utils/CompUtils";
 import {
   GetSisaPokokMargin,
   IDRFormat,
@@ -19,12 +18,11 @@ import {
   EnvironmentOutlined,
   FileProtectOutlined,
   FileTextOutlined,
-  FolderOutlined,
   PhoneOutlined,
   PlusCircleFilled,
   SaveOutlined,
 } from "@ant-design/icons";
-import { ProdukPembiayaan, Sumdan } from "@prisma/client";
+import { Prisma, ProdukPembiayaan, Sumdan } from "@prisma/client";
 import {
   App,
   Button,
@@ -36,7 +34,6 @@ import {
   Table,
   TableProps,
   Tabs,
-  Tag,
   Typography,
 } from "antd";
 import { HookAPI } from "antd/es/modal/useModal";
@@ -60,15 +57,25 @@ export default function Page() {
   });
   const [loading, setLoading] = useState(false);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/master/mitra");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/master/mitra",
+  );
 
   const getData = async () => {
     setLoading(true);
+    // const includes: Prisma.SumdanInclude = {
+    //   ProdukPembiayaans: {
+    //     include: {
+    //       Dapems: { where: { status: true }, include: { Angsurans: true } },
+    //     },
+    //   },
+    // };
     const params = new URLSearchParams({
       page: pageProps.page.toString(),
       limit: pageProps.limit.toString(),
       ...(pageProps.search && { search: pageProps.search }),
     });
+    // includes: JSON.stringify(includes),
     const res = await fetch(`/api/sumdan?${params.toString()}`);
     const json = await res.json();
     setPageProps((prev) => ({

@@ -128,6 +128,14 @@ export default function Page() {
     data.c_bop,
     data.margin_type,
     data.ProdukPembiayaan,
+    data.c_takeover,
+    data.c_blokir,
+    data.c_stamp,
+    data.c_insurance,
+    data.c_flagging,
+    data.c_infomation,
+    data.c_mutasi,
+    data.c_gov,
   ]);
 
   const handleSearch = async () => {

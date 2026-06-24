@@ -39,7 +39,7 @@ import {
   RobotOutlined,
   SwapOutlined,
 } from "@ant-design/icons";
-import { JenisPembiayaan, Sumdan } from "@prisma/client";
+import { JenisPembiayaan, Prisma, Sumdan } from "@prisma/client";
 import {
   App,
   Button,
@@ -100,6 +100,9 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
+    // const includes:Prisma.DapemInclude = {
+    //   ProdukPembiayaan:{include:{Sumda}}
+    // }
     const params = new URLSearchParams({
       page: pageProps.page.toString(),
       limit: pageProps.limit.toString(),
