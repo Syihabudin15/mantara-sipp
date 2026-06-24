@@ -206,9 +206,7 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
     by_sumdan: adm_sumdan + provisi_sumdan + dapem.c_account_sumdan,
     biaya,
     tk: dapem.plafond - biaya,
-    tb:
-      dapem.plafond -
-      (biaya + dapem.c_takeover + dapem.c_blokir * angs + dapem.c_ned),
+    tb: dapem.plafond - (biaya + dapem.c_takeover + dapem.c_blokir * angs),
   };
 };
 
