@@ -442,13 +442,14 @@ function UpsertSumdan({
   const handleSave = async () => {
     setLoading(true);
     const { ProdukPembiayaans, ...saved } = data;
+
     await fetch("/api/sumdan", {
       method: record ? "PUT" : "POST",
       body: JSON.stringify(
         serializeForApi({
           ...saved,
           limit: Number(saved.limit),
-          file: JSON.stringify(data.file),
+          // file: JSON.stringify(data.file),
         }),
       ),
     })

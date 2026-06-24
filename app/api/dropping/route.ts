@@ -98,59 +98,33 @@ export const GET = async (req: NextRequest) => {
     }),
   };
 
-  const data = await prisma.dropping.findMany({
-    where,
-    skip: skip,
-    take: parseInt(limit),
-    orderBy: {
-      created_at: "desc",
-    },
-    include: {
-      Sumdan: true,
-      Dapems: {
-        include: {
-          Debitur: true,
-          ProdukPembiayaan: { include: { Sumdan: true } },
-          JenisPembiayaan: true,
-          AO: { include: { Cabang: { include: { Area: true } } } },
-          AOCabang: { include: { Cabang: { include: { Area: true } } } },
-          AOArea: { include: { Cabang: { include: { Area: true } } } },
-          User: { include: { Cabang: { include: { Area: true } } } },
-          PayOffice: true,
-          Insurance: true,
+  const [data, total] = await Promise.all([
+    prisma.dropping.findMany({
+      where,
+      skip: skip,
+      take: parseInt(limit),
+      orderBy: {
+        created_at: "desc",
+      },
+      include: {
+        Sumdan: true,
+        Dapems: {
+          include: {
+            Debitur: true,
+            ProdukPembiayaan: { include: { Sumdan: true } },
+            JenisPembiayaan: true,
+            AO: { include: { Cabang: { include: { Area: true } } } },
+            AOCabang: { include: { Cabang: { include: { Area: true } } } },
+            AOArea: { include: { Cabang: { include: { Area: true } } } },
+            User: { include: { Cabang: { include: { Area: true } } } },
+            PayOffice: true,
+            Insurance: true,
+          },
         },
       },
-    },
-  });
-  const total = await prisma.dropping.count({ where });
-
-  // const [data, total] = await Promise.all([
-  //   prisma.dropping.findMany({
-  //     where,
-  //     skip: skip,
-  //     take: parseInt(limit),
-  //     orderBy: {
-  //       created_at: "desc",
-  //     },
-  //     include: {
-  //       Sumdan: true,
-  //       Dapems: {
-  //         include: {
-  //           Debitur: true,
-  //           ProdukPembiayaan: { include: { Sumdan: true } },
-  //           JenisPembiayaan: true,
-  //           AO: { include: { Cabang: { include: { Area: true } } } },
-  //           AOCabang: { include: { Cabang: { include: { Area: true } } } },
-  //           AOArea: { include: { Cabang: { include: { Area: true } } } },
-  //           User: { include: { Cabang: { include: { Area: true } } } },
-  //           PayOffice: true,
-  //           Insurance: true,
-  //         },
-  //       },
-  //     },
-  //   }),
-  //   await prisma.dropping.count({ where }),
-  // ]);
+    }),
+    await prisma.dropping.count({ where }),
+  ]);
 
   return NextResponse.json({
     status: 200,

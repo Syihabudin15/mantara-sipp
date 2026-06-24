@@ -107,7 +107,7 @@ export const POST = async (request: NextRequest) => {
 
 export const PUT = async (request: NextRequest) => {
   const body = await request.json();
-  const { id, ProductPembiayaans, ...updated } = body;
+  const { id, ProductPembiayaans, file, ...updated } = body;
   try {
     await prisma.sumdan.update({
       where: { id: id },
