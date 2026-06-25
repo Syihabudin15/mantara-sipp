@@ -39,7 +39,7 @@ import {
   RobotOutlined,
   SwapOutlined,
 } from "@ant-design/icons";
-import { JenisPembiayaan, Prisma, Sumdan } from "@prisma/client";
+import { JenisPembiayaan, Sumdan } from "@prisma/client";
 import {
   App,
   Button,
@@ -69,7 +69,7 @@ interface IActionTableAkad<T> extends IActionTable<T> {
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
     page: 1,
-    limit: 50,
+    limit: 100,
     total: 0,
     data: [],
     search: "",
@@ -102,18 +102,6 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    const includes: Prisma.DapemInclude = {
-      ProdukPembiayaan: { include: { Sumdan: true } },
-      PayOffice: true,
-      JenisPembiayaan: true,
-      User: true,
-      AO: { include: { Cabang: { include: { Area: true } } } },
-      AOCabang: { include: { Cabang: { include: { Area: true } } } },
-      AOArea: { include: { Cabang: { include: { Area: true } } } },
-      Dropping: true,
-      Berkas: true,
-      Jaminan: true,
-    };
     const params = new URLSearchParams({
       page: pageProps.page.toString(),
       limit: pageProps.limit.toString(),
@@ -130,7 +118,7 @@ export default function Page() {
         agentFrontingId: pageProps.agentFrontingId,
       }),
       ...(pageProps.backdate && { backdate: pageProps.backdate }),
-      includes: JSON.stringify(includes),
+      includes: "true",
     });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
@@ -165,10 +153,10 @@ export default function Page() {
         fetch("/api/sumdan?limit=500")
           .then((res) => res.json())
           .then((res) => setSumdans(res.data)),
-        fetch("/api/jenis?limit=100")
+        fetch("/api/jenis?limit=50")
           .then((res) => res.json())
           .then((res) => setJeniss(res.data)),
-        fetch("/api/agent?limit=500")
+        fetch("/api/agent?limit=100")
           .then((res) => res.json())
           .then((res) => setAgents(res.data)),
       ]);
@@ -531,7 +519,7 @@ export default function Page() {
             </Link>
           )}
           {hasAccess("update") &&
-            ["DRAFT", "CANCEL"].includes(record.dropping_status) && (
+            ["DRAFT", "BATAL"].includes(record.dropping_status) && (
               <Tooltip title={"Ajukan permohonan ini? (Naikan ke verifikasi)"}>
                 <Button
                   icon={<CheckCircleOutlined />}
@@ -552,9 +540,7 @@ export default function Page() {
               onClick={() =>
                 setSelected({ ...selected, delete: true, selected: record })
               }
-              disabled={["APPROVED", "PAID_OFF"].includes(
-                record.dropping_status,
-              )}
+              disabled={["DISETUJUI", "LUNAS"].includes(record.dropping_status)}
             ></Button>
           )}
           <Tooltip
@@ -661,11 +647,12 @@ export default function Page() {
                     size="small"
                     placeholder="Pilih Status..."
                     options={[
-                      { label: "Saved", value: "DRAFT" },
+                      { label: "Disimpan", value: "DRAFT" },
                       { label: "Antri", value: "PENDING" },
-                      { label: "Proses", value: "PROSES" },
+                      { label: "Disetujui/Proses Akad", value: "PROSES" },
                       { label: "Dropping", value: "DISETUJUI" },
                       { label: "Batal", value: "BATAL" },
+                      { label: "Ditolak", value: "DITOLAK" },
                       { label: "Lunas", value: "LUNAS" },
                       { label: "Final", value: "final" },
                     ]}
@@ -968,7 +955,7 @@ const DeleteSubmission = ({
     setLoading(true);
     await fetch("/api/dapem?id=" + data.id, {
       method: "PUT",
-      body: JSON.stringify({ ...data, dropping_status: "CANCEL" }),
+      body: JSON.stringify({ ...data, dropping_status: "BATAL" }),
     })
       .then((res) => res.json())
       .then(async (res) => {
@@ -997,7 +984,7 @@ const DeleteSubmission = ({
         </p>
         <div className="mt-4 text-xs italic text-blue-500">
           <p>Hapus : Hapus dari monitoring!</p>
-          <p>Batalkan : Update status menjadi CANCEL!</p>
+          <p>Batalkan : Update status menjadi BATAL!</p>
         </div>
       </div>
       <div className="flex justify-end gap-2">

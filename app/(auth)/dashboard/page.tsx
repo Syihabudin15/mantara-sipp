@@ -168,7 +168,7 @@ export default function Page() {
             icon={<DollarOutlined />}
             iconBg="bg-emerald-50 text-emerald-600"
             mainValue={`Rp ${IDRFormat(totalPlafondAll)}`}
-            subValue={`+ Rp ${IDRFormat(totalPlafondMonth)} bulan ini`}
+            subValue={`+ Rp ${IDRFormat(totalPlafondMonth)}`}
             subValueColor="text-emerald-600"
           />
 
@@ -209,21 +209,6 @@ export default function Page() {
                     NOA
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Lainnya</span>
-                  <span className="text-slate-800 font-semibold">
-                    {
-                      data.droppingall.filter(
-                        (f) =>
-                          f.Debitur.group_skep &&
-                          !["PT. TASPEN", "PT. ASABRI"].includes(
-                            f.Debitur.group_skep,
-                          ),
-                      ).length
-                    }{" "}
-                    NOA
-                  </span>
-                </div>
               </div>
             }
           />
@@ -242,7 +227,7 @@ export default function Page() {
             icon={<PayCircleOutlined />}
             iconBg="bg-rose-50 text-rose-600"
             mainValue={`${data.droppingall.filter((d) => d.dropping_status === "LUNAS").length} NOA Lunas`}
-            subValue={`Tunggakan: (${tunggakanCount}x) Rp ${IDRFormat(tunggakanValue)}`}
+            subValue={`(${tunggakanCount}x) Rp ${IDRFormat(tunggakanValue)} Tunggakan`}
             subValueColor="text-rose-600"
           />
 

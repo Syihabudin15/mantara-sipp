@@ -27,17 +27,19 @@ export const POST = async (req: NextRequest) => {
       await tx.dapem.update({
         where: { id: data.id },
         data: {
-          date_contract: data.date_contract,
+          date_contract: data.date_contract || new Date(),
           no_contract: data.no_contract,
-          date_end: moment(data.date_contract)
+          date_end: moment(data.date_contract || new Date())
             .add(find.tenor, "month")
             .toDate(),
-          tbo_date: moment(data.date_contract).add(find.tbo, "month").toDate(),
+          tbo_date: moment(data.date_contract || new Date())
+            .add(find.tbo, "month")
+            .toDate(),
         },
       });
       const generateAngsurans = GenerateTableAngsuran({
         ...find,
-        date_contract: data.date_contract,
+        date_contract: data.date_contract || new Date(),
         no_contract: data.no_contract,
       });
       await tx.angsuran.deleteMany({ where: { dapemId: data.id } });
@@ -58,7 +60,7 @@ export const POST = async (req: NextRequest) => {
     result.unshift({
       id: "",
       counter: 0,
-      date_pay: moment(data.date_contract).toDate(),
+      date_pay: moment(data.date_contract || new Date()).toDate(),
       date_paid: null,
       dapemId: "",
       principal: 0,
@@ -156,6 +158,7 @@ function GenerateAnuitas(dapem: Dapem): Angsuran[] {
     sisa -= pokok;
 
     if (sisa < 0) sisa = 0;
+    if (i === dapem.tenor) sisa = 0;
 
     angsurans.push({
       id: newId,

@@ -69,7 +69,7 @@ interface IActionTableAkad<T> extends IActionTable<T> {
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
     page: 1,
-    limit: 50,
+    limit: 100,
     total: 0,
     data: [],
     search: "",
@@ -112,6 +112,7 @@ export default function Page() {
       ...(pageProps.agentFrontingId && {
         agentFrontingId: pageProps.agentFrontingId,
       }),
+      includes: "true",
     });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
@@ -492,7 +493,7 @@ export default function Page() {
             </Link>
           )}
           {hasAccess("update") &&
-            ["DRAFT", "CANCEL"].includes(record.dropping_status) && (
+            ["DRAFT", "BATAL"].includes(record.dropping_status) && (
               <Tooltip title={"Ajukan permohonan ini? (Naikan ke verifikasi)"}>
                 <Button
                   icon={<CheckCircleOutlined />}
@@ -513,9 +514,7 @@ export default function Page() {
               onClick={() =>
                 setSelected({ ...selected, delete: true, selected: record })
               }
-              disabled={["DISETUJUI", "PAID_OFF"].includes(
-                record.dropping_status,
-              )}
+              disabled={["DISETUJUI", "LUNAS"].includes(record.dropping_status)}
             ></Button>
           )}
           <Tooltip
@@ -884,7 +883,7 @@ const DeleteSubmission = ({
     setLoading(true);
     await fetch("/api/dapem?id=" + data.id, {
       method: "PUT",
-      body: JSON.stringify({ ...data, dropping_status: "CANCEL" }),
+      body: JSON.stringify({ ...data, dropping_status: "BATAL" }),
     })
       .then((res) => res.json())
       .then(async (res) => {
@@ -912,7 +911,7 @@ const DeleteSubmission = ({
         </p>
         <div className="mt-4 text-xs italic text-blue-500">
           <p>Hapus : Hapus dari monitoring!</p>
-          <p>Batalkan : Update status menjadi CANCEL!</p>
+          <p>Batalkan : Update status menjadi BATAL!</p>
         </div>
       </div>
       <div className="flex justify-end gap-2">

@@ -51,7 +51,7 @@ const { RangePicker } = DatePicker;
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
     page: 1,
-    limit: 50,
+    limit: 100,
     total: 0,
     data: [],
     search: "",
@@ -80,17 +80,15 @@ export default function Page() {
     const params = new URLSearchParams({
       page: pageProps.page.toString(),
       limit: pageProps.limit.toString(),
-      verif_status: pageProps.verif_status || "all",
+      verif_status: pageProps.approv_status || "all",
       ...(pageProps.search && { search: pageProps.search }),
       ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
       ...(pageProps.jenisPembiayaanId && {
         jenisPembiayaanId: pageProps.jenisPembiayaanId,
       }),
       ...(pageProps.backdate && { backdate: pageProps.backdate }),
+      includes: true,
     });
-    params.append("page", pageProps.page.toString());
-    params.append("limit", pageProps.limit.toString());
-    params.append("verif_status", pageProps.verif_status || "all");
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
     const json = await res.json();

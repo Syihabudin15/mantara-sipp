@@ -4,7 +4,11 @@ import { FormInput, ViewFiles } from "@/components";
 import { printSIStandar } from "@/components/pdfutils/si/SIStandar";
 import { printSIVima } from "@/components/pdfutils/si/SIVima";
 import { FilterData } from "@/components/utils/CompUtils";
-import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
+import {
+  GetAngsuran,
+  GetDetailDapem,
+  IDRFormat,
+} from "@/components/utils/PembiayaanUtil";
 import {
   IActionTable,
   IDapem,
@@ -14,6 +18,7 @@ import {
 } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
+  BankOutlined,
   DeleteOutlined,
   EditOutlined,
   FileFilled,
@@ -43,7 +48,7 @@ const { RangePicker } = DatePicker;
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDropping>>({
     page: 1,
-    limit: 50,
+    limit: 100,
     data: [],
     total: 0,
     search: "",
@@ -104,7 +109,7 @@ export default function Page() {
 
   useEffect(() => {
     (async () => {
-      await fetch("/api/sumdan")
+      await fetch("/api/sumdan?limit=500")
         .then((res) => res.json())
         .then((res) => setSumdans(res.data));
     })();
@@ -139,22 +144,16 @@ export default function Page() {
           (acc, curr) => acc + curr.plafond,
           0,
         );
-        const biaya = record.Dapems.reduce(
-          (acc, curr) =>
+
+        const biaya = record.Dapems.reduce((acc, curr) => {
+          const detail = GetDetailDapem(curr);
+          return (
             acc +
-            (curr.plafond * (curr.c_adm_sumdan / 100) +
-              curr.plafond * (curr.c_provisi_sumdan / 100) +
-              curr.c_account_sumdan +
-              curr.c_blokir *
-                GetAngsuran(
-                  curr.plafond,
-                  curr.tenor,
-                  curr.c_margin_sumdan,
-                  curr.margin_type,
-                  curr.rounded_sumdan,
-                ).angsuran),
-          0,
-        );
+            detail.by_sumdan +
+            curr.c_blokir * detail.detail.angsuran_sumdan
+          ); // Explicit return required here
+        }, 0);
+
         return (
           <div>
             <div className="flex justify-between gap-2">
@@ -209,24 +208,31 @@ export default function Page() {
       key: "blokir",
       dataIndex: "blokir",
       render(value, record, index) {
-        const blokir = record.Dapems.reduce(
-          (acc, curr) =>
+        const blokir = record.Dapems.reduce((acc, curr) => {
+          const detail = GetDetailDapem(curr);
+          return (
             acc +
-            curr.c_blokir *
-              GetAngsuran(
-                curr.plafond,
-                curr.tenor,
-                curr.c_margin_sumdan,
-                curr.margin_type,
-                curr.rounded_sumdan,
-              ).angsuran,
-          0,
-        );
+            curr.c_blokir * (detail.angsuran - detail.detail.angsuran_sumdan)
+          ); // Explicit return required here
+        }, 0);
+        const blokir_sumdan = record.Dapems.reduce((acc, curr) => {
+          const detail = GetDetailDapem(curr);
+          return acc + curr.c_blokir * detail.detail.angsuran_sumdan; // Explicit return required here
+        }, 0);
+        const blokir_all = record.Dapems.reduce((acc, curr) => {
+          const detail = GetDetailDapem(curr);
+          return acc + curr.c_blokir * detail.angsuran; // Explicit return required here
+        }, 0);
         return (
-          <div className="text-xs">
-            <div className="flex justify-between gap-4 text-right">
-              <span>{IDRFormat(blokir)}</span>
+          <div className="text-xs flex flex-col items-center gap-1">
+            <div className="flex justify-center gap-1">
+              <Tag color={"blue"}>
+                <BankOutlined />
+                {IDRFormat(blokir_sumdan)}
+              </Tag>
+              <Tag color={"blue"}>{IDRFormat(blokir)}</Tag>
             </div>
+            <Tag color={"blue"}>{IDRFormat(blokir_all)}</Tag>
           </div>
         );
       },
@@ -511,9 +517,7 @@ export default function Page() {
                 </div>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={7} className="text-right font-bold">
-                <div className="flex justify-between gap-2">
-                  <div className="text-right">{IDRFormat(blokir)}</div>
-                </div>
+                <div className="text-right">{IDRFormat(blokir)}</div>
               </Table.Summary.Cell>
             </Table.Summary.Row>
           );
@@ -860,6 +864,29 @@ const TableDapem = ({ data }: { data: IDapem[] }) => {
       },
     },
     {
+      title: "Angsuran",
+      dataIndex: "angsuran",
+      key: "angsuran",
+      render(value, record, index) {
+        const temp = GetDetailDapem(record);
+        return (
+          <div className="text-xs">
+            <div className="flex gap-2 items-center">
+              <Tag color={"blue"}>
+                <BankOutlined /> {IDRFormat(temp.detail.angsuran_sumdan)}
+              </Tag>
+              <Tag color={"blue"}>
+                {IDRFormat(temp.angsuran - temp.detail.angsuran_sumdan)}
+              </Tag>
+            </div>
+            <div className="flex justify-center">
+              <Tag color={"blue"}> {IDRFormat(temp.angsuran)}</Tag>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
       title: "Biaya Mitra",
       key: "admsumdan",
       dataIndex: "admsumdan",
@@ -891,19 +918,21 @@ const TableDapem = ({ data }: { data: IDapem[] }) => {
       key: "blokir",
       dataIndex: "blokir",
       render(value, record, index) {
-        const angs = GetAngsuran(
-          record.plafond,
-          record.tenor,
-          record.c_margin_sumdan,
-          record.margin_type,
-          record.rounded_sumdan,
-        ).angsuran;
+        const temp = GetDetailDapem(record);
         return (
-          <div className="text-xs opacity-70">
+          <div className="text-xs">
             <div>
-              {record.c_blokir} x {IDRFormat(angs)}
+              <Tag color={"blue"}>
+                <BankOutlined /> ({record.c_blokir}x){" "}
+                {IDRFormat(record.c_blokir * temp.detail.angsuran_sumdan)}
+              </Tag>
             </div>
-            <div>{IDRFormat(angs * record.c_blokir)}</div>
+            <div>
+              <Tag color={"blue"}>
+                ({record.c_blokir}x)
+                {IDRFormat(record.c_blokir * temp.angsuran)}
+              </Tag>
+            </div>
           </div>
         );
       },

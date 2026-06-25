@@ -109,9 +109,9 @@ export default function Page() {
         fetch("/api/sumdan?limit=500")
           .then((res) => res.json())
           .then((res) => setSumdans(res.data)),
-        fetch("/api/pay_office?limit=500")
+        fetch("/api/payoffice?limit=100")
           .then((res) => res.json())
-          .then((res) => setSumdans(res.data)),
+          .then((res) => setPayoffices(res.data)),
       ]);
     })();
   }, []);

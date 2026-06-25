@@ -33,7 +33,9 @@ export default function Page() {
   });
   const [loading, setLoading] = useState(false);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess("/master/area");
+  const { hasAccess } = useAccess(
+    window ? window.location.pathname : "/master/area",
+  );
 
   const getData = async () => {
     setLoading(true);
@@ -166,7 +168,7 @@ export default function Page() {
         size="small"
         loading={loading}
         rowKey={"id"}
-        scroll={{ x: "max-content", y: "60vh" }}
+        scroll={{ x: "max-content", y: "48vh" }}
         bordered
         pagination={{
           current: pageProps.page,
@@ -180,6 +182,7 @@ export default function Page() {
             }));
           },
           pageSizeOptions: [50, 100, 500, 1000],
+          showSizeChanger: true,
         }}
         expandable={{
           expandedRowRender: (record) => {

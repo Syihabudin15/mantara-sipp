@@ -5,6 +5,7 @@ import prisma from "@/libs/Prisma";
 import { EDocStatus, Prisma } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
+import { ORDapem, WheresDapem } from "../utils/wheres";
 
 export const GET = async (req: NextRequest) => {
   const page = req.nextUrl.searchParams.get("page") || "1";
@@ -31,72 +32,33 @@ export const GET = async (req: NextRequest) => {
       { status: 200 },
     );
 
+  const whereFunc = WheresDapem(user);
   const where: Prisma.BerkasWhereInput = {
     ...(search && {
       OR: [
         { id: { contains: search } },
         {
           Dapems: {
-            some: {
-              OR: [
-                {
-                  Debitur: {
-                    OR: [
-                      { fullname: { contains: search } },
-                      { name_skep: { contains: search } },
-                      { nopen: { contains: search } },
-                      { no_skep: { contains: search } },
-                      { account_number: { contains: search } },
-                    ],
-                  },
-                },
-                { no_contract: { contains: search } },
-                { id: { contains: search } },
-              ],
-            },
+            some: ORDapem(search),
           },
         },
       ],
     }),
     ...(sumdanId && { sumdanId: sumdanId }),
+    ...(user.sumdanId && { sumdanId: user.sumdanId }),
     ...(backdate && {
       created_at: {
         gte: moment(backdate.split(",")[0]).toDate(),
         lte: moment(backdate.split(",")[1]).toDate(),
       },
     }),
-    ...(user.sumdanId && { sumdanId: user.sumdanId }),
     ...(status && { status: status as EDocStatus }),
-    ...(user.Role.data_status === "AREA" && {
-      Dapems: {
-        some: {
-          AO: { Cabang: { areaId: user.Cabang.areaId } },
-          AOCabang: { Cabang: { areaId: user.Cabang.areaId } },
-          AOArea: { Cabang: { areaId: user.Cabang.areaId } },
-          User: { Cabang: { areaId: user.Cabang.areaId } },
-        },
+    Dapems: {
+      some: {
+        status: true,
+        ...whereFunc,
       },
-    }),
-    ...(user.Role.data_status === "CABANG" && {
-      Dapems: {
-        some: {
-          AO: { cabangId: user.cabangId },
-          AOCabang: { cabangId: user.cabangId },
-          AOArea: { cabangId: user.cabangId },
-          User: { cabangId: user.cabangId },
-        },
-      },
-    }),
-    ...(user.Role.data_status === "USER" && {
-      Dapems: {
-        some: {
-          AO: { id: user.id },
-          AOCabang: { id: user.id },
-          AOArea: { id: user.id },
-          User: { id: user.id },
-        },
-      },
-    }),
+    },
   };
 
   const [data, total] = await Promise.all([
@@ -110,6 +72,10 @@ export const GET = async (req: NextRequest) => {
       include: {
         Sumdan: true,
         Dapems: {
+          where: {
+            status: true,
+            ...whereFunc,
+          },
           include: {
             Debitur: true,
             ProdukPembiayaan: true,

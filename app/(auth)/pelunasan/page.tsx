@@ -93,7 +93,7 @@ export default function Page() {
         fetch("/api/pelunasan", { method: "PATCH" })
           .then((res) => res.json())
           .then((res) => setDapems(res.data)),
-        fetch("/api/sumdan?limit=1000")
+        fetch("/api/sumdan?limit=500")
           .then((res) => res.json())
           .then((res) => setSumdans(res.data)),
       ]);

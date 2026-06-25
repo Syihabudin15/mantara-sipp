@@ -64,7 +64,7 @@ const { RangePicker } = DatePicker;
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
     page: 1,
-    limit: 50,
+    limit: 100,
     total: 0,
     data: [],
     search: "",
@@ -131,6 +131,7 @@ export default function Page() {
         dropping_status: pageProps.dropping_status,
       }),
       ...(pageProps.backdate && { backdate: pageProps.backdate }),
+      includes: "true",
     });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
@@ -173,10 +174,10 @@ export default function Page() {
         fetch("/api/jenis?limit=50")
           .then((res) => res.json())
           .then((res) => setJeniss(res.data)),
-        fetch("/api/pay_office?limit=500")
+        fetch("/api/payoffice?limit=100")
           .then((res) => res.json())
           .then((res) => setPays(res.data)),
-        fetch("/api/agent?limit=500")
+        fetch("/api/agent?limit=100")
           .then((res) => res.json())
           .then((res) => setAgents(res.data)),
       ]);
@@ -296,6 +297,74 @@ export default function Page() {
             <div className="text-xs opacity-80">
               {record.AgentFronting?.code}
             </div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Nomor Akad",
+      dataIndex: "dataakad",
+      key: "dataakad",
+      render(value, record, index) {
+        return (
+          <div>
+            {record.no_contract && <div>{record.no_contract}</div>}
+            {record.date_contract && (
+              <div className="text-xs opacity-80">
+                {moment(record.date_contract).format("DD/MM/YYYY")}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Mutasi & Takeover",
+      dataIndex: "produk",
+      key: "produk",
+      width: 350,
+      render(value, record, index) {
+        return (
+          <div>
+            {record.JenisPembiayaan.status_mutasi && (
+              <div style={{ fontSize: 9 }}>
+                <SwapOutlined />{" "}
+                <Tag style={{ fontSize: 9 }} color={"red"}>
+                  {record.prev_payoffice}
+                </Tag>{" "}
+                <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
+                <Tag style={{ fontSize: 9 }} color={"blue"}>
+                  {record.PayOffice.code || record.PayOffice.name}
+                </Tag>
+              </div>
+            )}
+            {record.JenisPembiayaan.status_takeover && (
+              <div style={{ fontSize: 9 }}>
+                <PayCircleOutlined />{" "}
+                <Tag color={"blue"} style={{ fontSize: 9 }}>
+                  {record.takeover_from} (
+                  {moment(record.takeover_date).format("DD/MM/YYYY")})
+                </Tag>
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Status Dropping",
+      dataIndex: "dropping_status",
+      key: "dropping_status",
+      width: 180,
+      render: (_, record, i) => {
+        return (
+          <div className="flex gap-1">
+            {GetDroppingStatusTag(record.dropping_status)}
+            {record.Dropping && record.Dropping.process_at && (
+              <div className="text-xs">
+                {moment(record.Dropping.process_at).format("DD/MM/YYYY HH:mm")}
+              </div>
+            )}
           </div>
         );
       },
@@ -586,74 +655,6 @@ export default function Page() {
             >
               {record.guarantee_desc}
             </Paragraph>
-          </div>
-        );
-      },
-    },
-    {
-      title: "Nomor Akad",
-      dataIndex: "dataakad",
-      key: "dataakad",
-      render(value, record, index) {
-        return (
-          <div>
-            {record.no_contract && <div>{record.no_contract}</div>}
-            {record.date_contract && (
-              <div className="text-xs opacity-80">
-                {moment(record.date_contract).format("DD/MM/YYYY")}
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Mutasi & Takeover",
-      dataIndex: "produk",
-      key: "produk",
-      width: 350,
-      render(value, record, index) {
-        return (
-          <div>
-            {record.JenisPembiayaan.status_mutasi && (
-              <div style={{ fontSize: 9 }}>
-                <SwapOutlined />{" "}
-                <Tag style={{ fontSize: 9 }} color={"red"}>
-                  {record.prev_payoffice}
-                </Tag>{" "}
-                <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
-                <Tag style={{ fontSize: 9 }} color={"blue"}>
-                  {record.PayOffice.code || record.PayOffice.name}
-                </Tag>
-              </div>
-            )}
-            {record.JenisPembiayaan.status_takeover && (
-              <div style={{ fontSize: 9 }}>
-                <PayCircleOutlined />{" "}
-                <Tag color={"blue"} style={{ fontSize: 9 }}>
-                  {record.takeover_from} (
-                  {moment(record.takeover_date).format("DD/MM/YYYY")})
-                </Tag>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Status Dropping",
-      dataIndex: "dropping_status",
-      key: "dropping_status",
-      width: 180,
-      render: (_, record, i) => {
-        return (
-          <div className="flex gap-1">
-            {GetDroppingStatusTag(record.dropping_status)}
-            {record.Dropping && record.Dropping.process_at && (
-              <div className="text-xs">
-                {moment(record.Dropping.process_at).format("DD/MM/YYYY HH:mm")}
-              </div>
-            )}
           </div>
         );
       },

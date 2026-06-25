@@ -5,6 +5,7 @@ import prisma from "@/libs/Prisma";
 import { Prisma } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
+import { WheresDapem } from "../../utils/wheres";
 
 export const GET = async (req: NextRequest) => {
   const page = req.nextUrl.searchParams.get("page") || "1";
@@ -19,7 +20,11 @@ export const GET = async (req: NextRequest) => {
     );
   const user = await prisma.user.findFirst({
     where: { id: session.user.id },
-    include: { Role: true, Cabang: true },
+    include: {
+      Role: true,
+      Cabang: true,
+      AgentFronting: { include: { SumdanAgentFrontings: true } },
+    },
   });
   if (!user)
     return NextResponse.json(
@@ -27,47 +32,15 @@ export const GET = async (req: NextRequest) => {
       { status: 200 },
     );
 
+  const whereFunc = WheresDapem(user);
   const where: Prisma.SumdanWhereInput = {
     status: true,
     ...(user.sumdanId && { id: user.sumdanId }),
-    ...(user.Role.data_status === "AREA" && {
-      ProdukPembiayaans: {
+    ...(user.agentFrontingId && {
+      SumdanAgentFrontings: {
         some: {
-          Dapems: {
-            some: {
-              AO: { Cabang: { areaId: user.Cabang.areaId } },
-              AOCabang: { Cabang: { areaId: user.Cabang.areaId } },
-              AOArea: { Cabang: { areaId: user.Cabang.areaId } },
-              User: { Cabang: { areaId: user.Cabang.areaId } },
-            },
-          },
-        },
-      },
-    }),
-    ...(user.Role.data_status === "CABANG" && {
-      ProdukPembiayaans: {
-        some: {
-          Dapems: {
-            some: {
-              AO: { cabangId: user.cabangId },
-              AOCabang: { cabangId: user.cabangId },
-              AOArea: { cabangId: user.cabangId },
-              User: { cabangId: user.cabangId },
-            },
-          },
-        },
-      },
-    }),
-    ...(user.Role.data_status === "USER" && {
-      ProdukPembiayaans: {
-        some: {
-          Dapems: {
-            some: {
-              AO: { id: user.id },
-              AOCabang: { id: user.id },
-              AOArea: { id: user.id },
-              User: { id: user.id },
-            },
+          sumdanId: {
+            in: user.AgentFronting?.SumdanAgentFrontings.map((s) => s.sumdanId),
           },
         },
       },
@@ -89,6 +62,8 @@ export const GET = async (req: NextRequest) => {
               where: {
                 dropping_status: { in: ["DISETUJUI", "LUNAS"] },
                 berkasId: null,
+                document_status: { notIn: ["DELIVERY", "MITRA"] },
+                ...whereFunc,
               },
               orderBy: { created_at: "desc" },
             },

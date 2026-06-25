@@ -10,6 +10,7 @@ import {
 } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
+import { ORDapem, WheresDapem } from "../utils/wheres";
 
 export const GET = async (request: NextRequest) => {
   const params = Object.fromEntries(request.nextUrl.searchParams);
@@ -50,23 +51,9 @@ export const GET = async (request: NextRequest) => {
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
+  const whereFunc = WheresDapem(user);
   const where: Prisma.DapemWhereInput = {
-    ...(search && {
-      OR: [
-        { id: { contains: search } },
-        { no_contract: { contains: search } },
-        {
-          Debitur: {
-            OR: [
-              { fullname: { contains: search } },
-              { nopen: { contains: search } },
-              { no_skep: { contains: search } },
-              { name_skep: { contains: search } },
-            ],
-          },
-        },
-      ],
-    }),
+    ...(search && ORDapem(search)),
     ...(dropping_status
       ? dropping_status === "final"
         ? { dropping_status: { in: ["DISETUJUI", "PROSES", "LUNAS"] } }
@@ -116,31 +103,6 @@ export const GET = async (request: NextRequest) => {
     ...(agentFrontingId && { agentFrontingId: agentFrontingId }),
     ...(payOfficeId && { payOfficeId: payOfficeId }),
     ...(insuranceId && { insuranceId: insuranceId }),
-    ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
-    ...(user.Role.data_status === "AREA" && {
-      OR: [
-        { User: { Cabang: { areaId: user.Cabang.areaId } } },
-        { AO: { Cabang: { areaId: user.Cabang.areaId } } },
-        { AOCabang: { Cabang: { areaId: user.Cabang.areaId } } },
-        { AOArea: { Cabang: { areaId: user.Cabang.areaId } } },
-      ],
-    }),
-    ...(user.Role.data_status === "CABANG" && {
-      OR: [
-        { User: { cabangId: user.cabangId } },
-        { AO: { cabangId: user.cabangId } },
-        { AOCabang: { cabangId: user.cabangId } },
-        { AOArea: { cabangId: user.cabangId } },
-      ],
-    }),
-    ...(user.Role.data_status === "USER" && {
-      OR: [
-        { User: { id: user.id } },
-        { AO: { id: user.id } },
-        { AOCabang: { id: user.id } },
-        { AOArea: { id: user.id } },
-      ],
-    }),
     ...(backdate
       ? {
           created_at: {
@@ -156,10 +118,10 @@ export const GET = async (request: NextRequest) => {
             },
           }
         : {}),
+    ...whereFunc,
     status: true,
   };
 
-  const include: Prisma.DapemInclude = includes ? JSON.parse(includes) : {};
   const [data, total] = await Promise.all([
     prisma.dapem.findMany({
       where,
@@ -169,53 +131,20 @@ export const GET = async (request: NextRequest) => {
         created_at: "desc",
       },
       include: {
-        Debitur: true,
-        ProdukPembiayaan: { include: { Sumdan: true } },
-        JenisPembiayaan: true,
-        User: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        AO: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        AOCabang: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        AOArea: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        Berkas: true,
-        Jaminan: true,
-        Angsurans: true,
-        Dropping: true,
-        Pelunasan: true,
-        AgentFronting: true,
-        PayOffice: true,
-        Insurance: true,
+        ...(includes && {
+          Debitur: true,
+          ProdukPembiayaan: { include: { Sumdan: true } },
+          PayOffice: true,
+          JenisPembiayaan: true,
+          Angsurans: true,
+          User: true,
+          AO: { include: { Cabang: { include: { Area: true } } } },
+          AOCabang: { include: { Cabang: { include: { Area: true } } } },
+          AOArea: { include: { Cabang: { include: { Area: true } } } },
+          Dropping: true,
+          Berkas: true,
+          Jaminan: true,
+        }),
       },
     }),
     prisma.dapem.count({ where }),

@@ -124,7 +124,7 @@ export const GET = async (req: NextRequest) => {
       }),
       prisma.berkas.count({
         where: {
-          status: "DELIVERY",
+          status: { not: "MITRA" },
           ...(user.sumdanId && {
             sumdanId: user.sumdanId,
           }),
@@ -144,7 +144,7 @@ export const GET = async (req: NextRequest) => {
       }),
       prisma.jaminan.count({
         where: {
-          status: "DELIVERY",
+          status: { not: "MITRA" },
           ...(user.sumdanId && {
             sumdanId: user.sumdanId,
           }),

@@ -3,10 +3,11 @@ import { getSession } from "@/libs/Auth";
 import prisma from "@/libs/Prisma";
 import { Prisma, SumdanAgentFronting } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { WheresDapem } from "../utils/wheres";
 
 export const GET = async (request: NextRequest) => {
   const params = Object.fromEntries(request.nextUrl.searchParams);
-  const { page = "1", limit = "50", search } = params;
+  const { page = "1", limit = "50", search, includes } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const session = await getSession();
@@ -29,40 +30,27 @@ export const GET = async (request: NextRequest) => {
     }),
     ...(user.agentFrontingId && { id: user.agentFrontingId }),
   };
+
+  const whereFunc = WheresDapem(user);
   const [data, total] = await Promise.all([
     prisma.agentFronting.findMany({
       where: where,
       skip: skip,
       take: parseInt(limit),
       include: {
-        SumdanAgentFrontings: {
-          include: { Sumdan: { include: { ProdukPembiayaans: true } } },
-        },
-        Users: { include: { Cabang: { include: { Area: true } } } },
-        Dapems: {
-          where: {
-            ...(user.Role.data_status === "AREA" && {
-              AO: { Cabang: { areaId: user.Cabang.areaId } },
-              AOCabang: { Cabang: { areaId: user.Cabang.areaId } },
-              AOArea: { Cabang: { areaId: user.Cabang.areaId } },
-              User: { Cabang: { areaId: user.Cabang.areaId } },
-            }),
-            ...(user.Role.data_status === "CABANG" && {
-              AO: { cabangId: user.cabangId },
-              AOCabang: { cabangId: user.cabangId },
-              AOArea: { cabangId: user.cabangId },
-              User: { cabangId: user.cabangId },
-            }),
-            ...(user.Role.data_status === "USER" && {
-              AO: { id: user.id },
-              AOCabang: { id: user.id },
-              AOArea: { id: user.id },
-              User: { id: user.id },
-            }),
-            status: true,
-            dropping_status: "DISETUJUI",
+        ...(includes && {
+          SumdanAgentFrontings: {
+            include: { Sumdan: { include: { ProdukPembiayaans: true } } },
           },
-        },
+          Users: { include: { Cabang: { include: { Area: true } } } },
+          Dapems: {
+            where: {
+              status: true,
+              dropping_status: "DISETUJUI",
+              ...whereFunc,
+            },
+          },
+        }),
       },
     }),
     prisma.agentFronting.count({ where }),

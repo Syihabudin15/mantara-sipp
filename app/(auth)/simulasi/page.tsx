@@ -164,7 +164,7 @@ export default function Page() {
         fetch("/api/jenis?limit=100")
           .then((res) => res.json())
           .then((res) => setJenis(res.data)),
-        fetch("/api/sumdan?limit=1000&includes=" + JSON.stringify(sumdanRelate))
+        fetch("/api/sumdan?limit=1000&includes=true&includeproduct=true")
           .then((res) => res.json())
           .then((res) => setSumdan(res.data)),
       ]);
@@ -378,7 +378,7 @@ export default function Page() {
           <div className="w-full bg-gray-800 text-gray-50 p-2 rounded">
             Rekomendasi Pembiayaan
           </div>
-          <div className="flex gap-2">
+          <div className="w-full flex gap-2">
             <div className="flex-1">
               <div>Tenor</div>
               <Input
@@ -394,7 +394,7 @@ export default function Page() {
               <Input value={data.max_tenor} type="number" disabled />
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="w-full flex gap-2">
             <div className="flex-1">
               <div>Plafond</div>
               <Input

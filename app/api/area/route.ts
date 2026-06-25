@@ -28,14 +28,13 @@ export const GET = async (request: NextRequest) => {
         { HeadAreas: { some: { User: { fullname: { contains: search } } } } },
       ],
     }),
-    ...(user.Role.data_status === "AREA" &&
-      !user.sumdanId && { id: user.Cabang.areaId }),
-    ...(user.Role.data_status === "CABANG" &&
-      !user.sumdanId && { Cabangs: { some: { id: user.cabangId } } }),
-    ...(user.Role.data_status === "USER" &&
-      !user.sumdanId && {
-        Cabangs: { some: { Users: { some: { id: user.id } } } },
-      }),
+    ...(user.Role.data_status === "AREA" && { id: user.Cabang.areaId }),
+    ...(user.Role.data_status === "CABANG" && {
+      Cabangs: { some: { id: user.cabangId } },
+    }),
+    ...(user.Role.data_status === "USER" && {
+      Cabangs: { some: { Users: { some: { id: user.id } } } },
+    }),
     status: true,
   };
   const [data, total] = await Promise.all([

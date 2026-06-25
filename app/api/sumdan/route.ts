@@ -2,12 +2,12 @@ import { serializeForApi } from "@/components/utils/PembiayaanUtil";
 import { getSession } from "@/libs/Auth";
 import prisma from "@/libs/Prisma";
 import { Prisma } from "@prisma/client";
-import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
+import { WheresDapem } from "../utils/wheres";
 
 export const GET = async (request: NextRequest) => {
   const params = Object.fromEntries(request.nextUrl.searchParams);
-  const { page = "1", limit = "50", search, includes } = params;
+  const { page = "1", limit = "50", search, includes, includeproduct } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const session = await getSession();
@@ -16,11 +16,16 @@ export const GET = async (request: NextRequest) => {
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
   const user = await prisma.user.findFirst({
     where: { id: session.user.id },
-    include: { AgentFronting: { include: { SumdanAgentFrontings: true } } },
+    include: {
+      AgentFronting: { include: { SumdanAgentFrontings: true } },
+      Role: true,
+      Cabang: true,
+    },
   });
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
+  const whereFunc = WheresDapem(user);
   const where: Prisma.SumdanWhereInput = {
     ...(search && {
       OR: [
@@ -44,35 +49,27 @@ export const GET = async (request: NextRequest) => {
     status: true,
   };
 
-  const include: Prisma.SumdanInclude = includes ? JSON.parse(includes) : {};
   const [data, total] = await Promise.all([
     prisma.sumdan.findMany({
       where,
       skip: skip,
       take: parseInt(limit),
       include: {
-        ProdukPembiayaans: {
-          where: { status: true },
-          include: {
-            Sumdan: true,
-            Dapems: {
-              where: {
-                status: true,
-                dropping_status: { in: ["DISETUJUI", "LUNAS"] },
-              },
-              include: {
-                Angsurans: {
-                  where: {
-                    date_pay: {
-                      gte: moment().startOf("month").toDate(),
-                      lte: moment().endOf("month").toDate(),
-                    },
-                  },
+        ...(includes && {
+          ProdukPembiayaans: {
+            include: {
+              Dapems: {
+                where: {
+                  status: true,
+                  dropping_status: { in: ["DISETUJUI", "LUNAS"] },
+                  ...whereFunc,
                 },
+                include: { Angsurans: true },
               },
             },
           },
-        },
+        }),
+        ...(includeproduct && { ProdukPembiayaans: true }),
       },
     }),
     prisma.sumdan.count({ where }),

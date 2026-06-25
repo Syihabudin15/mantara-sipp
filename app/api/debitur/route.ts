@@ -3,6 +3,7 @@ import { getSession } from "@/libs/Auth";
 import prisma from "@/libs/Prisma";
 import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { WheresDapem } from "../utils/wheres";
 
 export const GET = async (request: NextRequest) => {
   const params = Object.fromEntries(request.nextUrl.searchParams);
@@ -26,6 +27,8 @@ export const GET = async (request: NextRequest) => {
   });
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
+
+  const whereFunc = WheresDapem(user);
   const where: Prisma.DebiturWhereInput = {
     ...(search && {
       OR: [
@@ -33,6 +36,7 @@ export const GET = async (request: NextRequest) => {
         { fullname: { contains: search } },
         { account_number: { contains: search } },
         { no_skep: { contains: search } },
+        { name_skep: { contains: search } },
       ],
     }),
     ...(address && {
@@ -47,19 +51,15 @@ export const GET = async (request: NextRequest) => {
     }),
     ...(group_skep && { group_skep: group_skep }),
     ...(payOfficeId && { payOfficeId: payOfficeId }),
-    ...(user.sumdanId && {
-      Dapems: { some: { ProdukPembiayaan: { sumdanId: user.sumdanId } } },
-    }),
-    ...(aktif && {
-      Dapems: {
-        some: {
-          dropping_status: {
-            in: ["LUNAS", "DISETUJUI", "PROSES"],
-          },
+    Dapems: {
+      some: {
+        ...(aktif && {
+          dropping_status: { in: ["DISETUJUI", "LUNAS", "PROSES"] },
           status: true,
-        },
+        }),
+        ...whereFunc,
       },
-    }),
+    },
   };
   const [data, total] = await Promise.all([
     prisma.debitur.findMany({
@@ -69,31 +69,8 @@ export const GET = async (request: NextRequest) => {
       include: {
         Dapems: {
           where: {
-            dropping_status: {
-              in: ["LUNAS", "DISETUJUI", "PROSES"],
-            },
             status: true,
-            ...(user.sumdanId && {
-              ProdukPembiayaan: { sumdanId: user.sumdanId },
-            }),
-            ...(user.Role.data_status === "AREA" && {
-              AO: { Cabang: { areaId: user.Cabang.areaId } },
-              AOCabang: { Cabang: { areaId: user.Cabang.areaId } },
-              AOArea: { Cabang: { areaId: user.Cabang.areaId } },
-              User: { Cabang: { areaId: user.Cabang.areaId } },
-            }),
-            ...(user.Role.data_status === "CABANG" && {
-              AO: { cabangId: user.cabangId },
-              AOCabang: { cabangId: user.cabangId },
-              AOArea: { cabangId: user.cabangId },
-              User: { cabangId: user.cabangId },
-            }),
-            ...(user.Role.data_status === "USER" && {
-              AO: { id: user.id },
-              AOCabang: { id: user.id },
-              AOArea: { id: user.id },
-              User: { id: user.id },
-            }),
+            ...whereFunc,
           },
           include: {
             ProdukPembiayaan: { include: { Sumdan: true } },
@@ -105,11 +82,6 @@ export const GET = async (request: NextRequest) => {
           },
         },
         PayOffice: true,
-      },
-      orderBy: {
-        Dapems: {
-          _count: "desc",
-        },
       },
     }),
     prisma.debitur.count({ where }),

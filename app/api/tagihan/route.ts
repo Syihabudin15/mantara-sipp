@@ -5,6 +5,7 @@ import prisma from "@/libs/Prisma";
 import { Angsuran, Prisma } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
+import { ORDapem, WheresDapem } from "../utils/wheres";
 
 export const GET = async (req: NextRequest) => {
   const page = req.nextUrl.searchParams.get("page") || "1";
@@ -25,45 +26,13 @@ export const GET = async (req: NextRequest) => {
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
+  const whereFunc = WheresDapem(user);
   const where: Prisma.DapemWhereInput = {
     status: true,
     dropping_status: "DISETUJUI",
-    ...(search && {
-      OR: [
-        { id: { contains: search } },
-        { no_contract: { contains: search } },
-        {
-          Debitur: {
-            OR: [
-              { fullname: { contains: search } },
-              { nopen: { contains: search } },
-              { no_skep: { contains: search } },
-              { name_skep: { contains: search } },
-            ],
-          },
-        },
-      ],
-    }),
+    ...(search && ORDapem(search)),
     ...(sumdanId && { ProdukPembiayaan: { sumdanId: sumdanId } }),
-    ...(user.sumdanId && { ProdukPembiayaan: { sumdanId: user.sumdanId } }),
-    ...(user.Role.data_status === "AREA" && {
-      AO: { Cabang: { areaId: user.Cabang.areaId } },
-      AOCabang: { Cabang: { areaId: user.Cabang.areaId } },
-      AOArea: { Cabang: { areaId: user.Cabang.areaId } },
-      User: { Cabang: { areaId: user.Cabang.areaId } },
-    }),
-    ...(user.Role.data_status === "CABANG" && {
-      AO: { cabangId: user.cabangId },
-      AOCabang: { cabangId: user.cabangId },
-      AOArea: { cabangId: user.cabangId },
-      User: { cabangId: user.cabangId },
-    }),
-    ...(user.Role.data_status === "USER" && {
-      AO: { id: user.id },
-      AOCabang: { id: user.id },
-      AOArea: { id: user.id },
-      User: { id: user.id },
-    }),
+    ...whereFunc,
     Angsurans: {
       some: {
         date_pay: {
@@ -95,42 +64,10 @@ export const GET = async (req: NextRequest) => {
         Debitur: true,
         ProdukPembiayaan: { include: { Sumdan: true } },
         JenisPembiayaan: true,
-        User: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        AO: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        AOCabang: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
-        AOArea: {
-          include: {
-            Cabang: {
-              include: {
-                Area: true,
-              },
-            },
-          },
-        },
+        User: true,
+        AO: { include: { Cabang: { include: { Area: true } } } },
+        AOCabang: { include: { Cabang: { include: { Area: true } } } },
+        AOArea: { include: { Cabang: { include: { Area: true } } } },
         Berkas: true,
         Jaminan: true,
         Angsurans: true,

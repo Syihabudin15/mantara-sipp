@@ -116,16 +116,16 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
     (async () => {
       setLoading(true);
       await Promise.all([
-        fetch("/api/jenis?limit=100")
+        fetch("/api/jenis?limit=50")
           .then((res) => res.json())
           .then((res) => setJenis(res.data)),
-        fetch("/api/sumdan?limit=500")
+        fetch("/api/sumdan?limit=500&includeproduct=true")
           .then((res) => res.json())
           .then((res) => setSumdan(res.data)),
-        fetch("/api/user?limit=5000")
+        fetch("/api/user?limit=1000")
           .then((res) => res.json())
           .then((res) => setUser(res.data)),
-        fetch("/api/agent?limit=500")
+        fetch("/api/agent?limit=100")
           .then((res) => res.json())
           .then((res) => setAgets(res.data)),
         fetch("/api/payoffice?limit=100")
@@ -1184,8 +1184,6 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               options: [
                 { label: "PT. TASPEN", value: "PT. TASPEN" },
                 { label: "PT. ASABRI", value: "PT. ASABRI" },
-                { label: "BUMN", value: "BUMN" },
-                { label: "LAINNYA", value: "LAINNYA" },
               ],
               value: data.Debitur.group_skep,
               onChange: (e: string) =>
@@ -1681,7 +1679,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <Tooltip title="Adm Koperasi">
                   <Input
                     size="small"
-                    style={{ width: 80 }}
+                    style={{ width: 60 }}
                     suffix={
                       <span className="text-xs italic opacity-70">%</span>
                     }
@@ -1698,7 +1696,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <Tooltip title="Adm Mitra">
                   <Input
                     size="small"
-                    style={{ width: 80 }}
+                    style={{ width: 60 }}
                     suffix={
                       <span className="text-xs italic opacity-70">%</span>
                     }
@@ -1715,7 +1713,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <Tooltip title="Adm FF">
                   <Input
                     size="small"
-                    style={{ width: 80 }}
+                    style={{ width: 60 }}
                     suffix={
                       <span className="text-xs italic opacity-70">%</span>
                     }
@@ -1729,6 +1727,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     type={"number"}
                   />
                 </Tooltip>
+                {/* <div className="flex-2"> */}
                 <Input
                   size="small"
                   disabled
@@ -1736,8 +1735,9 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     data.plafond *
                       ((data.c_adm + data.c_adm_mitra + data.c_adm_ff) / 100),
                   )}
-                  style={{ textAlign: "right", color: "black" }}
+                  style={{ textAlign: "right", color: "black", flex: 2 }}
                 />
+                {/* </div> */}
               </div>
             </div>
             <div className="flex justify-between border-b border-dashed my-2">
@@ -1746,7 +1746,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <Tooltip title="Fee AO">
                   <Input
                     size="small"
-                    style={{ width: 80 }}
+                    style={{ width: 60 }}
                     suffix={
                       <span className="text-xs italic opacity-70">%</span>
                     }
@@ -1763,7 +1763,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <Tooltip title="Fee Cabang">
                   <Input
                     size="small"
-                    style={{ width: 80 }}
+                    style={{ width: 60 }}
                     suffix={
                       <span className="text-xs italic opacity-70">%</span>
                     }
@@ -1780,7 +1780,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <Tooltip title="Fee Area">
                   <Input
                     size="small"
-                    style={{ width: 80 }}
+                    style={{ width: 60 }}
                     suffix={
                       <span className="text-xs italic opacity-70">%</span>
                     }
@@ -1802,7 +1802,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                       (data.c_fee_ao + data.c_fee_cabang + data.c_fee_area)) /
                       100,
                   )}
-                  style={{ textAlign: "right", color: "black" }}
+                  style={{ textAlign: "right", color: "black", flex: 2 }}
                 />
               </div>
             </div>
@@ -1812,7 +1812,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <Tooltip title="Fee BPP">
                   <Input
                     size="small"
-                    style={{ width: 80 }}
+                    style={{ width: 60 }}
                     suffix={
                       <span className="text-xs italic opacity-70">%</span>
                     }
@@ -1829,7 +1829,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <Tooltip title="Fee BPB">
                   <Input
                     size="small"
-                    style={{ width: 80 }}
+                    style={{ width: 60 }}
                     suffix={
                       <span className="text-xs italic opacity-70">%</span>
                     }
@@ -1849,7 +1849,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                   value={IDRFormat(
                     (data.plafond * (data.c_fee_bpp + data.c_fee_bpb)) / 100,
                   )}
-                  style={{ textAlign: "right", color: "black" }}
+                  style={{ textAlign: "right", color: "black", flex: 2 }}
                 />
               </div>
             </div>

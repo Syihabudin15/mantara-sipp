@@ -1,59 +1,53 @@
 "use client";
 
-import { FormInput, ViewFiles } from "@/components";
+import { ViewFiles } from "@/components";
 import { useUser } from "@/components/UserContext";
 import {
   ExportToExcel,
   FilterData,
+  GetBerkasStatusTag,
   GetDroppingStatusTag,
   MappingToExcelDapem,
 } from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
-import {
-  GetDetailDapem,
-  IDRFormat,
-  IDRToNumber,
-} from "@/components/utils/PembiayaanUtil";
+import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
   IActionTable,
   IAgentFronting,
-  ICashDesc,
   IDapem,
   IPageProps,
   IPayOffice,
   IViewFiles,
 } from "@/libs/IInterfaces";
-import { useAccess } from "@/libs/Permission";
 
 import {
   ArrowRightOutlined,
   BankOutlined,
-  EditOutlined,
+  FileFilled,
   FileProtectOutlined,
   FolderOutlined,
   PayCircleOutlined,
-  PlusCircleOutlined,
   PrinterOutlined,
   SwapOutlined,
 } from "@ant-design/icons";
-import { EDapemStatus, JenisPembiayaan, Sumdan } from "@prisma/client";
+import { JenisPembiayaan, Sumdan } from "@prisma/client";
 import {
   Button,
   Card,
   DatePicker,
   Input,
-  Modal,
   Progress,
   Select,
   Table,
   TableProps,
   Tag,
   Tooltip,
+  Typography,
 } from "antd";
-import { HookAPI } from "antd/es/modal/useModal";
 import moment from "moment";
 import { useEffect, useState } from "react";
 const { RangePicker } = DatePicker;
+const { Paragraph } = Typography;
 
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
@@ -64,10 +58,6 @@ export default function Page() {
     search: "",
     sumdanId: "",
     jenisPembiayaanId: "",
-    takeover_status: "",
-    mutasi_status: "",
-    flagging_status: "",
-    cash_status: "",
     document_status: "",
     guarantee_status: "",
     payOfficeId: "",
@@ -85,9 +75,6 @@ export default function Page() {
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
   const [pays, setPays] = useState<IPayOffice[]>([]);
   const [agents, setAgents] = useState<IAgentFronting[]>([]);
-  const { hasAccess } = useAccess(
-    window ? window.location.pathname : "/nominatif",
-  );
   const user = useUser();
   const [views, setViews] = useState<IViewFiles>({
     open: false,
@@ -116,6 +103,7 @@ export default function Page() {
       }),
       ...(pageProps.payOfficeId && { payOfficeId: pageProps.payOfficeId }),
       ...(pageProps.backdate && { backdate: pageProps.backdate }),
+      includes: "true",
     });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);
@@ -140,10 +128,6 @@ export default function Page() {
     pageProps.sumdanId,
     pageProps.jenisPembiayaanId,
     pageProps.backdate,
-    pageProps.takeover_status,
-    pageProps.mutasi_status,
-    pageProps.flagging_status,
-    pageProps.cash_status,
     pageProps.document_status,
     pageProps.guarantee_status,
     pageProps.payOfficeId,
@@ -156,13 +140,13 @@ export default function Page() {
         fetch("/api/sumdan?limit=500")
           .then((res) => res.json())
           .then((res) => setSumdans(res.data)),
-        fetch("/api/jenis?limit=500")
+        fetch("/api/jenis?limit=50")
           .then((res) => res.json())
           .then((res) => setJeniss(res.data)),
-        fetch("/api/pay_office?limit=500")
+        fetch("/api/payoffice?limit=100")
           .then((res) => res.json())
           .then((res) => setPays(res.data)),
-        fetch("/api/agent?limit=500")
+        fetch("/api/agent?limit=100")
           .then((res) => res.json())
           .then((res) => setAgents(res.data)),
       ]);
@@ -355,6 +339,114 @@ export default function Page() {
       },
     },
     {
+      title: "Status Berkas",
+      dataIndex: "berkas_status",
+      key: "berkas_status",
+      width: 250,
+      render: (_, record, i) => {
+        return (
+          <div>
+            <div className="flex gap-1">
+              {GetBerkasStatusTag(record.document_status)}
+              <Button
+                size="small"
+                icon={<FileFilled />}
+                disabled={!record.Berkas || !record.Berkas.file_sub}
+                onClick={() =>
+                  setViews({
+                    open: true,
+                    data: [
+                      {
+                        name: "Pengiriman",
+                        url: record.Berkas?.file_sub || "",
+                      },
+                      {
+                        name: "Bukti Terima",
+                        url: record.Berkas?.file_proof || "",
+                      },
+                    ],
+                  })
+                }
+              ></Button>
+              {record.Berkas && record.Berkas.process_at && (
+                <span className="text-xs opacity-80">
+                  Send : {moment(record.Berkas.process_at).format("DD/MM/YYYY")}
+                </span>
+              )}
+            </div>
+            <Paragraph
+              ellipsis={{
+                rows: 2,
+                expandable: "collapsible",
+              }}
+              style={{ fontSize: 11 }}
+            >
+              {record.document_desc}
+            </Paragraph>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Status Jaminan",
+      dataIndex: "Jaminan_status",
+      key: "Jaminan_status",
+      width: 350,
+      render: (_, record, i) => {
+        const isTbo =
+          moment().isAfter(record.tbo_date, "date") &&
+          (!record.Jaminan || !record.Jaminan.status);
+        return (
+          <div>
+            <div className="flex gap-1">
+              {GetBerkasStatusTag(record.guarantee_status)}
+              <Tag color={isTbo ? "red" : "blue"} variant="solid">
+                {isTbo ? "LEWAT TBO" : "MASA TBO"}
+              </Tag>
+              <Button
+                size="small"
+                icon={<FileFilled />}
+                disabled={!record.Jaminan || !record.Jaminan.file_sub}
+                onClick={() =>
+                  setViews({
+                    open: true,
+                    data: [
+                      {
+                        name: "Pengiriman",
+                        url: record.Jaminan?.file_sub || "",
+                      },
+                      {
+                        name: "Bukti Terima",
+                        url: record.Jaminan?.file_proof || "",
+                      },
+                    ],
+                  })
+                }
+              ></Button>
+              <div className="text-xs opacity-80">
+                <div>TBO : {moment(record.tbo_date).format("DD/MM/YYYY")}</div>
+                {record.Jaminan && record.Jaminan.process_at && (
+                  <div>
+                    Send :{" "}
+                    {moment(record.Jaminan.process_at).format("DD/MM/YYYY")}
+                  </div>
+                )}
+              </div>
+            </div>
+            <Paragraph
+              ellipsis={{
+                rows: 2,
+                expandable: "collapsible",
+              }}
+              style={{ fontSize: 11 }}
+            >
+              {record.guarantee_desc}
+            </Paragraph>
+          </div>
+        );
+      },
+    },
+    {
       title: "Progress",
       dataIndex: "progress",
       key: "progress",
@@ -521,16 +613,6 @@ export default function Page() {
       width: 100,
       render: (_, record) => (
         <div className="flex gap-2">
-          {hasAccess("update") && (
-            <Button
-              icon={<EditOutlined />}
-              size="small"
-              type="primary"
-              onClick={() =>
-                setSelected({ ...selected, proses: true, selected: record })
-              }
-            ></Button>
-          )}
           <Tooltip
             title={`Detail Data ${record.Debitur.fullname} (${record.nopen})`}
           >
@@ -651,8 +733,8 @@ export default function Page() {
                   <Select
                     size="small"
                     placeholder="Pilih Kantor Bayar..."
-                    options={agents.map((s) => ({
-                      label: s.name,
+                    options={pays.map((s) => ({
+                      label: s.code || s.name,
                       value: s.id,
                     }))}
                     value={pageProps.payOfficeId}
@@ -939,361 +1021,6 @@ export default function Page() {
         setOpen={(v: boolean) => setViews({ ...views, open: v })}
         data={{ ...views }}
       />
-      {/* {selected.selected && selected.proses && (
-        <UpdateStatus
-          open={selected.proses}
-          setOpen={(val: boolean) =>
-            setSelected({ ...selected, proses: val, selected: undefined })
-          }
-          getData={getData}
-          dapem={selected.selected}
-          key={"upsert" + selected.selected.id}
-          hook={modal}
-        />
-      )} */}
     </Card>
   );
 }
-
-const UpdateStatus = ({
-  open,
-  setOpen,
-  getData,
-  dapem,
-  hook,
-}: {
-  open: boolean;
-  setOpen: Function;
-  getData: Function;
-  dapem: IDapem;
-  hook: HookAPI;
-}) => {
-  const [cashdesc, setCashdesc] = useState<ICashDesc[]>(
-    dapem.cash_desc
-      ? (JSON.parse(dapem.cash_desc) as ICashDesc[])
-      : [defaultCashDesc],
-  );
-  const [data, setData] = useState<IDapem>(dapem);
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    data.cash_desc = JSON.stringify(cashdesc);
-    await fetch("/api/dapem", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    })
-      .then((res) => res.json())
-      .then(async (res) => {
-        if (res.status === 200) {
-          hook.success({
-            title: "BERHASIL",
-            content: "Data Pembiayaan berhasil diupdate",
-          });
-          await getData();
-          setOpen(false);
-        } else {
-          hook.error({ title: "ERROR!!", content: res.msg });
-        }
-      });
-    setLoading(false);
-  };
-
-  return (
-    <Modal
-      title={"Update Data " + dapem.id}
-      open={open}
-      onCancel={() => setOpen(false)}
-      width={1200}
-      loading={loading}
-      onOk={handleSubmit}
-      style={{ top: 20 }}
-    >
-      <div className="my-4 flex gap-2 flex-col sm:flex-row">
-        <div className="flex-1">
-          <FormInput
-            data={{
-              label: "Pemohon",
-              class: "flex-1",
-              type: "text",
-              disabled: true,
-              value: `${dapem.Debitur.fullname} (${dapem.nopen})`,
-            }}
-          />
-          <div className="flex flex-wrap gap-2 border-b py-2">
-            <FormInput
-              data={{
-                label: "Status Takeover",
-                required: true,
-                class: "flex-1",
-                mode: "vertical",
-                type: "select",
-                options: [
-                  { label: "DRAFT", value: "DRAFT" },
-                  { label: "PENDING", value: "PENDING" },
-                  { label: "PROSES", value: "PROSES" },
-                  { label: "SELESAI", value: "DISETUJUI" },
-                ],
-                value: data.takeover_status,
-                onChange: (e: string) =>
-                  setData({ ...data, takeover_status: e as EDapemStatus }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "Tanggal Takeover",
-                required: true,
-                mode: "vertical",
-                type: "date",
-                class: "flex-1",
-                value: moment(data.takeover_date_exc).format("YYYY-MM-DD"),
-                onChange: (e: string) =>
-                  setData({ ...data, takeover_date_exc: new Date(e) }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "Keterangan",
-                required: true,
-                class: "flex-1",
-                type: "textarea",
-                value: data.takeover_desc,
-                onChange: (e: string) => setData({ ...data, takeover_desc: e }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "File",
-                required: true,
-                mode: "vertical",
-                class: "flex-1",
-                type: "upload",
-                value: data.file_takeover,
-                onChange: (e: string) => setData({ ...data, file_takeover: e }),
-              }}
-            />
-          </div>
-          <div className="flex flex-wrap gap-2 border-b py-2">
-            <FormInput
-              data={{
-                label: "Status Mutasi",
-                required: true,
-                mode: "vertical",
-                class: "flex-1",
-                type: "select",
-                options: [
-                  { label: "DRAFT", value: "DRAFT" },
-                  { label: "PENDING", value: "PENDING" },
-                  { label: "PROSES", value: "PROSES" },
-                  { label: "SELESAI", value: "DISETUJUI" },
-                ],
-                value: data.mutasi_status,
-                onChange: (e: string) =>
-                  setData({ ...data, mutasi_status: e as EDapemStatus }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "Tanggal Mutasi",
-                required: true,
-                type: "date",
-                mode: "vertical",
-                class: "flex-1",
-                value: moment(data.mutasi_date_exc).format("YYYY-MM-DD"),
-                onChange: (e: string) =>
-                  setData({ ...data, mutasi_date_exc: new Date(e) }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "Keterangan",
-                required: true,
-                mode: "vertical",
-                class: "flex-1",
-                type: "textarea",
-                value: data.mutasi_desc,
-                onChange: (e: string) => setData({ ...data, mutasi_desc: e }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "File",
-                required: true,
-                mode: "vertical",
-                class: "flex-1",
-                type: "upload",
-                value: data.file_mutasi,
-                onChange: (e: string) => setData({ ...data, file_mutasi: e }),
-              }}
-            />
-          </div>
-          <div className="flex flex-wrap gap-2 py-2">
-            <FormInput
-              data={{
-                label: "Status Flagging",
-                required: true,
-                mode: "vertical",
-                type: "select",
-                class: "flex-1",
-                options: [
-                  { label: "DRAFT", value: "DRAFT" },
-                  { label: "PENDING", value: "PENDING" },
-                  { label: "PROSES", value: "PROSES" },
-                  { label: "SELESAI", value: "DISETUJUI" },
-                ],
-                value: data.flagging_status,
-                onChange: (e: string) =>
-                  setData({ ...data, flagging_status: e as EDapemStatus }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "Tanggal Flagging",
-                required: true,
-                type: "date",
-                mode: "vertical",
-                class: "flex-1",
-                value: moment(data.flagging_date_exc).format("YYYY-MM-DD"),
-                onChange: (e: string) =>
-                  setData({ ...data, flagging_date_exc: new Date(e) }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "Keterangan",
-                required: true,
-                type: "textarea",
-                mode: "vertical",
-                class: "flex-1",
-                value: data.flagging_desc,
-                onChange: (e: string) => setData({ ...data, flagging_desc: e }),
-              }}
-            />
-            <FormInput
-              data={{
-                label: "File",
-                required: true,
-                mode: "vertical",
-                class: "flex-1",
-                type: "upload",
-                value: data.file_flagging,
-                onChange: (e: string) => setData({ ...data, file_flagging: e }),
-              }}
-            />
-          </div>
-        </div>
-        <div className="flex-1 flex flex-col gap-2">
-          <FormInput
-            data={{
-              label: "Status TB",
-              required: true,
-              mode: "horizontal",
-              type: "select",
-              options: [
-                { label: "DRAFT", value: "DRAFT" },
-                { label: "PENDING", value: "PENDING" },
-                { label: "PROSES", value: "PROSES" },
-                { label: "SELESAI", value: "DISETUJUI" },
-              ],
-              value: data.cash_status,
-              onChange: (e: string) =>
-                setData({ ...data, cash_status: e as EDapemStatus }),
-            }}
-          />
-          {cashdesc.map((c, i) => (
-            <div
-              className="w-full flex flex-wrap gap-2 border-b border-gray-400 py-1"
-              key={i}
-            >
-              <FormInput
-                data={{
-                  label: `Nominal (${i + 1})`,
-                  required: true,
-                  type: "text",
-                  mode: "vertical",
-                  class: "flex-1",
-                  value: IDRFormat(cashdesc[i].amount),
-                  onChange: (e: string) =>
-                    setCashdesc(
-                      cashdesc.map((cd, id) => ({
-                        ...cd,
-                        ...(i === id && { amount: IDRToNumber(e || "0") }),
-                      })),
-                    ),
-                }}
-              />
-              <FormInput
-                data={{
-                  label: `Tanggal TB (${i + 1})`,
-                  required: true,
-                  type: "date",
-                  mode: "vertical",
-                  class: "flex-1",
-                  value: moment(cashdesc[i].date).format("YYYY-MM-DD"),
-                  onChange: (e: string) =>
-                    setCashdesc(
-                      cashdesc.map((cd, id) => ({
-                        ...cd,
-                        ...(i === id && { date: new Date(e) }),
-                      })),
-                    ),
-                }}
-              />
-              <FormInput
-                data={{
-                  label: `Keterangan (${i + 1})`,
-                  required: true,
-                  type: "textarea",
-                  mode: "vertical",
-                  class: "flex-1",
-                  value: cashdesc[i].desc,
-                  onChange: (e: string) =>
-                    setCashdesc(
-                      cashdesc.map((cd, id) => ({
-                        ...cd,
-                        ...(i === id && { desc: e }),
-                      })),
-                    ),
-                }}
-              />
-              <FormInput
-                data={{
-                  label: "File",
-                  required: true,
-                  mode: "vertical",
-                  class: "flex-1",
-                  type: "upload",
-                  value: cashdesc[i].file,
-                  onChange: (e: string) =>
-                    setCashdesc(
-                      cashdesc.map((cd, id) => ({
-                        ...cd,
-                        ...(i === id && { file: e }),
-                      })),
-                    ),
-                }}
-              />
-            </div>
-          ))}
-          <div className="w-full">
-            <Button
-              icon={<PlusCircleOutlined />}
-              type="primary"
-              block
-              onClick={() => setCashdesc([...cashdesc, defaultCashDesc])}
-            >
-              Add More
-            </Button>
-          </div>
-        </div>
-      </div>
-    </Modal>
-  );
-};
-
-const defaultCashDesc: ICashDesc = {
-  amount: 0,
-  date: new Date(),
-  desc: "",
-  file: "",
-};

@@ -22,7 +22,7 @@ import {
   PlusCircleFilled,
   SaveOutlined,
 } from "@ant-design/icons";
-import { Prisma, ProdukPembiayaan, Sumdan } from "@prisma/client";
+import { ProdukPembiayaan, Sumdan } from "@prisma/client";
 import {
   App,
   Button,
@@ -63,19 +63,12 @@ export default function Page() {
 
   const getData = async () => {
     setLoading(true);
-    // const includes: Prisma.SumdanInclude = {
-    //   ProdukPembiayaans: {
-    //     include: {
-    //       Dapems: { where: { status: true }, include: { Angsurans: true } },
-    //     },
-    //   },
-    // };
     const params = new URLSearchParams({
       page: pageProps.page.toString(),
       limit: pageProps.limit.toString(),
       ...(pageProps.search && { search: pageProps.search }),
+      includes: "true",
     });
-    // includes: JSON.stringify(includes),
     const res = await fetch(`/api/sumdan?${params.toString()}`);
     const json = await res.json();
     setPageProps((prev) => ({
@@ -380,7 +373,7 @@ export default function Page() {
         loading={loading}
         rowKey={"id"}
         bordered
-        scroll={{ x: "max-content", y: "60vh" }}
+        scroll={{ x: "max-content", y: "48vh" }}
         pagination={{
           current: pageProps.page,
           pageSize: pageProps.limit,
@@ -393,6 +386,7 @@ export default function Page() {
             }));
           },
           pageSizeOptions: [50, 100, 500, 1000],
+          showSizeChanger: true,
         }}
         expandable={{
           expandedRowRender: (record) => {
@@ -444,7 +438,7 @@ function UpsertSumdan({
 }) {
   const [data, setData] = useState(record ? record : defaultSumdan);
   const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  // const [currentStep, setCurrentStep] = useState(0);
 
   const handleSave = async () => {
     setLoading(true);

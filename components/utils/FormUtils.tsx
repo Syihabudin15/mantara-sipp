@@ -166,17 +166,18 @@ const UploadComponents = ({
 
   const handleDeleteFiles = async () => {
     setLoading(true);
-    await fetch("/api/upload", {
-      method: "DELETE",
-      body: JSON.stringify({ publicId: file }),
-    })
-      .then(() => {
-        setFile(undefined);
-      })
-      .catch((err) => {
-        console.log(err);
-        setError("Gagal hapus file!.");
-      });
+    setFile(undefined);
+    // await fetch("/api/upload", {
+    //   method: "DELETE",
+    //   body: JSON.stringify({ publicId: file }),
+    // })
+    //   .then(() => {
+    //     setFile(undefined);
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //     setError("Gagal hapus file!.");
+    //   });
     setLoading(false);
   };
 
