@@ -139,7 +139,9 @@ export const GET = async (request: NextRequest) => {
           },
         },
         PayOffice: { select: { name: true, code: true } },
-        JenisPembiayaan: { select: { name: true } },
+        JenisPembiayaan: {
+          select: { name: true, status_mutasi: true, status_takeover: true },
+        },
         // Angsurans: true,
         ...(includes && {
           Angsurans: {
@@ -171,6 +173,7 @@ export const GET = async (request: NextRequest) => {
         },
         Dropping: true,
         // }),
+        AgentFronting: { select: { code: true, name: true, pic: true } },
       },
     }),
     prisma.dapem.count({ where }),
