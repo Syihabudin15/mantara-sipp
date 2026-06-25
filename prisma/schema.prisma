@@ -181,7 +181,6 @@ model Cabang {
   HeadCabangs HeadCabang[]
 
   @@index([name])
-  @@index([areaId])
 }
 
 model User {
@@ -224,10 +223,6 @@ model User {
   @@index([phone])
   @@index([end_pkwt])
   @@index([pkwt_status])
-  @@index([roleId])
-  @@index([cabangId])
-  @@index([sumdanId])
-  @@index([agentFrontingId])
 }
 
 model HeadArea {
@@ -328,13 +323,11 @@ model Debitur {
   PayOffice      PayOffice? @relation(fields: [payOfficeId], references: [id])
   payOfficeId    String?
 
-  @@index([nopen])
   @@index([fullname])
   @@index([nik])
   @@index([name_skep])
   @@index([no_skep])
   @@index([account_number])
-  @@index([payOfficeId])
   @@index([province])
   @@index([city])
   @@index([district])
@@ -490,13 +483,6 @@ model Dapem {
   Aianalyses         AIAnalysis[]
   userId             String
 
-  @@index([userId])
-  @@index([aoId])
-  @@index([aoCabangId])
-  @@index([aoAreaId])
-  @@index([jenisPembiayaanId])
-  @@index([nopen])
-  @@index([agentFrontingId])
   @@index([dropping_status])
   @@index([document_status])
   @@index([guarantee_status])
@@ -513,7 +499,6 @@ model Dapem {
   @@index([no_contract])
   @@index([date_contract])
   @@index([date_end])
-  @@index([droppingId])
 }
 
 model AIAnalysis {
@@ -529,8 +514,6 @@ model AIAnalysis {
   updated_at DateTime @updatedAt
   Dapem      Dapem    @relation(fields: [dapemId], references: [id])
   dapemId    String
-
-  @@index([dapemId])
 }
 
 model PayOffice {
@@ -585,7 +568,6 @@ model Dropping {
   Sumdan     Sumdan    @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
   sumdanId   String
 
-  @@index([sumdanId])
   @@index([process_at])
   @@index([status])
 }
@@ -601,7 +583,6 @@ model Berkas {
   Sumdan     Sumdan     @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
   sumdanId   String
 
-  @@index([sumdanId])
   @@index([process_at])
   @@index([status])
 }
@@ -617,7 +598,6 @@ model Jaminan {
   Sumdan     Sumdan     @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
   sumdanId   String
 
-  @@index([sumdanId])
   @@index([process_at])
   @@index([status])
 }
@@ -639,7 +619,6 @@ model Pelunasan {
   created_at  DateTime
   dapemId     String            @unique
 
-  @@index([dapemId])
   @@index([type])
   @@index([guarantee_status])
   @@index([status_paid])
@@ -660,7 +639,6 @@ model Angsuran {
   Dapem       Dapem     @relation(fields: [dapemId], references: [id], onUpdate: Cascade)
   dapemId     String
 
-  @@index([dapemId])
   @@index([date_pay])
 }
 
@@ -685,7 +663,6 @@ model CategoryOfAccount {
 
   @@index([name])
   @@index([type])
-  @@index([parentId])
 }
 
 model JournalEntry {
@@ -709,10 +686,6 @@ model JournalDetail {
   journalEntryId      String
   categoryOfAccountId String
   userId              String?
-
-  @@index([userId])
-  @@index([journalEntryId])
-  @@index([categoryOfAccountId])
 }
 
 model AgentFronting {
@@ -744,7 +717,4 @@ model SumdanAgentFronting {
   sumdanId        String
   AgentFronting   AgentFronting @relation(fields: [agentFrontingId], references: [id], onUpdate: Cascade)
   agentFrontingId String
-
-  @@index([sumdanId])
-  @@index([agentFrontingId])
 }

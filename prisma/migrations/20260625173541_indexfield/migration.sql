@@ -99,9 +99,6 @@ CREATE INDEX `Dapem_date_contract_idx` ON `Dapem`(`date_contract`);
 CREATE INDEX `Dapem_date_end_idx` ON `Dapem`(`date_end`);
 
 -- CreateIndex
-CREATE INDEX `Debitur_nopen_idx` ON `Debitur`(`nopen`);
-
--- CreateIndex
 CREATE INDEX `Debitur_fullname_idx` ON `Debitur`(`fullname`);
 
 -- CreateIndex
@@ -159,9 +156,6 @@ CREATE INDEX `PayOffice_name_idx` ON `PayOffice`(`name`);
 CREATE INDEX `PayOffice_code_idx` ON `PayOffice`(`code`);
 
 -- CreateIndex
-CREATE INDEX `Pelunasan_dapemId_idx` ON `Pelunasan`(`dapemId`);
-
--- CreateIndex
 CREATE INDEX `Pelunasan_type_idx` ON `Pelunasan`(`type`);
 
 -- CreateIndex
@@ -205,103 +199,3 @@ CREATE INDEX `User_end_pkwt_idx` ON `User`(`end_pkwt`);
 
 -- CreateIndex
 CREATE INDEX `User_pkwt_status_idx` ON `User`(`pkwt_status`);
-
--- RedefineIndex
-CREATE INDEX `AIAnalysis_dapemId_idx` ON `AIAnalysis`(`dapemId`);
-DROP INDEX `AIAnalysis_dapemId_fkey` ON `aianalysis`;
-
--- RedefineIndex
-CREATE INDEX `Angsuran_dapemId_idx` ON `Angsuran`(`dapemId`);
-DROP INDEX `Angsuran_dapemId_fkey` ON `angsuran`;
-
--- RedefineIndex
-CREATE INDEX `Berkas_sumdanId_idx` ON `Berkas`(`sumdanId`);
-DROP INDEX `Berkas_sumdanId_fkey` ON `berkas`;
-
--- RedefineIndex
-CREATE INDEX `Cabang_areaId_idx` ON `Cabang`(`areaId`);
-DROP INDEX `Cabang_areaId_fkey` ON `cabang`;
-
--- RedefineIndex
-CREATE INDEX `CategoryOfAccount_parentId_idx` ON `CategoryOfAccount`(`parentId`);
-DROP INDEX `CategoryOfAccount_parentId_fkey` ON `categoryofaccount`;
-
--- RedefineIndex
-CREATE INDEX `Dapem_agentFrontingId_idx` ON `Dapem`(`agentFrontingId`);
-DROP INDEX `Dapem_agentFrontingId_fkey` ON `dapem`;
-
--- RedefineIndex
-CREATE INDEX `Dapem_aoAreaId_idx` ON `Dapem`(`aoAreaId`);
-DROP INDEX `Dapem_aoAreaId_fkey` ON `dapem`;
-
--- RedefineIndex
-CREATE INDEX `Dapem_aoCabangId_idx` ON `Dapem`(`aoCabangId`);
-DROP INDEX `Dapem_aoCabangId_fkey` ON `dapem`;
-
--- RedefineIndex
-CREATE INDEX `Dapem_aoId_idx` ON `Dapem`(`aoId`);
-DROP INDEX `Dapem_aoId_fkey` ON `dapem`;
-
--- RedefineIndex
-CREATE INDEX `Dapem_droppingId_idx` ON `Dapem`(`droppingId`);
-DROP INDEX `Dapem_droppingId_fkey` ON `dapem`;
-
--- RedefineIndex
-CREATE INDEX `Dapem_jenisPembiayaanId_idx` ON `Dapem`(`jenisPembiayaanId`);
-DROP INDEX `Dapem_jenisPembiayaanId_fkey` ON `dapem`;
-
--- RedefineIndex
-CREATE INDEX `Dapem_nopen_idx` ON `Dapem`(`nopen`);
-DROP INDEX `Dapem_nopen_fkey` ON `dapem`;
-
--- RedefineIndex
-CREATE INDEX `Dapem_userId_idx` ON `Dapem`(`userId`);
-DROP INDEX `Dapem_userId_fkey` ON `dapem`;
-
--- RedefineIndex
-CREATE INDEX `Debitur_payOfficeId_idx` ON `Debitur`(`payOfficeId`);
-DROP INDEX `Debitur_payOfficeId_fkey` ON `debitur`;
-
--- RedefineIndex
-CREATE INDEX `Dropping_sumdanId_idx` ON `Dropping`(`sumdanId`);
-DROP INDEX `Dropping_sumdanId_fkey` ON `dropping`;
-
--- RedefineIndex
-CREATE INDEX `Jaminan_sumdanId_idx` ON `Jaminan`(`sumdanId`);
-DROP INDEX `Jaminan_sumdanId_fkey` ON `jaminan`;
-
--- RedefineIndex
-CREATE INDEX `JournalDetail_categoryOfAccountId_idx` ON `JournalDetail`(`categoryOfAccountId`);
-DROP INDEX `JournalDetail_categoryOfAccountId_fkey` ON `journaldetail`;
-
--- RedefineIndex
-CREATE INDEX `JournalDetail_journalEntryId_idx` ON `JournalDetail`(`journalEntryId`);
-DROP INDEX `JournalDetail_journalEntryId_fkey` ON `journaldetail`;
-
--- RedefineIndex
-CREATE INDEX `JournalDetail_userId_idx` ON `JournalDetail`(`userId`);
-DROP INDEX `JournalDetail_userId_fkey` ON `journaldetail`;
-
--- RedefineIndex
-CREATE INDEX `SumdanAgentFronting_agentFrontingId_idx` ON `SumdanAgentFronting`(`agentFrontingId`);
-DROP INDEX `SumdanAgentFronting_agentFrontingId_fkey` ON `sumdanagentfronting`;
-
--- RedefineIndex
-CREATE INDEX `SumdanAgentFronting_sumdanId_idx` ON `SumdanAgentFronting`(`sumdanId`);
-DROP INDEX `SumdanAgentFronting_sumdanId_fkey` ON `sumdanagentfronting`;
-
--- RedefineIndex
-CREATE INDEX `User_agentFrontingId_idx` ON `User`(`agentFrontingId`);
-DROP INDEX `User_agentFrontingId_fkey` ON `user`;
-
--- RedefineIndex
-CREATE INDEX `User_cabangId_idx` ON `User`(`cabangId`);
-DROP INDEX `User_cabangId_fkey` ON `user`;
-
--- RedefineIndex
-CREATE INDEX `User_roleId_idx` ON `User`(`roleId`);
-DROP INDEX `User_roleId_fkey` ON `user`;
-
--- RedefineIndex
-CREATE INDEX `User_sumdanId_idx` ON `User`(`sumdanId`);
-DROP INDEX `User_sumdanId_fkey` ON `user`;
