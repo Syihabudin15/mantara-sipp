@@ -4,6 +4,7 @@ import prisma from "@/libs/Prisma";
 import { Prisma } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
+import { WheresDapem } from "./utils/wheres";
 
 export const GET = async (req: NextRequest) => {
   const session = await getSession();
@@ -18,33 +19,7 @@ export const GET = async (req: NextRequest) => {
 
   const where: Prisma.DapemWhereInput = {
     status: true,
-    ...(user.sumdanId && {
-      ProdukPembiayaan: { sumdanId: user.sumdanId },
-    }),
-    ...(user.Role.data_status === "AREA" && {
-      OR: [
-        { AO: { Cabang: { areaId: user.Cabang.areaId } } },
-        { AOCabang: { Cabang: { areaId: user.Cabang.areaId } } },
-        { AOArea: { Cabang: { areaId: user.Cabang.areaId } } },
-      ],
-    }),
-    ...(user.Role.data_status === "CABANG" && {
-      OR: [
-        { AO: { cabangId: user.cabangId } },
-        { AOCabang: { cabangId: user.cabangId } },
-        { AOArea: { cabangId: user.cabangId } },
-      ],
-    }),
-    ...(user.Role.data_status === "USER" && {
-      OR: [
-        { AO: { id: user.id } },
-        { AOCabang: { id: user.id } },
-        { AOArea: { id: user.id } },
-      ],
-    }),
-    ...(user.agentFrontingId && {
-      agentFrontingId: user.agentFrontingId,
-    }),
+    ...WheresDapem(user),
   };
 
   const [alldata, droppingall, droppingmonthly, byjepem, sumdan] =

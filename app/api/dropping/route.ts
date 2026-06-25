@@ -70,16 +70,16 @@ export const GET = async (req: NextRequest) => {
         created_at: "desc",
       },
       include: {
-        Sumdan: true,
+        Sumdan: { select: { name: true, code: true } },
         Dapems: {
           where: {
             status: true,
             ...whereFunc,
           },
           include: {
-            Debitur: true,
-            ProdukPembiayaan: { include: { Sumdan: true } },
-            JenisPembiayaan: true,
+            Debitur: { select: { fullname: true, nopen: true } },
+            ProdukPembiayaan: { select: { name: true } },
+            JenisPembiayaan: { select: { name: true } },
           },
         },
       },

@@ -118,7 +118,6 @@ export default function Page() {
         agentFrontingId: pageProps.agentFrontingId,
       }),
       ...(pageProps.backdate && { backdate: pageProps.backdate }),
-      includes: "true",
     });
 
     const res = await fetch(`/api/dapem?${params.toString()}`);

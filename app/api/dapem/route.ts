@@ -131,27 +131,57 @@ export const GET = async (request: NextRequest) => {
         created_at: "desc",
       },
       include: {
+        // ...(includes && {
+        Debitur: true,
+        ProdukPembiayaan: {
+          include: {
+            Sumdan: { select: { name: true, code: true, dsr: true } },
+          },
+        },
+        PayOffice: { select: { name: true, code: true } },
+        JenisPembiayaan: { select: { name: true } },
+        // Angsurans: true,
         ...(includes && {
-          Debitur: true,
-          ProdukPembiayaan: { include: { Sumdan: true } },
-          PayOffice: true,
-          JenisPembiayaan: true,
-          Angsurans: true,
-          User: true,
-          AO: { include: { Cabang: { include: { Area: true } } } },
-          AOCabang: { include: { Cabang: { include: { Area: true } } } },
-          AOArea: { include: { Cabang: { include: { Area: true } } } },
-          Dropping: true,
-          Berkas: true,
-          Jaminan: true,
+          Angsurans: {
+            select: { id: true },
+            where: { date_paid: { not: null } },
+          },
         }),
+        User: { select: { fullname: true } },
+        AO: {
+          include: {
+            Cabang: {
+              include: { Area: { select: { name: true } } },
+            },
+          },
+        },
+        AOCabang: {
+          include: {
+            Cabang: {
+              include: { Area: { select: { name: true } } },
+            },
+          },
+        },
+        AOArea: {
+          include: {
+            Cabang: {
+              include: { Area: { select: { name: true } } },
+            },
+          },
+        },
+        Dropping: true,
+        // }),
       },
     }),
     prisma.dapem.count({ where }),
   ]);
 
   return NextResponse.json(
-    { data: serializeForApi(data), total, status: 200 },
+    {
+      data,
+      total,
+      status: 200,
+    },
     { status: 200 },
   );
 };

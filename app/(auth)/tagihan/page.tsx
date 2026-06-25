@@ -553,55 +553,35 @@ export default function Page() {
           showSizeChanger: true,
         }}
         summary={(pageData) => {
-          const angs = pageData.reduce(
-            (acc, curr) => acc + GetDetailDapem(curr).angsuran,
-            0,
-          );
-          const angsSumdan = pageData.reduce(
-            (acc, curr) => acc + GetDetailDapem(curr).detail.angsuran_sumdan,
-            0,
-          );
-          const pokok = pageData
-            .flatMap((d) =>
-              d.Angsurans.find((a) =>
-                moment(a.date_pay).isSame(
-                  pageProps.backdate || new Date(),
-                  "month",
-                ),
+          let angs = 0;
+          let angsSumdan = 0;
+          let pokok = 0;
+          let margin = 0;
+          let plafond = 0;
+          let os = 0;
+          pageData.forEach((p) => {
+            const detail = GetDetailDapem(p);
+            const currAngs = p.Angsurans.find((a) =>
+              moment(a.date_pay).isSame(
+                pageProps.backdate || new Date(),
+                "month",
               ),
-            )
-            .reduce((acc, curr) => acc + (curr ? curr.principal : 0), 0);
-          const margin = pageData
-            .flatMap((d) =>
-              d.Angsurans.find((a) =>
-                moment(a.date_pay).isSame(
-                  pageProps.backdate || new Date(),
-                  "month",
-                ),
-              ),
-            )
-            .reduce((acc, curr) => acc + (curr ? curr.margin : 0), 0);
-          const os = pageData
-            .flatMap((d) =>
-              d.Angsurans.find((a) =>
-                moment(a.date_pay).isSame(
-                  pageProps.backdate || new Date(),
-                  "month",
-                ),
-              ),
-            )
-            .reduce((acc, curr) => acc + (curr ? curr.remaining : 0), 0);
+            );
+
+            angs += detail.angsuran;
+            angsSumdan += detail.detail.angsuran_sumdan;
+            os += currAngs?.remaining ?? 0;
+            pokok += currAngs?.principal ?? 0;
+            margin += currAngs?.margin ?? 0;
+            plafond += p.plafond;
+          });
           return (
             <Table.Summary.Row className="text-xs bg-blue-400">
               <Table.Summary.Cell index={0} colSpan={3} className="text-center">
                 <b>SUMMARY</b>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={4} className="text-center">
-                <b>
-                  {IDRFormat(
-                    pageData.reduce((acc, item) => acc + item.plafond, 0),
-                  )}{" "}
-                </b>
+                <b>{IDRFormat(plafond)}</b>
               </Table.Summary.Cell>
               <Table.Summary.Cell
                 index={5}
@@ -609,10 +589,10 @@ export default function Page() {
               ></Table.Summary.Cell>
               <Table.Summary.Cell index={6} className="text-center font-bold">
                 <div>
-                  {IDRFormat(angs)} - {IDRFormat(angsSumdan)}
+                  {IDRFormat(angsSumdan)} - {IDRFormat(angs - angsSumdan)}
                 </div>
                 <div className="border-t border-gray-500">
-                  {IDRFormat(angs - angsSumdan)}
+                  {IDRFormat(angs)}
                 </div>
               </Table.Summary.Cell>
               <Table.Summary.Cell index={5} className="font-bold text-right">

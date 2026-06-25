@@ -5,7 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -499,6 +500,7 @@ model Dapem {
   @@index([no_contract])
   @@index([date_contract])
   @@index([date_end])
+  @@index([created_at])
 }
 
 model AIAnalysis {
@@ -569,6 +571,7 @@ model Dropping {
   sumdanId   String
 
   @@index([process_at])
+  @@index([created_at])
   @@index([status])
 }
 
@@ -584,6 +587,7 @@ model Berkas {
   sumdanId   String
 
   @@index([process_at])
+  @@index([created_at])
   @@index([status])
 }
 
@@ -599,6 +603,7 @@ model Jaminan {
   sumdanId   String
 
   @@index([process_at])
+  @@index([created_at])
   @@index([status])
 }
 
@@ -623,6 +628,7 @@ model Pelunasan {
   @@index([guarantee_status])
   @@index([status_paid])
   @@index([process_at])
+  @@index([created_at])
 }
 
 model Angsuran {

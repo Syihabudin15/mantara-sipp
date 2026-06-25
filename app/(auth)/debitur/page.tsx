@@ -173,14 +173,6 @@ export default function Page() {
             allowClear
             style={{ width: 170 }}
           />
-          <Input.Search
-            size="small"
-            style={{ width: 170 }}
-            placeholder="Kantor Bayar..."
-            onChange={(e) =>
-              setPageProps({ ...pageProps, pay_office: e.target.value })
-            }
-          />
         </div>
         <div className="flex gap-2 justify-end">
           <Input.Search
