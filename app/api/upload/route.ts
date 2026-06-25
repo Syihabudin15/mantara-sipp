@@ -25,6 +25,8 @@ export const POST = async (req: NextRequest) => {
         blobContentType: file.type,
         blobContentDisposition: "inline",
       },
+      blockSize: 4 * 1024 * 1024, // 4MB per potongan file (chunk)
+      concurrency: 4, // Jalankan 4 upload potongan sekaligus secara paralel
     });
 
     return NextResponse.json(

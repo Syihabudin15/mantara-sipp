@@ -143,52 +143,68 @@ const UploadComponents = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const handleUpload = async (file: any) => {
-    const formData = new FormData();
-    formData.append("file", file);
+  const handleUpload = async (fileObj: File) => {
+    setError(undefined); // Reset error status
+
     try {
-      const res = await fetch(`/api/upload`, {
+      // Langkah 1: Minta URL SAS khusus dari API backend Anda
+      const resSas = await fetch(`/api/upload/sas`, {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          filename: fileObj.name,
+          filetype: fileObj.type,
+        }),
       });
 
-      const resData = await res.json();
-      if (resData.secure_url) {
-        setFile(resData.secure_url);
+      const sasData = await resSas.json();
+
+      if (!resSas.ok || !sasData.uploadUrl) {
+        setError(
+          sasData.message || "Gagal mendapatkan izin upload (SAS Token)",
+        );
+        return;
+      }
+
+      // Langkah 2: Upload file mentah langsung ke Azure Storage menggunakan PUT
+      const resAzure = await fetch(sasData.uploadUrl, {
+        method: "PUT",
+        body: fileObj, // Langsung kirim file mentah tanpa FormData wrapper
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
+          "Content-Type": fileObj.type,
+        },
+      });
+
+      if (resAzure.ok) {
+        // Simpan secure_url bersih (tanpa token) ke state/database Anda
+        setFile(sasData.secure_url);
       } else {
-        setError(resData.error.message);
+        setError("Gagal mengunggah berkas langsung ke Azure Storage.");
       }
     } catch (err) {
-      console.log(err);
-      setError("Internal Server Error");
+      console.error(err);
+      setError("Internal Server Error saat proses upload.");
     }
   };
 
   const handleDeleteFiles = async () => {
     setLoading(true);
     setFile(undefined);
-    // await fetch("/api/upload", {
-    //   method: "DELETE",
-    //   body: JSON.stringify({ publicId: file }),
-    // })
-    //   .then(() => {
-    //     setFile(undefined);
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //     setError("Gagal hapus file!.");
-    //   });
     setLoading(false);
   };
 
   const props: UploadProps = {
     beforeUpload: async (file) => {
       setLoading(true);
-      await handleUpload(file);
+      // Antd melemparkan objek file di sini
+      await handleUpload(file as File);
       setLoading(false);
-      return false; // prevent automatic upload
+      return false; // Mencegah Antd melakukan upload otomatis bawaan mereka
     },
-    showUploadList: false, // sembunyikan default list
+    showUploadList: false,
     accept: accept,
   };
 
@@ -218,7 +234,7 @@ const UploadComponents = ({
               Upload Berkas
             </Button>
           </Upload>
-          {error && <p className="italic text-red-500">{error}</p>}
+          {error && <p className="italic text-red-500 text-xs mt-1">{error}</p>}
         </div>
       )}
     </div>
