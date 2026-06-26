@@ -226,5 +226,6 @@ export const SIPage4Vima = (
           <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
         </div>
       </div>
+    </div>
 `;
 };

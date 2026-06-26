@@ -77,9 +77,54 @@ export const GET = async (req: NextRequest) => {
             ...whereFunc,
           },
           include: {
-            Debitur: { select: { fullname: true, nopen: true } },
-            ProdukPembiayaan: { select: { name: true } },
+            // Debitur: {
+            //   select: {
+            //     fullname: true,
+            //     nopen: true,
+            //     no_skep: true,
+            //     date_skep: true,
+            //     group_skep: true,
+            //     account_number: true,
+            //     account_name: true,
+            //     birthplace: true,
+            //     birthdate: true,
+            //     nik: true,
+            //     phone: true,
+            //     address: true,
+            //     ward: true,
+            //     district: true,
+            //     city: true,
+            //     province: true,
+            //     pos_code: true,
+            //   },
+            // },
+            Debitur: true,
+            ProdukPembiayaan: {
+              include: {
+                Sumdan: { select: { code: true, name: true, address: true } },
+              },
+            },
             JenisPembiayaan: { select: { name: true } },
+            AO: {
+              include: {
+                Cabang: { include: { Area: { select: { name: true } } } },
+              },
+            },
+            AOCabang: {
+              include: {
+                Cabang: { include: { Area: { select: { name: true } } } },
+              },
+            },
+            AOArea: {
+              include: {
+                Cabang: { include: { Area: { select: { name: true } } } },
+              },
+            },
+            User: {
+              include: {
+                Cabang: { include: { Area: { select: { name: true } } } },
+              },
+            },
           },
         },
       },
