@@ -109,7 +109,7 @@ export const SIPage1Vima = (record: IDropping) => {
       <p class="mt-4">Selanjutnya kami mohon :</p>
         <div class="ml-6">
           <div class="flex gap-2 font-bold">
-            <p class="w-44">Blokir Angsuran</p>
+            <p class="w-44">Blokir Angsuran ${dapem.c_blokir} Bulan</p>
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
