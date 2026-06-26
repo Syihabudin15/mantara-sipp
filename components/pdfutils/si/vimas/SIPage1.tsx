@@ -1,37 +1,12 @@
 import { IDropping } from "@/libs/IInterfaces";
 import { ListNonStyle } from "../../utils";
 import moment from "moment";
-import {
-  GetAngsuran,
-  GetDetailDapem,
-  IDRFormat,
-} from "@/components/utils/PembiayaanUtil";
+import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 moment.locale("id");
 
 export const SIPage1Vima = (record: IDropping) => {
   const dapem = record.Dapems[0];
   const detail = GetDetailDapem(dapem);
-
-  const adm =
-    dapem.plafond * ((dapem.c_adm + dapem.c_adm_mitra + dapem.c_adm_ff) / 100);
-  const provisi =
-    dapem.plafond *
-    ((dapem.c_fee_ao +
-      dapem.c_fee_cabang +
-      dapem.c_fee_area +
-      dapem.c_fee_bpp +
-      dapem.c_fee_bpb) /
-      100);
-  const asuransi = dapem.plafond * (dapem.c_insurance / 100);
-  const tatalaksana =
-    dapem.c_gov +
-    dapem.c_flagging +
-    dapem.c_infomation +
-    dapem.c_stamp +
-    dapem.c_bop +
-    dapem.c_account +
-    dapem.c_mutasi;
-  const biaya = adm + provisi + asuransi + tatalaksana;
   return `
   <div>
      <div class="page-header flex items-center mb-6 border-b pb-4">
@@ -85,8 +60,7 @@ export const SIPage1Vima = (record: IDropping) => {
           {
             key: `Provisi ${dapem.c_provisi_sumdan + dapem.c_adm_sumdan}%`,
             value: IDRFormat(
-              dapem.plafond *
-                ((dapem.c_provisi_sumdan + dapem.c_adm_sumdan) / 100),
+              detail.detail.adm_sumdan + detail.detail.provisi_sumdan,
             ),
             currency: true,
             classStyle: "font-bold",
@@ -121,7 +95,7 @@ export const SIPage1Vima = (record: IDropping) => {
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(biaya)}</p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(detail.biayakop)}</p>
             </div>
           </div>
           <div class="flex gap-2 ml-2">
@@ -130,7 +104,7 @@ export const SIPage1Vima = (record: IDropping) => {
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(asuransi)}</p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(detail.asuransi)}</p>
             </div>
           </div>
           <div class="flex gap-2 ml-2">
@@ -139,7 +113,7 @@ export const SIPage1Vima = (record: IDropping) => {
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(adm + provisi)}</p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(detail.detail.adm + detail.detail.adm_ff + detail.detail.adm_mita)}</p>
             </div>
           </div>
           <div class="flex gap-2 ml-2">
@@ -148,7 +122,7 @@ export const SIPage1Vima = (record: IDropping) => {
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(tatalaksana)}</p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(detail.detail.fee_ao + detail.detail.fee_cabang + detail.detail.fee_area + detail.detail.fee_bpb + detail.detail.fee_bpp + dapem.c_account)}</p>
             </div>
           </div>
           <div class="flex gap-2 font-bold">
@@ -156,7 +130,7 @@ export const SIPage1Vima = (record: IDropping) => {
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(biaya + dapem.c_blokir * (detail.angsuran - detail.detail.angsuran_sumdan))}</p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(detail.biayakop + dapem.c_blokir * (detail.angsuran - detail.detail.angsuran_sumdan))}</p>
             </div>
           </div>
         </div>

@@ -224,6 +224,7 @@ export interface IOutputDapemDetail {
   asuransi: number;
   by_sumdan: number;
   biaya: number;
+  biayakop: number;
   tk: number;
   tb: number;
 }

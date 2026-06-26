@@ -47,8 +47,8 @@ const generateSI = (record: IDropping) => {
           @media print {
             .page {
               position: relative;
-              min-height: 95vh;    /* atau height A4 jika untuk print */
-              padding-top: 80px;    /* ruang untuk header */
+              min-height: 80vh;    /* atau height A4 jika untuk print */
+              padding-top: 60px;    /* ruang untuk header */
               page-break-after: always;
             }
     
@@ -57,7 +57,6 @@ const generateSI = (record: IDropping) => {
               top: 0;
               left: 0;
               right: 0;
-              padding: 10px;
               text-align: center;
               background: white;
               border-bottom: 1px solid #ccc;

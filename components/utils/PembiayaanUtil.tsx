@@ -179,6 +179,7 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
     adm_sumdan +
     provisi_sumdan +
     dapem.c_account_sumdan;
+  const biayakop = administrasi + provisi + tatalaksana + asuransi;
   const angs =
     Math.ceil(angsuran / dapem.rounded) * dapem.rounded + dapem.c_ned;
 
@@ -205,6 +206,7 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
     asuransi,
     by_sumdan: adm_sumdan + provisi_sumdan + dapem.c_account_sumdan,
     biaya,
+    biayakop,
     tk: dapem.plafond - biaya,
     tb: dapem.plafond - (biaya + dapem.c_takeover + dapem.c_blokir * angs),
   };
@@ -330,6 +332,7 @@ export const getInitialDapemDetail = (): IOutputDapemDetail => ({
   asuransi: 0,
   by_sumdan: 0,
   biaya: 0,
+  biayakop: 0,
   tk: 0,
   tb: 0,
 });

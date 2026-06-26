@@ -1,6 +1,6 @@
 import { ICashDesc, IDapem, IDropping } from "@/libs/IInterfaces";
 import moment from "moment";
-import { IDRFormat } from "@/components/utils/PembiayaanUtil";
+import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import { ListNonStyle, NumberToWordsID } from "../../utils";
 moment.locale("id");
 
@@ -10,29 +10,13 @@ export const SIPage4Vima = (
   cash: ICashDesc,
   firstdata: boolean,
 ) => {
-  const adm =
-    dapem.plafond * ((dapem.c_adm + dapem.c_adm_mitra + dapem.c_adm_ff) / 100);
-  const provisi =
-    dapem.plafond *
-    ((dapem.c_fee_ao +
-      dapem.c_fee_cabang +
-      dapem.c_fee_area +
-      dapem.c_fee_bpp +
-      dapem.c_fee_bpb) /
-      100);
-  const asuransi = dapem.plafond * (dapem.c_insurance / 100);
-  const tatalaksana =
-    dapem.c_gov +
-    dapem.c_flagging +
-    dapem.c_infomation +
-    dapem.c_stamp +
-    dapem.c_bop +
-    dapem.c_mutasi;
-  const biaya = adm + provisi + asuransi + tatalaksana + dapem.c_account;
-  const tb = biaya;
+  const detail = GetDetailDapem(dapem);
+  const blok =
+    (detail.angsuran - detail.detail.angsuran_sumdan) * dapem.c_blokir;
+  const tb = detail.biayakop + blok;
 
   return `
-    <div class="page-header flex items-center mb-6 border-b pb-4">
+    <div class="page-header flex items-center mb-4 border-b pb-2">
       <div class="flex-1 flex items-center">
         <img src="${process.env.NEXT_PUBLIC_APP_LOGO}" alt="Logo" class="h-16 mr-4" />
         <div class="font-bold">
@@ -83,13 +67,13 @@ export const SIPage4Vima = (
         <p class="w-4"></p>
         <p class="w-44">No. Rekening : </p>
         <p class="w-4">:</p>
-        <p class="w-40">${dapem.Debitur.account_number}</>
+        <p class="w-40">${dapem.Debitur.account_number}</p>
       </div>
       <div class="flex gap-2">
         <p class="w-4"></p>
         <p class="w-44">Atas Nama : </p>
         <p class="w-4">:</p>
-        <p class="w-40">${dapem.Debitur.fullname}</>
+        <p class="w-40">${dapem.Debitur.fullname}</p>
         </div>
         <div class="flex gap-2">
         <p class="w-4"></p>
@@ -104,7 +88,7 @@ export const SIPage4Vima = (
         <p class="w-4"></p>
         <p class="w-44">Keterangan : </p>
         <p class="w-4">:</p>
-        <p class="flex-1 italic">${cash.desc}</>
+        <p class="flex-1 italic">${cash.desc}</p>
       </div>
     </div>
 
@@ -120,19 +104,19 @@ export const SIPage4Vima = (
         <p class="w-4"></p>
         <p class="w-44">No. Rekening : </p>
         <p class="w-4">:</p>
-        <p class="w-40">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NUMBER}</>
+        <p class="w-40">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NUMBER}</p>
       </div>
       <div class="flex gap-2">
         <p class="w-4"></p>
         <p class="w-44">Atas Nama : </p>
         <p class="w-4">:</p>
-        <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NAME}</>
+        <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NAME}</p>
       </div>
       <div class="flex gap-2">
         <p class="w-4"></p>
         <p class="w-44">Nama Bank : </p>
         <p class="w-4">:</p>
-        <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_BANK}</>
+        <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_BANK}</p>
         </div>
         <div class="flex gap-2">
         <p class="w-4"></p>
@@ -147,7 +131,7 @@ export const SIPage4Vima = (
         <p class="w-4"></p>
         <p class="w-44">Terbilang : </p>
         <p class="w-4">:</p>
-        <p class="flex-1 italic">${NumberToWordsID(tb)} Rupiah</>
+        <p class="flex-1 italic">${NumberToWordsID(tb)} Rupiah</p>
       </div>
     </div>
 
@@ -155,46 +139,46 @@ export const SIPage4Vima = (
       dapem.c_takeover > 0
         ? `
       <div class="my-2">
-      <div class="flex gap-2 font-bold">
-        <p class="w-4">3.</p>
-        <p class="w-60">Take Over (T.O) : </p>
-        <p class="w-4">:</p>
-        <p class="w-40"></>
-      </div>
-      <div class="flex gap-2">
-        <p class="w-4"></p>
-        <p class="w-44">No. Rekening : </p>
-        <p class="w-4">:</p>
-        <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NUMBER}</>
-      </div>
-      <div class="flex gap-2">
-        <p class="w-4"></p>
-        <p class="w-44">Atas Nama : </p>
-        <p class="w-4">:</p>
-        <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NAME}</>
-      </div>
-      <div class="flex gap-2">
-        <p class="w-4"></p>
-        <p class="w-44">Nama Bank : </p>
-        <p class="w-4">:</p>
-        <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_BANK}</>
+        <div class="flex gap-2 font-bold">
+          <p class="w-4">3.</p>
+          <p class="w-60">Take Over (T.O) : </p>
+          <p class="w-4">:</p>
+          <p class="w-40"></>
         </div>
-      <div class="flex gap-2">
-        <p class="w-4"></p>
-        <p class="w-44">Uang Sejumlah :</p>
-        <p class="w-4">:</p>
-        <div class="w-28 flex justify-between gap-2">
-          <p class="w-4">Rp. </p>
-          <p class="w-28 text-right">${IDRFormat(dapem.c_takeover)}</p>
+        <div class="flex gap-2">
+          <p class="w-4"></p>
+          <p class="w-44">No. Rekening : </p>
+          <p class="w-4">:</p>
+          <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NUMBER}</p>
+        </div>
+        <div class="flex gap-2">
+          <p class="w-4"></p>
+          <p class="w-44">Atas Nama : </p>
+          <p class="w-4">:</p>
+          <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NAME}</p>
+        </div>
+        <div class="flex gap-2">
+          <p class="w-4"></p>
+          <p class="w-44">Nama Bank : </p>
+          <p class="w-4">:</p>
+          <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_BANK}</p>
+          </div>
+        <div class="flex gap-2">
+          <p class="w-4"></p>
+          <p class="w-44">Uang Sejumlah :</p>
+          <p class="w-4">:</p>
+          <div class="w-28 flex justify-between gap-2">
+            <p class="w-4">Rp. </p>
+            <p class="w-28 text-right">${IDRFormat(dapem.c_takeover)}</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <p class="w-4"></p>
+          <p class="w-44">Terbilang : </p>
+          <p class="w-4">:</p>
+          <p class="flex-1 italic">${NumberToWordsID(dapem.c_takeover)} Rupiah</p>
         </div>
       </div>
-      <div class="flex gap-2">
-        <p class="w-4"></p>
-        <p class="w-44">Terbilang : </p>
-        <p class="w-4">:</p>
-        <p class="flex-1 italic">${NumberToWordsID(dapem.c_takeover)} Rupiah</>
-      </div>
-    </div>
       `
         : ""
     }
@@ -207,24 +191,29 @@ export const SIPage4Vima = (
       <p >Demikian Standing Instruction (SI) ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan sebagaimana mestinya.</p>
     </div>
 
-     <div class="flex justify-between gap-6 items-end mt-2">
-      <div class="flex-1 text-center">
-        <p >${process.env.NEXT_PUBLIC_APP_COMPANY_CITY}, ${moment(record.created_at).format("DD-MM-YYYY")}</p>
-          <div class="h-28 flex items-center justify-center opacity-50">
-            <p >Materai 10.000</p>
-          </div>
-          <div>
-            <p class="w-full border-b">${dapem.Debitur.fullname}</p>
-          </div>
+    <div class="my-5 flex justify-around gap-10 items-end text-center">
+      <div class="flex-1 flex flex-col justify-end text-center">
+        <p>${process.env.NEXT_PUBLIC_APP_COMPANY_CITY}, ${moment(record.created_at).format("DD-MM-YYYY")}</p>
+
+        <div class="h-28 flex items-center justify-center opacity-50">
+          <p>Materai 10.000</p>
+        </div>
+
+        <div class="h-10">
+          <p class="w-full border-b">${dapem.Debitur.fullname}</p>
         </div>
       </div>
-      <div class="flex-1 text-center">
+
+      <div class="flex-1 flex flex-col justify-end text-center">
         <p>Dibuat Oleh,</p>
         <p>${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</p>
-        <div class="h-28">
+
+        <div class="h-28"></div>
+
+        <div class="h-10">
+          <p class="w-full border-b">${process.env.NEXT_PUBLIC_APP_SI_NAME}</p>
+          <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
         </div>
-        <p class="w-full border-b">${process.env.NEXT_PUBLIC_APP_SI_NAME}</p>
-        <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
       </div>
     </div>
 `;
