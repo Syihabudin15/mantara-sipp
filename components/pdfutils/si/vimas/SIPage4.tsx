@@ -217,14 +217,14 @@ export const SIPage4Vima = (
             <p class="w-full border-b">${dapem.Debitur.fullname}</p>
           </div>
         </div>
-        <div class="flex-1 text-center">
-          <p>Dibuat Oleh,</p>
-          <p>${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</p>
-          <div class="h-28">
-          </div>
-          <p class="w-full border-b">${process.env.NEXT_PUBLIC_APP_SI_NAME}</p>
-          <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
+      </div>
+      <div class="flex-1 text-center">
+        <p>Dibuat Oleh,</p>
+        <p>${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</p>
+        <div class="h-28">
         </div>
+        <p class="w-full border-b">${process.env.NEXT_PUBLIC_APP_SI_NAME}</p>
+        <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
       </div>
     </div>
 `;
