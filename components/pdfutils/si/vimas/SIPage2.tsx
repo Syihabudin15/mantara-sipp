@@ -77,9 +77,9 @@ export const SIPage2Vima = (record: IDropping) => {
         { key: "Nama Debitur", value: dapem.Debitur.fullname },
         {
           key: "Tempat, Tanggal Lahir",
-          value: `${dapem.Debitur.birthplace}, ${moment(dapem.Debitur.birthdate).format("DD MMMM YYYY")}`,
+          value: `${dapem.Debitur.birthplace || " "}, ${moment(dapem.Debitur.birthdate).format("DD MMMM YYYY")}`,
         },
-        { key: "Nomor PK", value: dapem.no_contract },
+        { key: "Nomor PK", value: dapem.no_contract || "" },
         {
           key: "Plafon Pembiayaan",
           classStyle: "font-bold",
@@ -133,8 +133,8 @@ export const SIPage2Vima = (record: IDropping) => {
       <div class="flex-1">
         <p>Hormat kami,</p>
         <div class="h-28"></div>
-        <p class="border-b">${""}</p>
-        <p>${""}</p>
+        <p class="w-full border-b">${process.env.NEXT_PUBLIC_APP_SI_NAME}</p>
+        <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
       </div>
     </div>
 `;

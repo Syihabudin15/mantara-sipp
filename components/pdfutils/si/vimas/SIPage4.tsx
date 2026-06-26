@@ -222,7 +222,8 @@ export const SIPage4Vima = (
           <p>${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</p>
           <div class="h-28">
           </div>
-          <p class="w-full border-b">${""}</p>
+          <p class="w-full border-b">${process.env.NEXT_PUBLIC_APP_SI_NAME}</p>
+          <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
         </div>
       </div>
 `;

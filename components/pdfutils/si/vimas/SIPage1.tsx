@@ -1,27 +1,17 @@
 import { IDropping } from "@/libs/IInterfaces";
 import { ListNonStyle } from "../../utils";
 import moment from "moment";
-import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
+import {
+  GetAngsuran,
+  GetDetailDapem,
+  IDRFormat,
+} from "@/components/utils/PembiayaanUtil";
 moment.locale("id");
 
 export const SIPage1Vima = (record: IDropping) => {
   const dapem = record.Dapems[0];
-  const angs = GetAngsuran(
-    dapem.plafond,
-    dapem.tenor,
-    dapem.c_margin + dapem.c_margin_sumdan,
-    dapem.margin_type,
-    dapem.rounded,
-    dapem.c_ned,
-  ).angsuran;
-  const angsSumdan = GetAngsuran(
-    dapem.plafond,
-    dapem.tenor,
-    dapem.c_margin_sumdan,
-    dapem.margin_type,
-    dapem.rounded,
-  ).angsuran;
-  const admAngsuran = Math.ceil(angs - angsSumdan);
+  const detail = GetDetailDapem(dapem);
+
   const adm =
     dapem.plafond * ((dapem.c_adm + dapem.c_adm_mitra + dapem.c_adm_ff) / 100);
   const provisi =
@@ -109,7 +99,7 @@ export const SIPage1Vima = (record: IDropping) => {
           },
           {
             key: `Blokir Angsuran ${dapem.c_blokir} Bulan`,
-            value: IDRFormat(angs * dapem.c_blokir),
+            value: IDRFormat(detail.detail.angsuran_sumdan * dapem.c_blokir),
             currency: true,
             classStyle: "font-bold",
           },
@@ -118,6 +108,14 @@ export const SIPage1Vima = (record: IDropping) => {
 
       <p class="mt-4">Selanjutnya kami mohon :</p>
         <div class="ml-6">
+          <div class="flex gap-2 font-bold">
+            <p class="w-44">Blokir Angsuran</p>
+            <p class="w-4">:</p>
+            <div class="w-28 flex justify-between gap-2">
+              <p class="w-4">Rp. </p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(dapem.c_blokir * (detail.angsuran - detail.detail.angsuran_sumdan))}</p>
+            </div>
+          </div>
           <div class="flex gap-2 font-bold">
             <p class="w-44">Total Biaya</p>
             <p class="w-4">:</p>
@@ -153,16 +151,24 @@ export const SIPage1Vima = (record: IDropping) => {
               <p class="w-4 flex-1 text-right">${IDRFormat(tatalaksana)}</p>
             </div>
           </div>
+          <div class="flex gap-2 font-bold">
+            <p class="w-44">Total Dropping</p>
+            <p class="w-4">:</p>
+            <div class="w-28 flex justify-between gap-2">
+              <p class="w-4">Rp. </p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(biaya + dapem.c_blokir * (detail.angsuran - detail.detail.angsuran_sumdan))}</p>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
 
     <div class="my-5 flex justify-around gap-10 items-end text-center">
       <div class="flex-1"></div>
       <div class="flex-1">
         <p>Hormat kami,</p>
         <div class="h-28"></div>
-        <p class="border-b">${""}</p>
-        <p>${""}</p>
+        <p class="w-full border-b">${process.env.NEXT_PUBLIC_APP_SI_NAME}</p>
+        <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
       </div>
     </div>
   </div>

@@ -28,19 +28,19 @@ export const SIPage3Vima = (record: IDropping) => {
         { key: "Nama Debitur", value: dapem.Debitur.fullname },
         {
           key: "Tempat, Tanggal Lahir",
-          value: `${dapem.Debitur.birthplace}, ${moment(dapem.Debitur.birthdate).format("DD MMMM YYYY")}`,
+          value: `${dapem.Debitur.birthplace || ""}, ${moment(dapem.Debitur.birthdate).format("DD MMMM YYYY")}`,
         },
-        { key: "No. KTP / NIK", value: dapem.Debitur.nik },
-        { key: "No. Tlp/HP", value: dapem.Debitur.phone },
+        { key: "No. KTP / NIK", value: dapem.Debitur.nik || "" },
+        { key: "No. Tlp/HP", value: dapem.Debitur.phone || "" },
         { key: "No. Pensiun", value: dapem.Debitur.nopen },
-        { key: "No. SK / SKEP", value: dapem.Debitur.no_skep },
-        { key: "Nomor PK", value: dapem.no_contract },
+        { key: "No. SK / SKEP", value: dapem.Debitur.no_skep || "" },
+        { key: "Nomor PK", value: dapem.no_contract || "" },
         {
           key: "Plafon Pembiayaan",
           classStyle: "font-bold",
           value: `Rp. ${IDRFormat(dapem.plafond)}`,
         },
-        { key: "Pengelola", value: dapem.Debitur.group_skep },
+        { key: "Pengelola", value: dapem.Debitur.group_skep || "" },
       ]
         .map(
           (r, i) => `

@@ -169,7 +169,7 @@ export default function Page() {
       },
     },
     {
-      title: "Adm Mitra & Rekening",
+      title: "Biaya Mitra",
       key: "adm",
       dataIndex: "adm",
       render(value, record, index) {
