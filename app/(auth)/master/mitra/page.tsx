@@ -118,6 +118,7 @@ export default function Page() {
       title: "Kontak",
       dataIndex: "code",
       key: "code",
+      width: 200,
       render(value, record, index) {
         return (
           <div>

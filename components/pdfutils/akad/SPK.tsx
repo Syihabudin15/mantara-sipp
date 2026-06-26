@@ -1,22 +1,11 @@
-import {
-  GetAngsuran,
-  GetDapem,
-  IDRFormat,
-} from "@/components/utils/PembiayaanUtil";
+import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header, ListNonStyle, NumberToWordsID } from "../utils";
 moment.locale("id");
 
 export const SPK = (record: IDapem) => {
-  const angsuran = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin + record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded,
-    record.c_ned,
-  ).angsuran;
+  const angsuran = GetDetailDapem(record).angsuran;
 
   return `
   ${Header("SURAT PERNYATAAN KESANGGUPAN (SPK)", record.no_contract, undefined, record.ProdukPembiayaan.Sumdan.logo, undefined)}

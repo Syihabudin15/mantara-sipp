@@ -1,8 +1,41 @@
 "use client";
 
+import { useEffect, useState, useCallback, useMemo, useId } from "react";
+import Link from "next/link";
+import moment from "moment";
+import { JenisPembiayaan, Sumdan } from "@prisma/client";
+import {
+  App,
+  Button,
+  Card,
+  Input,
+  Modal,
+  Select,
+  Table,
+  TableProps,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
+import { HookAPI } from "antd/es/modal/useModal";
+import {
+  ArrowRightOutlined,
+  BankOutlined,
+  CheckCircleOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  FileFilled,
+  FolderOutlined,
+  PayCircleOutlined,
+  PrinterOutlined,
+  ReadOutlined,
+  RobotOutlined,
+  SwapOutlined,
+} from "@ant-design/icons";
+
 import { FormInput, ViewFiles } from "@/components";
 import { printContract } from "@/components/pdfutils/akad/Akad";
-import { printForm } from "@/components/pdfutils/etc/printForm";
+// import { printForm } from "@/components/pdfutils/etc/printForm";
 import { printMonitoring } from "@/components/pdfutils/etc/printMonitoring";
 import { useUser } from "@/components/UserContext";
 import {
@@ -13,7 +46,11 @@ import {
   MappingToExcelDapem,
 } from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
-import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
+import {
+  GetDetailDapem,
+  GetRoman,
+  IDRFormat,
+} from "@/components/utils/PembiayaanUtil";
 import {
   IActionTable,
   IAgentFronting,
@@ -24,43 +61,7 @@ import {
 } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 
-import {
-  ArrowRightOutlined,
-  BankOutlined,
-  CheckCircleOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  FileFilled,
-  FolderOutlined,
-  PayCircleOutlined,
-  PlusCircleOutlined,
-  PrinterOutlined,
-  ReadOutlined,
-  RobotOutlined,
-  SwapOutlined,
-} from "@ant-design/icons";
-import { JenisPembiayaan, Sumdan } from "@prisma/client";
-import {
-  App,
-  Button,
-  Card,
-  DatePicker,
-  Input,
-  message,
-  Modal,
-  Select,
-  Table,
-  TableProps,
-  Tag,
-  Tooltip,
-  Typography,
-} from "antd";
-import { HookAPI } from "antd/es/modal/useModal";
-import moment from "moment";
-import Link from "next/link";
-import { useEffect, useState } from "react";
 const { Paragraph } = Typography;
-const { RangePicker } = DatePicker;
 
 interface IActionTableAkad<T> extends IActionTable<T> {
   cetakAkad: boolean;
@@ -75,9 +76,7 @@ export default function Page() {
     search: "",
     sumdanId: "",
     jenisPembiayaanId: "",
-    dropping_status: "",
     agentFrontingId: "",
-    backdate: "",
   });
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<IActionTableAkad<IDapem>>({
@@ -91,154 +90,186 @@ export default function Page() {
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
   const [agents, setAgents] = useState<IAgentFronting[]>([]);
   const { modal } = App.useApp();
-  const { hasAccess } = useAccess(
-    window ? window.location.pathname : "/monitoring",
-  );
+
+  const currentPath =
+    typeof window !== "undefined" ? window.location.pathname : "/pendingdata";
+  const { hasAccess } = useAccess(currentPath);
   const user = useUser();
-  const [views, setViews] = useState<IViewFiles>({
-    open: false,
-    data: [],
-  });
+  const [views, setViews] = useState<IViewFiles>({ open: false, data: [] });
 
-  const getData = async () => {
+  // 1. Fetch data utama dibungkus useCallback agar stabil
+  const getData = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({
-      page: pageProps.page.toString(),
-      limit: pageProps.limit.toString(),
-      // currmonth: "ya",
-      ...(pageProps.search && { search: pageProps.search }),
-      ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
-      ...(pageProps.jenisPembiayaanId && {
-        jenisPembiayaanId: pageProps.jenisPembiayaanId,
-      }),
-      ...(pageProps.dropping_status && {
-        dropping_status: pageProps.dropping_status,
-      }),
-      ...(pageProps.agentFrontingId && {
-        agentFrontingId: pageProps.agentFrontingId,
-      }),
-      ...(pageProps.backdate && { backdate: pageProps.backdate }),
-    });
+    try {
+      const params = new URLSearchParams({
+        page: pageProps.page.toString(),
+        limit: pageProps.limit.toString(),
+        ...(pageProps.search && { search: pageProps.search }),
+        ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+        ...(pageProps.jenisPembiayaanId && {
+          jenisPembiayaanId: pageProps.jenisPembiayaanId,
+        }),
+        ...(pageProps.agentFrontingId && {
+          agentFrontingId: pageProps.agentFrontingId,
+        }),
+        includes: "true",
+      });
 
-    const res = await fetch(`/api/dapem?${params.toString()}`);
-    const json = await res.json();
-    setPageProps((prev) => ({
-      ...prev,
-      data: json.data,
-      total: json.total,
-    }));
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      await getData();
-    }, 200);
-    return () => clearTimeout(timeout);
+      const res = await fetch(`/api/dapem?${params.toString()}`);
+      const json = await res.json();
+      setPageProps((prev) => ({
+        ...prev,
+        data: json.data || [],
+        total: json.total || 0,
+      }));
+    } catch (err) {
+      console.error("Gagal memuat data dapem pending:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [
     pageProps.page,
     pageProps.limit,
     pageProps.search,
     pageProps.sumdanId,
     pageProps.jenisPembiayaanId,
-    pageProps.dropping_status,
     pageProps.agentFrontingId,
-    pageProps.backdate,
   ]);
 
+  // Debouncer pencarian
   useEffect(() => {
+    const timeout = setTimeout(() => {
+      getData();
+    }, 250);
+    return () => clearTimeout(timeout);
+  }, [getData]);
+
+  // Fetch master data sekali saat mount
+  useEffect(() => {
+    let isMounted = true;
     (async () => {
-      await Promise.all([
-        fetch("/api/sumdan?limit=500")
-          .then((res) => res.json())
-          .then((res) => setSumdans(res.data)),
-        fetch("/api/jenis?limit=50")
-          .then((res) => res.json())
-          .then((res) => setJeniss(res.data)),
-        fetch("/api/agent?limit=100")
-          .then((res) => res.json())
-          .then((res) => setAgents(res.data)),
-      ]);
+      try {
+        const [resSumdan, resJenis, resAgent] = await Promise.all([
+          fetch("/api/sumdan?limit=500").then((res) => res.json()),
+          fetch("/api/jenis?limit=50").then((res) => res.json()),
+          fetch("/api/agent?limit=100").then((res) => res.json()),
+        ]);
+
+        if (isMounted) {
+          setSumdans(resSumdan.data || []);
+          setJeniss(resJenis.data || []);
+          setAgents(resAgent.data || []);
+        }
+      } catch (err) {
+        console.error("Gagal memuat master data filter:", err);
+      }
     })();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const columns: TableProps<IDapem>["columns"] = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      fixed: window && window.innerWidth > 600 ? "left" : false,
-      render(value, record, index) {
-        return (
+  // 2. Mencegah mapping array Select Options di setiap render ulang
+  const sumdanOptions = useMemo(
+    () => sumdans.map((s) => ({ label: s.code, value: s.id })),
+    [sumdans],
+  );
+  const jenisOptions = useMemo(
+    () => jeniss.map((s) => ({ label: s.name, value: s.id })),
+    [jeniss],
+  );
+  const agentOptions = useMemo(
+    () => agents.map((s) => ({ label: s.name, value: s.id })),
+    [agents],
+  );
+
+  // 3. Gabungkan ringkasan kalkulasi data ke dalam satu loop useMemo tunggal
+  const calculatedSummary = useMemo(() => {
+    let angsuran = 0;
+    let angsuran_sumdan = 0;
+    let plafond = 0;
+
+    const dataLength = pageProps.data?.length || 0;
+    for (let i = 0; i < dataLength; i++) {
+      const d = pageProps.data[i];
+      const angs = GetDetailDapem(d);
+      angsuran += angs.angsuran;
+      angsuran_sumdan += angs.detail.angsuran_sumdan;
+      plafond += d.plafond;
+    }
+    return { angsuran, angsuran_sumdan, plafond };
+  }, [pageProps.data]);
+
+  // 4. Bersihkan dependensi `selected` dari useMemo columns agar table tidak re-render radikal saat modal dibuka/ditutup
+  const columns: TableProps<IDapem>["columns"] = useMemo(() => {
+    return [
+      {
+        title: "ID",
+        dataIndex: "id",
+        key: "id",
+        render: (_, record, index) => (
           <div>
             <div>{(pageProps.page - 1) * pageProps.limit + index + 1}</div>
             <div className="opacity-80 text-xs">{record.id}</div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Pemohon",
-      dataIndex: "pemohon",
-      key: "pemohon",
-      fixed: window && window.innerWidth > 600 ? "left" : false,
-      render(value, record, index) {
-        return (
+      {
+        title: "Pemohon",
+        dataIndex: "pemohon",
+        key: "pemohon",
+        render: (_, record) => (
           <div>
             <p className="font-bold">{record.Debitur.fullname}</p>
             <div className="text-xs opacity-80">
               <p>@{record.Debitur.nopen}</p>
             </div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Permohonan",
-      dataIndex: "permohonan",
-      key: "permohonan",
-      render(value, record, index) {
-        return (
+      {
+        title: "Permohonan",
+        dataIndex: "permohonan",
+        key: "permohonan",
+        render: (_, record) => (
           <div>
             <div>
-              Plafond : <Tag color={"blue"}>{IDRFormat(record.plafond)}</Tag>
+              Plafond : <Tag color="blue">{IDRFormat(record.plafond)}</Tag>
             </div>
             <div>
-              Tenor : <Tag color={"blue"}>{record.tenor} Bulan</Tag>
+              Tenor : <Tag color="blue">{record.tenor} Bulan</Tag>
             </div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Angsuran",
-      dataIndex: "angsuran",
-      key: "angsuran",
-      render(value, record, index) {
-        const temp = GetDetailDapem(record);
-        return (
-          <div className="text-xs">
-            <div className="flex gap-2 items-center">
-              <Tag color={"blue"}>
-                <BankOutlined /> {IDRFormat(temp.detail.angsuran_sumdan)}
-              </Tag>
-              <Tag color={"blue"}>
-                {IDRFormat(temp.angsuran - temp.detail.angsuran_sumdan)}
-              </Tag>
+      {
+        title: "Angsuran",
+        dataIndex: "angsuran",
+        key: "angsuran",
+        render: (_, record) => {
+          const temp = GetDetailDapem(record);
+          return (
+            <div className="text-xs">
+              <div className="flex gap-2 items-center">
+                <Tag color="blue">
+                  <BankOutlined /> {IDRFormat(temp.detail.angsuran_sumdan)}
+                </Tag>
+                <Tag color="blue">
+                  {IDRFormat(temp.angsuran - temp.detail.angsuran_sumdan)}
+                </Tag>
+              </div>
+              <div className="flex justify-center mt-1">
+                <Tag color="blue"> {IDRFormat(temp.angsuran)}</Tag>
+              </div>
             </div>
-            <div className="flex justify-center">
-              <Tag color={"blue"}> {IDRFormat(temp.angsuran)}</Tag>
-            </div>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      title: "Produk Pembiayaan",
-      dataIndex: "produk",
-      key: "produk",
-      render(value, record, index) {
-        return (
+      {
+        title: "Produk Pembiayaan",
+        dataIndex: "produk",
+        key: "produk",
+        render: (_, record) => (
           <div>
             <p>
               {record.ProdukPembiayaan.name}{" "}
@@ -246,196 +277,162 @@ export default function Page() {
             </p>
             <p className="opacity-80 text-xs">{record.JenisPembiayaan.name}</p>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "AO & UP",
-      dataIndex: "aoup",
-      key: "aoup",
-      render(value, record, index) {
-        const ao = record.AO || record.AOCabang || record.AOArea;
-        return (
-          <div>
+      {
+        title: "AO & UP",
+        dataIndex: "aoup",
+        key: "aoup",
+        render: (_, record) => {
+          const ao = record.AO || record.AOCabang || record.AOArea;
+          return (
             <div>
-              {ao?.fullname} ({ao?.position})
+              <div>{ao?.fullname}</div>
+              <div className="text-xs opacity-80">
+                {ao?.Cabang.name} | {ao?.Cabang.Area.name}
+              </div>
             </div>
-            <div className="text-xs opacity-80">
-              {ao?.Cabang.name} | {ao?.Cabang.Area.name}
+          );
+        },
+      },
+      {
+        title: "Status VERIFIKASI",
+        dataIndex: "verif_status",
+        key: "verif_status",
+        width: 250,
+        render: (_, record) => {
+          const temp = record.verif_desc
+            ? (JSON.parse(record.verif_desc) as IDesc)
+            : null;
+          return (
+            <div className="flex gap-1">
+              {GetStatusTag(record.verif_status)}
+              {temp && (
+                <Paragraph
+                  ellipsis={{ rows: 2, expandable: "collapsible" }}
+                  style={{ fontSize: 11 }}
+                >
+                  {temp.desc}
+                  <p>
+                    (By {temp.name} at {moment(temp.date).format("DD/MM/YYYY")})
+                  </p>
+                </Paragraph>
+              )}
             </div>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      title: "Agent Fronting",
-      dataIndex: "agentFrontingId",
-      key: "agentFrontingId",
-      render(value, record, index) {
-        return (
-          <div>
-            <div>{record.AgentFronting?.name}</div>
-            <div className="text-xs opacity-80">
-              {record.AgentFronting?.code}
+      {
+        title: "Status SLIK",
+        dataIndex: "slik_status",
+        key: "slik_status",
+        width: 250,
+        render: (_, record) => {
+          const temp = record.slik_desc
+            ? (JSON.parse(record.slik_desc) as IDesc)
+            : null;
+          return (
+            <div className="flex gap-1">
+              {GetStatusTag(record.slik_status)}
+              {temp && (
+                <Paragraph
+                  ellipsis={{ rows: 2, expandable: "collapsible" }}
+                  style={{ fontSize: 11 }}
+                >
+                  {temp.desc}
+                  <p>
+                    (By {temp.name} at {moment(temp.date).format("DD/MM/YYYY")})
+                  </p>
+                </Paragraph>
+              )}
             </div>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      title: "Status SLIK",
-      dataIndex: "slik_status",
-      key: "slik_status",
-      width: 250,
-      render: (_, record, i) => {
-        const temp = record.slik_desc
-          ? (JSON.parse(record.slik_desc) as IDesc)
-          : null;
-        return (
-          <div className="flex gap-1">
-            {GetStatusTag(record.slik_status)}
-            {temp && (
-              <Paragraph
-                ellipsis={{
-                  rows: 2,
-                  expandable: "collapsible",
-                }}
-                style={{ fontSize: 11 }}
-              >
-                {temp.desc}
-                <p>
-                  (By {temp.name} at {moment(temp.date).format("DD/MM/YYYY")})
-                </p>
-              </Paragraph>
-            )}
-          </div>
-        );
+      {
+        title: "Status APPROVAL",
+        dataIndex: "approvel_status",
+        key: "approvel_status",
+        width: 250,
+        render: (_, record) => {
+          const temp = record.approv_desc
+            ? (JSON.parse(record.approv_desc) as IDesc)
+            : null;
+          return (
+            <div className="flex gap-1">
+              {GetStatusTag(record.approv_status)}
+              {temp && (
+                <Paragraph
+                  ellipsis={{ rows: 2, expandable: "collapsible" }}
+                  style={{ fontSize: 11 }}
+                >
+                  {temp.desc}
+                  <p>
+                    (By {temp.name} at {moment(temp.date).format("DD/MM/YYYY")})
+                  </p>
+                </Paragraph>
+              )}
+            </div>
+          );
+        },
       },
-    },
-    {
-      title: "Status VERIFIKASI",
-      dataIndex: "verif_status",
-      key: "verif_status",
-      width: 250,
-      render: (_, record, i) => {
-        const temp = record.verif_desc
-          ? (JSON.parse(record.verif_desc) as IDesc)
-          : null;
-        return (
-          <div className="flex gap-1">
-            {GetStatusTag(record.verif_status)}
-            {temp && (
-              <Paragraph
-                ellipsis={{
-                  rows: 2,
-                  expandable: "collapsible",
-                }}
-                style={{ fontSize: 11 }}
-              >
-                {temp.desc}
-                <p>
-                  (By {temp.name} at {moment(temp.date).format("DD/MM/YYYY")})
-                </p>
-              </Paragraph>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Status APPROVAL",
-      dataIndex: "approvel_status",
-      key: "approvel_status",
-      width: 250,
-      render: (_, record, i) => {
-        const temp = record.approv_desc
-          ? (JSON.parse(record.approv_desc) as IDesc)
-          : null;
-        return (
-          <div className="flex gap-1">
-            {GetStatusTag(record.approv_status)}
-            {temp && (
-              <Paragraph
-                ellipsis={{
-                  rows: 2,
-                  expandable: "collapsible",
-                }}
-                style={{ fontSize: 11 }}
-              >
-                {temp.desc}
-                <p>
-                  (By {temp.name} at {moment(temp.date).format("DD/MM/YYYY")})
-                </p>
-              </Paragraph>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Status Dropping",
-      dataIndex: "dropping_status",
-      key: "dropping_status",
-      width: 180,
-      render: (_, record, i) => {
-        return (
+      {
+        title: "Status Dropping",
+        dataIndex: "dropping_status",
+        key: "dropping_status",
+        width: 180,
+        render: (_, record) => (
           <div className="flex gap-1">
             {GetDroppingStatusTag(record.dropping_status)}
-            {record.Dropping && record.Dropping.process_at && (
+            {record.Dropping?.process_at && (
               <div className="text-xs">
                 {moment(record.Dropping.process_at).format("DD/MM/YYYY HH:mm")}
               </div>
             )}
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Berkas Akad",
-      dataIndex: "akad",
-      key: "akad",
-      render(value, record, index) {
-        return (
-          <div>
-            <div className="flex gap-2">
+      {
+        title: "Berkas Akad",
+        dataIndex: "akad",
+        key: "akad",
+        render: (_, record) => (
+          <div className="flex gap-2">
+            <Button
+              icon={<FileFilled />}
+              size="small"
+              disabled={!record.file_contract}
+              onClick={() =>
+                setViews({
+                  open: true,
+                  data: [
+                    { name: "Berkas Akad", url: record.file_contract || "" },
+                  ],
+                })
+              }
+            />
+            {hasAccess("update") && (
               <Button
-                icon={<FileFilled />}
+                icon={<PrinterOutlined />}
+                type="primary"
                 size="small"
-                disabled={!record.file_contract}
                 onClick={() =>
-                  setViews({
-                    open: true,
-                    data: [
-                      { name: "Berkas Akad", url: record.file_contract || "" },
-                    ],
-                  })
+                  setSelected((prev) => ({
+                    ...prev,
+                    selected: record,
+                    cetakAkad: true,
+                  }))
                 }
-              ></Button>
-              {hasAccess("update") && (
-                <Button
-                  icon={<PrinterOutlined />}
-                  type="primary"
-                  size="small"
-                  onClick={() =>
-                    setSelected({
-                      ...selected,
-                      selected: record,
-                      cetakAkad: true,
-                    })
-                  }
-                ></Button>
-              )}
-            </div>
+              />
+            )}
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Nomor Akad",
-      dataIndex: "dataakad",
-      key: "dataakad",
-      render(value, record, index) {
-        return (
+      {
+        title: "Nomor Akad",
+        dataIndex: "dataakad",
+        key: "dataakad",
+        render: (_, record) => (
           <div>
             {record.no_contract && <div>{record.no_contract}</div>}
             {record.date_contract && (
@@ -444,120 +441,172 @@ export default function Page() {
               </div>
             )}
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Mutasi & Takeover",
-      dataIndex: "produk",
-      key: "produk",
-      render(value, record, index) {
-        return (
+      {
+        title: "Mutasi & Takeover",
+        dataIndex: "produk",
+        key: "produk_mutasi",
+        width: 350,
+        render: (_, record) => (
           <div>
             {record.JenisPembiayaan.status_mutasi && (
               <div style={{ fontSize: 9 }}>
                 <SwapOutlined />{" "}
-                <Tag style={{ fontSize: 9 }} color={"red"}>
+                <Tag style={{ fontSize: 9 }} color="red">
                   {record.prev_payoffice}
                 </Tag>{" "}
                 <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
-                <Tag style={{ fontSize: 9 }} color={"blue"}>
+                <Tag style={{ fontSize: 9 }} color="blue">
                   {record.PayOffice.code || record.PayOffice.name}
                 </Tag>
               </div>
             )}
             {record.JenisPembiayaan.status_takeover && (
-              <div style={{ fontSize: 9 }}>
+              <div style={{ fontSize: 9 }} className="mt-1">
                 <PayCircleOutlined />{" "}
-                <Tag color={"blue"} style={{ fontSize: 9 }}>
+                <Tag color="blue" style={{ fontSize: 9 }}>
                   {record.takeover_from} (
                   {moment(record.takeover_date).format("DD/MM/YYYY")})
                 </Tag>
               </div>
             )}
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Created",
-      dataIndex: "created_at",
-      key: "created_at",
-      render(value, record, index) {
-        return (
+      {
+        title: "Created",
+        dataIndex: "created_at",
+        key: "created_at",
+        render: (_, record) => (
           <div>
             <div>{record.User.fullname}</div>
             <div className="opacity-80 text-xs">
               {moment(record.created_at).format("DD/MM/YYYY")}
             </div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Aksi",
-      key: "action",
-      width: 100,
-      render: (_, record) => (
-        <div className="flex gap-1 flex-wrap justify-center">
-          {hasAccess("write") && (
-            <Button
-              icon={<PrinterOutlined />}
-              type="primary"
-              size="small"
-              onClick={() => printForm(record)}
-            ></Button>
-          )}
-          {hasAccess("update") && (
-            <Link href={`/monitoring/upsert/${record.id}`}>
+      {
+        title: "Aksi",
+        key: "action",
+        width: 100,
+        render: (_, record) => (
+          <div className="flex gap-1 flex-wrap justify-center">
+            {/* {hasAccess("write") && (
               <Button
-                icon={<EditOutlined />}
+                icon={<PrinterOutlined />}
+                type="primary"
+                size="small"
+                onClick={() => printForm(record)}
+              />
+            )} */}
+            {hasAccess("update") && (
+              <Link href={`/monitoring/upsert/${record.id}`}>
+                <Button icon={<EditOutlined />} size="small" type="primary" />
+              </Link>
+            )}
+            {hasAccess("update") &&
+              ["DRAFT", "BATAL"].includes(record.dropping_status) && (
+                <Tooltip title="Ajukan permohonan ini? (Naikan ke verifikasi)">
+                  <Button
+                    icon={<CheckCircleOutlined />}
+                    size="small"
+                    type="primary"
+                    onClick={() =>
+                      setSelected((prev) => ({
+                        ...prev,
+                        proses: true,
+                        selected: record,
+                      }))
+                    }
+                  />
+                </Tooltip>
+              )}
+            {hasAccess("delete") && (
+              <Button
+                icon={<DeleteOutlined />}
                 size="small"
                 type="primary"
-              ></Button>
-            </Link>
-          )}
-          {hasAccess("update") &&
-            ["DRAFT", "BATAL","DITOLAK"].includes(record.dropping_status) && (
-              <Tooltip title={"Ajukan permohonan ini? (Naikan ke verifikasi)"}>
-                <Button
-                  icon={<CheckCircleOutlined />}
-                  size="small"
-                  type="primary"
-                  onClick={() =>
-                    setSelected({ ...selected, proses: true, selected: record })
-                  }
-                ></Button>
-              </Tooltip>
+                danger
+                onClick={() =>
+                  setSelected((prev) => ({
+                    ...prev,
+                    delete: true,
+                    selected: record,
+                  }))
+                }
+                disabled={["DISETUJUI", "LUNAS"].includes(
+                  record.dropping_status,
+                )}
+              />
             )}
-          {hasAccess("delete") && (
-            <Button
-              icon={<DeleteOutlined />}
-              size="small"
-              type="primary"
-              danger
-              onClick={() =>
-                setSelected({ ...selected, delete: true, selected: record })
-              }
-              disabled={["DISETUJUI", "LUNAS"].includes(record.dropping_status)}
-            ></Button>
-          )}
-          <Tooltip
-            title={`Detail Data ${record.Debitur.fullname} (${record.nopen})`}
-          >
-            <Button
-              icon={<FolderOutlined />}
-              type="primary"
-              size="small"
-              onClick={() =>
-                setSelected({ ...selected, upsert: true, selected: record })
-              }
-            ></Button>
-          </Tooltip>
-        </div>
-      ),
-    },
-  ];
+            <Tooltip
+              title={`Detail Data ${record.Debitur.fullname} (${record.nopen})`}
+            >
+              <Button
+                icon={<FolderOutlined />}
+                type="primary"
+                size="small"
+                onClick={() =>
+                  setSelected((prev) => ({
+                    ...prev,
+                    upsert: true,
+                    selected: record,
+                  }))
+                }
+              />
+            </Tooltip>
+          </div>
+        ),
+      },
+    ];
+  }, [pageProps.page, pageProps.limit, hasAccess]); // selected DIBUANG dari dependensi agar tabel tidak lag/re-render total
+
+  // Callback excel stabil
+  const handleExportExcel = useCallback(() => {
+    ExportToExcel(
+      [{ sheetname: "alldata", data: MappingToExcelDapem(pageProps.data) }],
+      "pendingdata",
+    );
+  }, [pageProps.data]);
+
+  // Callback penangan summary stabil
+  const handleTableSummary = useCallback(
+    () => (
+      <Table.Summary.Row className="text-xs bg-blue-400">
+        <Table.Summary.Cell index={0} colSpan={2} className="text-center">
+          <b>SUMMARY</b>
+        </Table.Summary.Cell>
+        <Table.Summary.Cell index={3} className="text-center">
+          <b>{IDRFormat(calculatedSummary.plafond)}</b>
+        </Table.Summary.Cell>
+        <Table.Summary.Cell index={4} className="text-center font-bold">
+          <div>
+            {IDRFormat(calculatedSummary.angsuran_sumdan)} +{" "}
+            {IDRFormat(
+              calculatedSummary.angsuran - calculatedSummary.angsuran_sumdan,
+            )}
+          </div>
+          <div className="border-t border-gray-500">
+            {IDRFormat(calculatedSummary.angsuran)}
+          </div>
+        </Table.Summary.Cell>
+      </Table.Summary.Row>
+    ),
+    [calculatedSummary],
+  );
+
+  // Callback penangan clear filter
+  const handleClearFilter = useCallback(() => {
+    setPageProps((prev) => ({
+      ...prev,
+      sumdanId: "",
+      jenisPembiayaanId: "",
+      agentFrontingId: "",
+      page: 1,
+    }));
+  }, []);
 
   return (
     <Card
@@ -570,142 +619,73 @@ export default function Page() {
     >
       <div className="flex justify-between my-1 gap-2 overflow-auto">
         <div className="flex gap-2">
-          {hasAccess("write") && (
-            <Link href={"/monitoring/upsert"}>
-              <Button size="small" icon={<PlusCircleOutlined />} type="primary">
-                Add New
-              </Button>
-            </Link>
-          )}
-          <FilterData
-            children={
-              <>
+          <FilterData clearfilter={handleClearFilter}>
+            <>
+              {user && !user.sumdanId && (
                 <div className="my-2">
-                  <p>Periode :</p>
-                  <RangePicker
-                    size="small"
-                    onChange={(date, dateStr) =>
-                      setPageProps({ ...pageProps, backdate: dateStr })
-                    }
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                {user && !user.sumdanId && (
-                  <div className="my-2">
-                    <p>Mitra pembiayaan :</p>
-                    <Select
-                      size="small"
-                      placeholder="Pilih Mitra..."
-                      options={sumdans.map((s) => ({
-                        label: s.code,
-                        value: s.id,
-                      }))}
-                      onChange={(e) =>
-                        setPageProps({ ...pageProps, sumdanId: e })
-                      }
-                      allowClear
-                      style={{ width: "100%" }}
-                    />
-                  </div>
-                )}
-                <div className="my-2">
-                  <p>Jenis pembiayaan :</p>
+                  <p>Mitra pembiayaan :</p>
                   <Select
                     size="small"
-                    placeholder="Pilih Jenis..."
-                    options={jeniss.map((s) => ({
-                      label: s.name,
-                      value: s.id,
-                    }))}
+                    placeholder="Pilih Mitra..."
+                    options={sumdanOptions}
+                    value={pageProps.sumdanId}
                     onChange={(e) =>
-                      setPageProps({ ...pageProps, jenisPembiayaanId: e })
+                      setPageProps((prev) => ({
+                        ...prev,
+                        sumdanId: e,
+                        page: 1,
+                      }))
                     }
                     allowClear
                     style={{ width: "100%" }}
                   />
                 </div>
-                <div className="my-2">
-                  <p>Agent Fronting :</p>
-                  <Select
-                    size="small"
-                    placeholder="Pilih agent..."
-                    options={agents.map((s) => ({
-                      label: s.name,
-                      value: s.id,
-                    }))}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, agentFrontingId: e })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status pembiayaan</p>
-                  <Select
-                    size="small"
-                    placeholder="Pilih Status..."
-                    options={[
-                      { label: "Disimpan", value: "DRAFT" },
-                      { label: "Antri", value: "PENDING" },
-                      { label: "Disetujui/Proses Akad", value: "PROSES" },
-                      { label: "Dropping", value: "DISETUJUI" },
-                      { label: "Batal", value: "BATAL" },
-                      { label: "Ditolak", value: "DITOLAK" },
-                      { label: "Lunas", value: "LUNAS" },
-                      { label: "Final", value: "final" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, dropping_status: e })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-              </>
-            }
-          />
+              )}
+              <div className="my-2">
+                <p>Jenis pembiayaan :</p>
+                <Select
+                  size="small"
+                  placeholder="Pilih Jenis..."
+                  options={jenisOptions}
+                  value={pageProps.jenisPembiayaanId}
+                  onChange={(e) =>
+                    setPageProps((prev) => ({
+                      ...prev,
+                      jenisPembiayaanId: e,
+                      page: 1,
+                    }))
+                  }
+                  allowClear
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div className="my-2">
+                <p>Agent Fronting :</p>
+                <Select
+                  size="small"
+                  placeholder="Pilih Agent..."
+                  options={agentOptions}
+                  value={pageProps.agentFrontingId}
+                  onChange={(e) =>
+                    setPageProps((prev) => ({
+                      ...prev,
+                      agentFrontingId: e,
+                      page: 1,
+                    }))
+                  }
+                  allowClear
+                  style={{ width: "100%" }}
+                />
+              </div>
+            </>
+          </FilterData>
         </div>
         <div className="flex gap-2">
           <Button
             icon={<PrinterOutlined />}
             size="small"
             type="primary"
-            onClick={() =>
-              ExportToExcel(
-                [
-                  {
-                    sheetname: "alldata",
-                    data: MappingToExcelDapem(pageProps.data),
-                  },
-                  {
-                    sheetname: "antri",
-                    data: MappingToExcelDapem(
-                      pageProps.data.filter((d) =>
-                        ["DRAFT", "PENDING"].includes(d.dropping_status),
-                      ),
-                    ),
-                  },
-                  {
-                    sheetname: "final",
-                    data: MappingToExcelDapem(
-                      pageProps.data.filter((d) =>
-                        ["PROSES", "DISETUJUI"].includes(d.dropping_status),
-                      ),
-                    ),
-                  },
-                  {
-                    sheetname: "dropping",
-                    data: MappingToExcelDapem(
-                      pageProps.data.filter(
-                        (d) => d.dropping_status === "DISETUJUI",
-                      ),
-                    ),
-                  },
-                ],
-                "monitoring",
-              )
-            }
+            onClick={handleExportExcel}
           >
             Excel
           </Button>
@@ -719,7 +699,7 @@ export default function Page() {
           >
             PDF
           </Button>
-          {hasAccess("write") && (
+          {/* {hasAccess("write") && (
             <Button
               icon={<PrinterOutlined />}
               type="primary"
@@ -728,13 +708,18 @@ export default function Page() {
             >
               Form
             </Button>
-          )}
+          )} */}
           <Input.Search
             size="small"
             style={{ width: 170 }}
             placeholder="Cari nama..."
+            value={pageProps.search}
             onChange={(e) =>
-              setPageProps({ ...pageProps, search: e.target.value })
+              setPageProps((prev) => ({
+                ...prev,
+                search: e.target.value,
+                page: 1,
+              }))
             }
           />
         </div>
@@ -745,7 +730,7 @@ export default function Page() {
         dataSource={pageProps.data}
         size="small"
         loading={loading}
-        rowKey={"id"}
+        rowKey="id"
         bordered
         scroll={{ x: "max-content", y: "48vh" }}
         pagination={{
@@ -753,47 +738,12 @@ export default function Page() {
           pageSize: pageProps.limit,
           total: pageProps.total,
           onChange: (page, pageSize) => {
-            setPageProps((prev) => ({
-              ...prev,
-              page,
-              limit: pageSize,
-            }));
+            setPageProps((prev) => ({ ...prev, page, limit: pageSize }));
           },
           pageSizeOptions: [50, 100, 500, 1000],
           showSizeChanger: true,
         }}
-        summary={(pageData) => {
-          let angsuran = 0;
-          let angsuran_sumdan = 0;
-          let plafond = 0;
-
-          pageData.forEach((d) => {
-            const angs = GetDetailDapem(d);
-            angsuran += angs.angsuran;
-            angsuran_sumdan += angs.detail.angsuran_sumdan;
-            plafond += d.plafond;
-          });
-
-          return (
-            <Table.Summary.Row className="text-xs bg-blue-400">
-              <Table.Summary.Cell index={0} colSpan={2} className="text-center">
-                <b>SUMMARY</b>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={3} className="text-center">
-                <b>{IDRFormat(plafond)}</b>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={4} className="text-center font-bold">
-                <div>
-                  {IDRFormat(angsuran_sumdan)} +{" "}
-                  {IDRFormat(angsuran - angsuran_sumdan)}
-                </div>
-                <div className="border-t border-gray-500">
-                  {IDRFormat(angsuran)}
-                </div>
-              </Table.Summary.Cell>
-            </Table.Summary.Row>
-          );
-        }}
+        summary={handleTableSummary}
       />
 
       {selected.selected && selected.proses && (
@@ -801,7 +751,11 @@ export default function Page() {
           data={selected.selected}
           open={selected.proses}
           setOpen={(val: boolean) =>
-            setSelected({ ...selected, proses: val, selected: undefined })
+            setSelected((prev) => ({
+              ...prev,
+              proses: val,
+              selected: undefined,
+            }))
           }
           getData={getData}
           hook={modal}
@@ -812,7 +766,11 @@ export default function Page() {
         <DeleteSubmission
           open={selected.delete}
           setOpen={(val: boolean) =>
-            setSelected({ ...selected, selected: undefined, delete: val })
+            setSelected((prev) => ({
+              ...prev,
+              selected: undefined,
+              delete: val,
+            }))
           }
           getData={getData}
           data={selected.selected}
@@ -824,7 +782,11 @@ export default function Page() {
         <PrintContractSubmission
           open={selected.cetakAkad}
           setOpen={(val: boolean) =>
-            setSelected({ ...selected, selected: undefined, cetakAkad: val })
+            setSelected((prev) => ({
+              ...prev,
+              selected: undefined,
+              cetakAkad: val,
+            }))
           }
           getData={getData}
           data={selected.selected}
@@ -836,7 +798,11 @@ export default function Page() {
         <DetailDapem
           open={selected.upsert}
           setOpen={(val: boolean) =>
-            setSelected({ ...selected, selected: undefined, upsert: val })
+            setSelected((prev) => ({
+              ...prev,
+              selected: undefined,
+              upsert: val,
+            }))
           }
           data={selected.selected}
           key={"detail" + selected.selected.id}
@@ -844,13 +810,14 @@ export default function Page() {
         />
       )}
       <ViewFiles
-        setOpen={(v: boolean) => setViews({ ...views, open: v })}
-        data={{ ...views }}
+        setOpen={(v: boolean) => setViews((prev) => ({ ...prev, open: v }))}
+        data={views}
       />
     </Card>
   );
 }
 
+// Sub-komponen penanganan aksi dengan pembaruan state yang stabil
 const SendSubmission = ({
   data,
   open,
@@ -865,29 +832,28 @@ const SendSubmission = ({
   hook: HookAPI;
 }) => {
   const [loading, setLoading] = useState(false);
-
   const handleSubmit = async () => {
     setLoading(true);
-    await fetch("/api/dapem?id=" + data.id, {
-      method: "PUT",
-      body: JSON.stringify({
-        ...data,
-        slik_status: "PENDING",
-        verif_status: "PENDING",
-        dropping_status: "PENDING",
-      }),
-    })
-      .then((res) => res.json())
-      .then(async (res) => {
-        if (res.status === 200) {
-          setOpen(false);
-          getData();
-          message.success("Data pembiayaan berhasil diajukan");
-        } else {
-          hook.error({ title: "ERROR!!", content: res.msg });
-        }
-      });
-    setLoading(false);
+    try {
+      const res = await fetch("/api/dapem?id=" + data.id, {
+        method: "PUT",
+        body: JSON.stringify({
+          ...data,
+          verif_status: "PENDING",
+          dropping_status: "PENDING",
+        }),
+      }).then((r) => r.json());
+      if (res.status === 200) {
+        setOpen(false);
+        await getData();
+      } else {
+        hook.error({ title: "ERROR!!", content: res.msg });
+      }
+    } catch {
+      hook.error({ content: "Gagal memproses data pengajuan." });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -927,46 +893,47 @@ const DeleteSubmission = ({
   hook: HookAPI;
 }) => {
   const [loading, setLoading] = useState(false);
-
   const handleDelete = async () => {
     setLoading(true);
-    await fetch("/api/dapem?id=" + data.id, { method: "DELETE" })
-      .then((res) => res.json())
-      .then(async (res) => {
-        const { msg, status } = res;
-        if (status === 200) {
-          await getData();
-          setOpen(false);
-        } else {
-          hook.error({ content: msg });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        hook.error({
-          content: `Internal Server Error!!. Hapus data permohonan kredit ${data.id}) gagal`,
-        });
+    try {
+      const res = await fetch("/api/dapem?id=" + data.id, {
+        method: "DELETE",
+      }).then((r) => r.json());
+      if (res.status === 200) {
+        await getData();
+        setOpen(false);
+      } else {
+        hook.error({ content: res.msg });
+      }
+    } catch {
+      hook.error({
+        content: `Internal Server Error!!. Hapus data permohonan kredit ${data.id} gagal`,
       });
-    setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = async () => {
     setLoading(true);
-    await fetch("/api/dapem?id=" + data.id, {
-      method: "PUT",
-      body: JSON.stringify({ ...data, dropping_status: "BATAL" }),
-    })
-      .then((res) => res.json())
-      .then(async (res) => {
-        if (res.status === 200) {
-          setOpen(false);
-          await getData();
-        } else {
-          hook.error({ title: "ERROR!!", content: res.msg });
-        }
-      });
-    setLoading(false);
+    try {
+      const res = await fetch("/api/dapem?id=" + data.id, {
+        method: "PUT",
+        body: JSON.stringify({ ...data, dropping_status: "BATAL" }),
+      }).then((r) => r.json());
+      if (res.status === 200) {
+        setOpen(false);
+        await getData();
+      } else {
+        hook.error({ title: "ERROR!!", content: res.msg });
+      }
+    } catch {
+      hook.error({ content: "Gagal membatalkan pengajuan." });
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
     <Modal
       open={open}
@@ -987,10 +954,10 @@ const DeleteSubmission = ({
         </div>
       </div>
       <div className="flex justify-end gap-2">
-        <Button danger onClick={() => handleDelete()}>
+        <Button danger onClick={handleDelete}>
           Hapus Pengajuan
         </Button>
-        <Button danger onClick={() => handleCancel()}>
+        <Button danger onClick={handleCancel}>
           Batalkan Pengajuan
         </Button>
         <Button onClick={() => setOpen(false)}>Tutup</Button>
@@ -1014,54 +981,30 @@ const PrintContractSubmission = ({
 }) => {
   const [temp, setTemp] = useState<IDapem>(data);
   const [loading, setLoading] = useState(false);
+  const formInputId = useId();
 
   const handleSubmit = async () => {
     setLoading(true);
-    await fetch("/api/akad", {
-      method: "POST",
-      body: JSON.stringify({
-        id: data.id,
-        date_contract: temp.date_contract,
-        no_contract: temp.no_contract,
-      }),
-    })
-      .then((res) => res.json())
-      .then(async (res) => {
-        const { msg, status, data } = res;
-        if (status === 200) {
-          await getData();
-          printContract({ ...temp, Angsurans: data } as IDapem);
-        } else {
-          hook.error({ content: msg });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        hook.error({ content: `Internal Server Error!!. Generate PK gagal` });
-      });
-    setLoading(false);
-  };
-
-  const handleGenerate = async () => {
-    setLoading(true);
-    await fetch("/api/akad?id=" + data.id, {
-      method: "PATCH",
-      body: JSON.stringify({ created_at: temp.date_contract }),
-    })
-      .then((res) => res.json())
-      .then(async (res) => {
-        const { msg, status, data } = res;
-        if (status === 200) {
-          setTemp({ ...temp, no_contract: data });
-        } else {
-          hook.error({ content: msg });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        hook.error({ content: `Internal Server Error!!. Generate PK gagal` });
-      });
-    setLoading(false);
+    try {
+      const res = await fetch("/api/akad", {
+        method: "POST",
+        body: JSON.stringify({
+          id: data.id,
+          date_contract: temp.date_contract,
+          no_contract: temp.no_contract,
+        }),
+      }).then((r) => r.json());
+      if (res.status === 200) {
+        await getData();
+        printContract({ ...temp, Angsuran: res.data } as IDapem);
+      } else {
+        hook.error({ content: res.msg });
+      }
+    } catch {
+      hook.error({ content: `Internal Server Error!!. Generate PK gagal` });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -1071,9 +1014,8 @@ const PrintContractSubmission = ({
       title={"Cetak Akad " + data.id}
       loading={loading}
       onOk={handleSubmit}
-      okButtonProps={{
-        disabled: !temp.date_contract || !temp.no_contract,
-      }}
+      okButtonProps={{ disabled: !temp.date_contract || !temp.no_contract }}
+      destroyOnHidden
     >
       <div className="flex flex-col gap-2">
         <FormInput
@@ -1092,23 +1034,30 @@ const PrintContractSubmission = ({
             required: true,
             value: moment(temp.date_contract).format("YYYY-MM-DD"),
             onChange: (e: string) =>
-              setTemp({ ...temp, date_contract: new Date(e) }),
+              setTemp((prev) => ({ ...prev, date_contract: new Date(e) })),
           }}
         />
         <FormInput
           data={{
+            // key: `${formInputId}-no-contract`,
             label: "Nomor Akad",
             type: "text",
             required: true,
             value: temp.no_contract,
-            onChange: (e: string) => setTemp({ ...temp, no_contract: e }),
+            onChange: (e: string) =>
+              setTemp((prev) => ({ ...prev, no_contract: e })),
             suffix: (
               <Button
                 size="small"
                 icon={<RobotOutlined />}
                 type="primary"
-                onClick={() => handleGenerate()}
-              ></Button>
+                onClick={() =>
+                  setTemp((prev) => ({
+                    ...prev,
+                    no_contract: `${data.id}/FAS-PKPP/${GetRoman(new Date(prev.date_contract || new Date()).getMonth() + 1)}/${moment(prev.date_contract || new Date()).format("YYYY")}`,
+                  }))
+                }
+              />
             ),
           }}
         />

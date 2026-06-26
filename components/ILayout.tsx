@@ -8,7 +8,7 @@ import {
   MenuOutlined,
 } from "@ant-design/icons";
 import { Badge, Button, Drawer, Dropdown, Layout, Menu, Modal } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "./UserContext";
 import { listMenuUI, MenuPermission } from "./IMenu";
@@ -21,7 +21,7 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(1200); // Default safe width untuk SSR
+  const [windowWidth, setWindowWidth] = useState(1200);
   const router = useRouter();
   const user = useUser();
   const { crossAccess } = useAccess("/");
@@ -42,48 +42,57 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
     pelunasan: 0,
   });
 
-  const getNotif = async () => {
+  // 1. Bungkus getNotif dengan useCallback agar referensi fungsinya stabil
+  const getNotif = useCallback(async () => {
+    if (!user) return; // Jangan panggil API jika user belum termuat/null
+
     try {
       const res = await fetch("/api/notif");
       const result = await res.json();
 
       if (result.data) {
         let c = 0;
-        if (user) {
-          if (crossAccess("update", "/monitoring"))
-            c += result.data.draft + result.data.akad;
-          if (crossAccess("read", "/proses/verif")) c += result.data.verif;
-          if (crossAccess("read", "/proses/slik")) c += result.data.slik;
-          if (crossAccess("read", "/proses/approv")) c += result.data.approv;
-          if (crossAccess("read", "/pencairan/print")) c += result.data.printSI;
-          if (crossAccess("read", "/pencairan/dropping")) c += result.data.SI;
-          if (crossAccess("read", "/ttpb/print")) c += result.data.printSD;
-          if (crossAccess("read", "/ttpb/dropping")) c += result.data.SD;
-          if (crossAccess("read", "/ttpj/print")) c += result.data.printTTPJ;
-          if (crossAccess("read", "/ttpj/dropping")) c += result.data.TTPJ;
-          if (crossAccess("read", "/pelunasan")) c += result.data.pelunasan;
-        }
+        if (crossAccess("update", "/monitoring"))
+          c += result.data.draft + result.data.akad;
+        if (crossAccess("read", "/proses/verif")) c += result.data.verif;
+        if (crossAccess("read", "/proses/slik")) c += result.data.slik;
+        if (crossAccess("read", "/proses/approv")) c += result.data.approv;
+        if (crossAccess("read", "/pencairan/print")) c += result.data.printSI;
+        if (crossAccess("read", "/pencairan/dropping")) c += result.data.SI;
+        if (crossAccess("read", "/ttpb/print")) c += result.data.printSD;
+        if (crossAccess("read", "/ttpb/dropping")) c += result.data.SD;
+        if (crossAccess("read", "/ttpj/print")) c += result.data.printTTPJ;
+        if (crossAccess("read", "/ttpj/dropping")) c += result.data.TTPJ;
+        if (crossAccess("read", "/pelunasan")) c += result.data.pelunasan;
+
         setNotif({ ...result.data, count: c });
       }
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
     }
-  };
+  }, [user, crossAccess]); // Hanya dibuat ulang jika user atau hak akses berubah
 
+  // 2. Misahkan window resize listener agar tidak terganggu oleh perubahan state user
   useEffect(() => {
-    // Menangani ukuran layar dengan aman di Next.js (Mencegah Error Hydration)
-    setWindowWidth(window.innerWidth);
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
+    if (typeof window !== "undefined") {
+      setWindowWidth(window.innerWidth);
+      const handleResize = () => setWindowWidth(window.innerWidth);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
 
-    getNotif();
-    const interval = setInterval(getNotif, 1000 * 3);
+  // 3. Efek khusus untuk pooling notifikasi (Sangat aman dari penumpukan/looping)
+  useEffect(() => {
+    if (!user) return;
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearInterval(interval);
-    };
-  }, [user]);
+    getNotif(); // Panggil sekali saat user pertama kali siap
+
+    // Naikkan interval menjadi 10 atau 15 detik agar meringankan beban server database Anda
+    const interval = setInterval(getNotif, 1000 * 10);
+
+    return () => clearInterval(interval);
+  }, [user, getNotif]);
 
   const handleLogout = async () => {
     setLoading(true);
@@ -97,9 +106,10 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
 
   const isMobile = windowWidth < 600;
 
+  // ... (Sisa kode return JSX ke bawah tetap sama seperti kode Anda sebelumnya)
   return (
     <Layout style={{ minHeight: "100vh", backgroundColor: "#f0f2f5" }}>
-      {/* SIDER BARU: Menggunakan Light Theme yang Elegan & Berjarak (Floating Effect) */}
+      {/* ... kode komponen Anda tetap dipertahankan ... */}
       <Sider
         breakpoint="xs"
         collapsedWidth={isMobile ? 0 : 80}
@@ -121,13 +131,12 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
           transition: "all 0.3s cubic-bezier(0.2, 0, 0, 1)",
         }}
       >
-        {/* Profile Card yang Dipercantik */}
         <div
           style={{
             margin: "12px",
             padding: collapsed ? "12px 4px" : "16px",
             borderRadius: "12px",
-            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", // Warna gelap premium (Slate)
+            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
             color: "#fff",
             boxShadow: "0 8px 16px rgba(15, 23, 42, 0.2)",
             position: "relative",
@@ -139,7 +148,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
             transition: "all 0.3s",
           }}
         >
-          {/* Avatar Ring */}
           <div
             style={{
               width: collapsed ? 40 : 52,
@@ -163,7 +171,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
             />
           </div>
 
-          {/* User Info */}
           {!collapsed && (
             <div
               style={{
@@ -205,7 +212,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
-          {/* Tombol Collapse terintegrasi di dalam Card jika tidak collapsed */}
           {!collapsed && (
             <Button
               size="small"
@@ -216,16 +222,11 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
                 />
               }
               onClick={() => setCollapsed(true)}
-              style={{
-                position: "absolute",
-                top: 8,
-                right: 4,
-              }}
+              style={{ position: "absolute", top: 8, right: 4 }}
             />
           )}
         </div>
 
-        {/* Tombol Expand ketika collapsed */}
         {collapsed && (
           <div className="flex justify-center w-full my-2">
             <Button
@@ -237,7 +238,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {/* Menu Navigasi dengan Gaya Modern (Light Theme) */}
         {user && (
           <div
             style={{
@@ -245,7 +245,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
               overflowY: "auto",
               paddingBottom: 24,
               height: 470,
-              overflow: "auto",
             }}
             className="custom-scrollbar"
           >
@@ -263,9 +262,7 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
         )}
       </Sider>
 
-      {/* Bagian Kanan Layout */}
       <Layout style={{ background: "transparent" }}>
-        {/* Header bergaya Floating White Card */}
         <Header
           style={{
             margin: "12px 12px 0 12px",
@@ -302,9 +299,8 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex gap-3 items-center">
-            {/* Dropdown Notifikasi */}
             <Dropdown
-              trigger={["click"]} // Mengubah hover ke click agar lebih ramah mobile/tablet
+              trigger={["click"]}
               placement="bottomRight"
               popupRender={() => (
                 <div
@@ -420,7 +416,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
               />
             </Dropdown>
 
-            {/* Tombol Logout */}
             <Button
               type="text"
               danger
@@ -430,7 +425,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
               onClick={() => setOpen(true)}
             />
 
-            {/* Tombol Menu Mobile */}
             {isMobile && (
               <Button
                 type="text"
@@ -442,12 +436,9 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
           </div>
         </Header>
 
-        {/* Area Konten Utama */}
         <Content
           style={{
             margin: "12px",
-            // height: "calc(100vh - 96px)",
-            // overflowY: "auto",
             background: "#fff",
             borderRadius: "16px",
             padding: "15px",
@@ -459,7 +450,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
         </Content>
       </Layout>
 
-      {/* Dialog Konfirmasi Keluar */}
       <Modal
         open={open}
         onCancel={() => setOpen(false)}
@@ -477,7 +467,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
         </p>
       </Modal>
 
-      {/* Drawer Menu Ponsel */}
       {isMobile && (
         <Drawer
           placement="left"
@@ -503,14 +492,13 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
               )}
               onClick={(e) => {
                 router.push(e.key);
-                setCollapsed(true); // Tutup laci setelah berpindah halaman
+                setCollapsed(true);
               }}
             />
           )}
         </Drawer>
       )}
 
-      {/* Injeksi CSS Khusus untuk menyembunyikan scrollbar bawaan yang kaku */}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
@@ -531,7 +519,7 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* Pembaruan Tampilan Item Notifikasi Badge */
+// Komponen Notify dipisah ke bawah tetap dipertahankan seperti semula
 const Notify = ({
   url,
   name,
@@ -544,7 +532,6 @@ const Notify = ({
   crossAccess: boolean;
 }) => {
   if (!crossAccess) return null;
-
   return (
     <Link
       href={url}

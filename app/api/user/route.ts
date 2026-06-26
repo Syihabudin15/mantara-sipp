@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { getSession } from "@/libs/Auth";
 import { serializeForApi } from "@/components/utils/PembiayaanUtil";
+import { clearUserSessionCache } from "../utils/wheres";
 
 export const GET = async (request: NextRequest) => {
   const params = Object.fromEntries(request.nextUrl.searchParams);
@@ -138,6 +139,11 @@ export const PUT = async (request: NextRequest) => {
   try {
     const find = await prisma.user.findFirst({ where: { id } });
 
+    if (!find)
+      return NextResponse.json(
+        { status: 404, msg: "Not found user" },
+        { status: 404 },
+      );
     if (find) {
       if (body.password && body.password !== "" && body.password.length < 20) {
         updated.password = await bcrypt.hash(body.password, 10);
@@ -150,6 +156,9 @@ export const PUT = async (request: NextRequest) => {
       where: { id: id },
       data: { ...updated, updated_at: new Date() },
     });
+    if (updated.cabangId && updated.cabangId !== find.cabangId) {
+      clearUserSessionCache(find.id);
+    }
     return NextResponse.json({
       status: 200,
       msg: "Berhasil memperbarui data user.",

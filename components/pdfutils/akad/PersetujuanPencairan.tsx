@@ -10,7 +10,6 @@ moment.locale("id");
 
 export const PersetujuanPencairan = (record: IDapem) => {
   const detail = GetDetailDapem(record);
-  const dapem = GetDapem(record);
 
   return `
   <div class="mb-4">
@@ -107,7 +106,7 @@ export const PersetujuanPencairan = (record: IDapem) => {
       },
       {
         key: `Total Potongan`,
-        value: IDRFormat(dapem.biaya),
+        value: IDRFormat(detail.biaya),
         currency: true,
         classStyle: "border-t font-bold",
       },
@@ -126,13 +125,13 @@ export const PersetujuanPencairan = (record: IDapem) => {
       },
       {
         key: `Penerimaan Bersih`,
-        value: IDRFormat(dapem.tb),
+        value: IDRFormat(detail.tb),
         currency: true,
         classStyle: "border-t font-bold",
       },
       {
         key: ``,
-        value: `( ${NumberToWordsID(dapem.tb)} Rupiah )`,
+        value: `( ${NumberToWordsID(detail.tb)} Rupiah )`,
         classStyle: "font-bold",
       },
     ])}

@@ -1,5 +1,4 @@
 import {
-  GetDapem,
   GetDetailDapem,
   GetFullAge,
   IDRFormat,
@@ -22,7 +21,6 @@ export const AnalisaPerhitungan = (record: IDapem) => {
   );
   const detail = GetDetailDapem(record);
 
-  const dapem = GetDapem(record);
   const ao = record.AO || record.AOCabang || record.AOArea;
 
   return `
@@ -156,15 +154,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
         ${ListNonStyle([
           {
             key: "Biaya Administrasi",
-            value: IDRFormat(
-              record.plafond *
-                ((record.c_provisi_sumdan +
-                  record.c_adm +
-                  record.c_adm_sumdan +
-                  record.c_adm_mitra +
-                  record.c_adm_ff) /
-                  100),
-            ),
+            value: IDRFormat(detail.administrasi + detail.detail.adm_sumdan),
             currency: true,
           },
           {
@@ -174,38 +164,22 @@ export const AnalisaPerhitungan = (record: IDapem) => {
           },
           {
             key: "Biaya Asuransi",
-            value: IDRFormat(record.plafond * (record.c_insurance / 100)),
+            value: IDRFormat(detail.asuransi),
             currency: true,
           },
           {
             key: "Biaya Provisi",
-            value: IDRFormat(
-              record.plafond *
-                ((record.c_fee_ao +
-                  record.c_fee_cabang +
-                  record.c_fee_area +
-                  record.c_fee_bpp +
-                  record.c_fee_bpb) /
-                  100),
-            ),
+            value: IDRFormat(detail.provisi + detail.detail.provisi_sumdan),
             currency: true,
           },
           {
             key: "Biaya Tatalaksana",
-            value: IDRFormat(
-              record.c_gov +
-                record.c_flagging +
-                record.c_infomation +
-                record.c_stamp +
-                record.c_mutasi +
-                record.c_account +
-                record.c_bop,
-            ),
+            value: IDRFormat(detail.tatalaksana),
             currency: true,
           },
           {
             key: "Total Biaya",
-            value: IDRFormat(dapem.biaya),
+            value: IDRFormat(detail.biaya),
             currency: true,
             classStyle: "border-t border-dashed font-bold",
           },
@@ -216,7 +190,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
       ${ListNonStyle([
         {
           key: "Terima Kotor",
-          value: IDRFormat(record.plafond - dapem.biaya),
+          value: IDRFormat(detail.tk),
           currency: true,
         },
         {
@@ -226,12 +200,12 @@ export const AnalisaPerhitungan = (record: IDapem) => {
         },
         {
           key: `Blokir Angsuran (${record.c_blokir}x)`,
-          value: IDRFormat(dapem.blok),
+          value: IDRFormat(record.c_blokir * detail.angsuran),
           currency: true,
         },
         {
           key: "Terima Bersih",
-          value: IDRFormat(dapem.tb),
+          value: IDRFormat(detail.tb),
           currency: true,
           classStyle: "border-t border-dashed font-bold",
         },

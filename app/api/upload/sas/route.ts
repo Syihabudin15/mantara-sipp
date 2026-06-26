@@ -9,6 +9,18 @@ const folderName = process.env.NEXT_PUBLIC_APP_FOLDER!;
 const nestedFolderName = process.env.NEXT_PUBLIC_APP_NESTED_FOLDER!;
 const containerClient = getContainerClient();
 
+function safeFileName(filename: string) {
+  const ext = filename.split(".").pop();
+  const nameOnly = filename.replace(/\.[^/.]+$/, "");
+
+  const cleanName = nameOnly
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^\w.-]/g, "");
+
+  return `${cleanName}_${Date.now()}.${ext}`;
+}
+
 export const POST = async (req: NextRequest) => {
   try {
     const { filename, filetype } = await req.json();
@@ -20,43 +32,43 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    // 1. Tentukan path file di Azure
-    const blobName = `${folderName}/${nestedFolderName}/${filename}`;
+    const finalFilename = safeFileName(filename);
+
+    const blobName = `${folderName}/${nestedFolderName}/${finalFilename}`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
-    // 2. Set waktu kedaluwarsa token (misal: berlaku 15 menit saja)
+    const startsOn = new Date();
+    startsOn.setMinutes(startsOn.getMinutes() - 5);
+
     const expiresOn = new Date();
     expiresOn.setMinutes(expiresOn.getMinutes() + 15);
 
-    // 3. Buat Hak Akses (Hanya boleh "Write/Upload")
-    const sasPermissions = new BlobSASPermissions();
-    sasPermissions.write = true;
-
-    // 4. Generate token SAS menggunakan credential internal Azure
     const sasToken = generateBlobSASQueryParameters(
       {
         containerName: containerClient.containerName,
-        blobName: blobName,
-        permissions: sasPermissions,
-        expiresOn: expiresOn,
-        startsOn: new Date(),
+        blobName,
+        permissions: BlobSASPermissions.parse("cw"),
+        startsOn,
+        expiresOn,
       },
-      sharedKeyCredential, // 🔥 Gunakan langsung di sini, tanpa lewat containerClient
+      sharedKeyCredential,
     ).toString();
 
-    // 5. Gabungkan URL Blob asli dengan SAS Token
     const uploadUrl = `${blockBlobClient.url}?${sasToken}`;
 
     return NextResponse.json(
       {
         status: 200,
-        uploadUrl, // URL khusus untuk dipakai di frontend
-        secure_url: blockBlobClient.url, // URL bersih untuk disimpan ke database MySQL Anda nanti
+        uploadUrl,
+        secure_url: blockBlobClient.url,
+        blobName,
+        contentType: filetype,
       },
       { status: 200 },
     );
   } catch (err) {
     console.error(err);
+
     return NextResponse.json(
       { status: 500, message: "Failed to generate SAS token" },
       { status: 500 },

@@ -1,7 +1,40 @@
 "use client";
 
+import { useMemo, useEffect, useState, useCallback, useId } from "react";
+import moment from "moment";
+import { EDapemStatus, JenisPembiayaan, Sumdan } from "@prisma/client";
+import {
+  App,
+  Button,
+  Card,
+  DatePicker,
+  Input,
+  Modal,
+  Progress,
+  Select,
+  Table,
+  TableProps,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
+import { HookAPI } from "antd/es/modal/useModal";
+import {
+  ArrowRightOutlined,
+  BankOutlined,
+  EditOutlined,
+  FileFilled,
+  FileProtectOutlined,
+  FolderOutlined,
+  PayCircleOutlined,
+  PlusCircleOutlined,
+  PrinterOutlined,
+  SwapOutlined,
+} from "@ant-design/icons";
+
 import { FormInput, ViewFiles } from "@/components";
 import { useUser } from "@/components/UserContext";
+import { useAccess } from "@/libs/Permission";
 import {
   ExportToExcel,
   FilterData,
@@ -25,41 +58,30 @@ import {
   IPayOffice,
   IViewFiles,
 } from "@/libs/IInterfaces";
-import { useAccess } from "@/libs/Permission";
 
-import {
-  ArrowRightOutlined,
-  BankOutlined,
-  EditOutlined,
-  FileFilled,
-  FileProtectOutlined,
-  FolderOutlined,
-  PayCircleOutlined,
-  PlusCircleOutlined,
-  PrinterOutlined,
-  SwapOutlined,
-} from "@ant-design/icons";
-import { EDapemStatus, JenisPembiayaan, Sumdan } from "@prisma/client";
-import {
-  App,
-  Button,
-  Card,
-  DatePicker,
-  Input,
-  Modal,
-  Progress,
-  Select,
-  Table,
-  TableProps,
-  Tag,
-  Tooltip,
-  Typography,
-} from "antd";
-import { HookAPI } from "antd/es/modal/useModal";
-import moment from "moment";
-import { useEffect, useState } from "react";
 const { Paragraph } = Typography;
 const { RangePicker } = DatePicker;
+
+const DEFAULT_CASH_DESC: ICashDesc = {
+  amount: 0,
+  date: new Date(),
+  desc: "",
+  file: "",
+};
+
+// Opsi dropdown statis dipisahkan agar tidak dibuat ulang di setiap render
+const DROPPING_OPTIONS = [
+  { label: "PENDING", value: "PENDING" },
+  { label: "TRANSFER", value: "DISETUJUI" },
+  { label: "LUNAS", value: "LUNAS" },
+];
+
+const GENERAL_STATUS_OPTIONS = [
+  { label: "DRAFT", value: "DRAFT" },
+  { label: "PENDING", value: "PENDING" },
+  { label: "PROSES", value: "PROSES" },
+  { label: "SELESAI", value: "DISETUJUI" },
+];
 
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
@@ -79,6 +101,7 @@ export default function Page() {
     agentFrontingId: "",
     backdate: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<IActionTable<IDapem>>({
     upsert: false,
@@ -86,24 +109,27 @@ export default function Page() {
     proses: false,
     selected: undefined,
   });
+
   const [sumdans, setSumdans] = useState<Sumdan[]>([]);
   const [jeniss, setJeniss] = useState<JenisPembiayaan[]>([]);
   const [agents, setAgents] = useState<IAgentFronting[]>([]);
   const [pays, setPays] = useState<IPayOffice[]>([]);
-  const { modal } = App.useApp();
-  const { hasAccess } = useAccess(window ? window.location.pathname : "/tmftb");
-  const user = useUser();
-  const [views, setViews] = useState<IViewFiles>({
-    open: false,
-    data: [],
-  });
+  const [views, setViews] = useState<IViewFiles>({ open: false, data: [] });
 
-  const getData = async () => {
+  const { modal } = App.useApp();
+  const currentPath =
+    typeof window !== "undefined" ? window.location.pathname : "/tmftb";
+  const { hasAccess } = useAccess(currentPath);
+  const user = useUser();
+
+  // Membungkus fetch data utama dengan useCallback
+  const getData = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({
       page: pageProps.page.toString(),
       limit: pageProps.limit.toString(),
       approv_status: "DISETUJUI",
+      includes: "true",
       ...(pageProps.search && { search: pageProps.search }),
       ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
       ...(pageProps.jenisPembiayaanId && {
@@ -118,12 +144,8 @@ export default function Page() {
       ...(pageProps.flagging_status && {
         flagging_status: pageProps.flagging_status,
       }),
-      ...(pageProps.cash_status && {
-        cash_status: pageProps.cash_status,
-      }),
-      ...(pageProps.payOfficeId && {
-        payOfficeId: pageProps.payOfficeId,
-      }),
+      ...(pageProps.cash_status && { cash_status: pageProps.cash_status }),
+      ...(pageProps.payOfficeId && { payOfficeId: pageProps.payOfficeId }),
       ...(pageProps.agentFrontingId && {
         agentFrontingId: pageProps.agentFrontingId,
       }),
@@ -131,24 +153,21 @@ export default function Page() {
         dropping_status: pageProps.dropping_status,
       }),
       ...(pageProps.backdate && { backdate: pageProps.backdate }),
-      includes: "true",
     });
 
-    const res = await fetch(`/api/dapem?${params.toString()}`);
-    const json = await res.json();
-    setPageProps((prev) => ({
-      ...prev,
-      data: json.data,
-      total: json.total,
-    }));
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      await getData();
-    }, 200);
-    return () => clearTimeout(timeout);
+    try {
+      const res = await fetch(`/api/dapem?${params.toString()}`);
+      const json = await res.json();
+      setPageProps((prev) => ({
+        ...prev,
+        data: json.data || [],
+        total: json.total || 0,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch dapem data:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [
     pageProps.page,
     pageProps.limit,
@@ -165,148 +184,178 @@ export default function Page() {
     pageProps.backdate,
   ]);
 
+  // Debounce data fetching
   useEffect(() => {
-    (async () => {
-      await Promise.all([
-        fetch("/api/sumdan?limit=500")
-          .then((res) => res.json())
-          .then((res) => setSumdans(res.data)),
-        fetch("/api/jenis?limit=50")
-          .then((res) => res.json())
-          .then((res) => setJeniss(res.data)),
-        fetch("/api/payoffice?limit=100")
-          .then((res) => res.json())
-          .then((res) => setPays(res.data)),
-        fetch("/api/agent?limit=100")
-          .then((res) => res.json())
-          .then((res) => setAgents(res.data)),
-      ]);
-    })();
+    const timeout = setTimeout(() => {
+      getData();
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [getData]);
+
+  // Fetch data master sekali saat mounting
+  useEffect(() => {
+    let isMounted = true;
+    const fetchMasterData = async () => {
+      try {
+        const [resSumdan, resJenis, resPay, resAgent] = await Promise.all([
+          fetch("/api/sumdan?limit=500").then((r) => r.json()),
+          fetch("/api/jenis?limit=50").then((r) => r.json()),
+          fetch("/api/payoffice?limit=100").then((r) => r.json()),
+          fetch("/api/agent?limit=100").then((r) => r.json()),
+        ]);
+
+        if (isMounted) {
+          setSumdans(resSumdan.data || []);
+          setJeniss(resJenis.data || []);
+          setPays(resPay.data || []);
+          setAgents(resAgent.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch master data:", error);
+      }
+    };
+
+    fetchMasterData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const columns: TableProps<IDapem>["columns"] = [
-    {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      render(value, record, index) {
-        return (
+  // Transformasi data untuk Select option dimemokan agar tidak di-map terus-menerus
+  const sumdanOptions = useMemo(
+    () => sumdans.map((s) => ({ label: s.code, value: s.id })),
+    [sumdans],
+  );
+  const jenisOptions = useMemo(
+    () => jeniss.map((s) => ({ label: s.name, value: s.id })),
+    [jeniss],
+  );
+  const payOptions = useMemo(
+    () => pays.map((s) => ({ label: s.code || s.name, value: s.id })),
+    [pays],
+  );
+  const agentOptions = useMemo(
+    () => agents.map((s) => ({ label: s.name, value: s.id })),
+    [agents],
+  );
+
+  // Definisi kolom tabel dimemokan agar referensinya tetap sama
+  const columns: TableProps<IDapem>["columns"] = useMemo(
+    () => [
+      {
+        title: "ID",
+        dataIndex: "id",
+        key: "id",
+        render: (_, record, index) => (
           <div>
             <div>{(pageProps.page - 1) * pageProps.limit + index + 1}</div>
             <div className="opacity-80 text-xs">{record.id}</div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Pemohon",
-      dataIndex: "pemohon",
-      key: "pemohon",
-      fixed: window.innerWidth < 600 ? false : true,
-      render(value, record, index) {
-        return (
+      {
+        title: "Pemohon",
+        dataIndex: "pemohon",
+        key: "pemohon",
+        fixed:
+          typeof window !== "undefined" && window.innerWidth < 600
+            ? false
+            : true,
+        render: (_, record) => (
           <div>
-            <p className="font-bold">{record.Debitur.fullname}</p>
+            <p className="font-bold">{record.Debitur?.fullname}</p>
             <div className="text-xs opacity-80">
-              <p>@{record.Debitur.nopen}</p>
+              <p>@{record.Debitur?.nopen}</p>
             </div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Permohonan",
-      dataIndex: "permohonan",
-      key: "permohonan",
-      render(value, record, index) {
-        return (
+      {
+        title: "Permohonan",
+        dataIndex: "permohonan",
+        key: "permohonan",
+        render: (_, record) => (
           <div>
             <div>
-              Plafond : <Tag color={"blue"}>{IDRFormat(record.plafond)}</Tag>
+              Plafond : <Tag color="blue">{IDRFormat(record.plafond)}</Tag>
             </div>
             <div>
-              Tenor : <Tag color={"blue"}>{record.tenor} Bulan</Tag>
+              Tenor : <Tag color="blue">{record.tenor} Bulan</Tag>
             </div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Angsuran",
-      dataIndex: "angsuran",
-      key: "angsuran",
-      render(value, record, index) {
-        const detail = GetDetailDapem(record);
-        return (
-          <div className="text-xs">
-            <div className="flex gap-2 items-center">
-              <Tag color={"blue"}>
-                <BankOutlined /> {IDRFormat(detail.detail.angsuran_sumdan)}
-              </Tag>
-              <Tag color={"blue"}>
-                {IDRFormat(detail.angsuran - detail.detail.angsuran_sumdan)}
-              </Tag>
+      {
+        title: "Angsuran",
+        dataIndex: "angsuran",
+        key: "angsuran",
+        render: (_, record) => {
+          const detail = GetDetailDapem(record);
+          return (
+            <div className="text-xs">
+              <div className="flex gap-2 items-center">
+                <Tag color="blue">
+                  <BankOutlined /> {IDRFormat(detail.detail.angsuran_sumdan)}
+                </Tag>
+                <Tag color="blue">
+                  {IDRFormat(detail.angsuran - detail.detail.angsuran_sumdan)}
+                </Tag>
+              </div>
+              <div className="flex justify-center mt-1">
+                <Tag color="blue">{IDRFormat(detail.angsuran)}</Tag>
+              </div>
             </div>
-            <div className="flex justify-center">
-              <Tag color={"blue"}> {IDRFormat(detail.angsuran)}</Tag>
-            </div>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      title: "Produk Pembiayaan",
-      dataIndex: "produk",
-      key: "produk",
-      render(value, record, index) {
-        return (
+      {
+        title: "Produk Pembiayaan",
+        dataIndex: "produk",
+        key: "produk",
+        render: (_, record) => (
           <div>
             <p>
-              {record.ProdukPembiayaan.name}{" "}
-              <span>({record.ProdukPembiayaan.Sumdan.code})</span>
+              {record.ProdukPembiayaan?.name}{" "}
+              <span>({record.ProdukPembiayaan?.Sumdan?.code})</span>
             </p>
-            <p className="opacity-80 text-xs">{record.JenisPembiayaan.name}</p>
+            <p className="opacity-80 text-xs">{record.JenisPembiayaan?.name}</p>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "AO & UP",
-      dataIndex: "aoup",
-      key: "aoup",
-      render(value, record, index) {
-        const ao = record.AO || record.AOCabang || record.AOArea;
-        return (
-          <div>
-            <div>{ao?.fullname}</div>
-            <div className="text-xs opacity-80">
-              {ao?.Cabang.name} | {ao?.Cabang.Area.name}
+      {
+        title: "AO & UP",
+        dataIndex: "aoup",
+        key: "aoup",
+        render: (_, record) => {
+          const ao = record.AO || record.AOCabang || record.AOArea;
+          return (
+            <div>
+              <div>{ao?.fullname}</div>
+              <div className="text-xs opacity-80">
+                {ao?.Cabang?.name} | {ao?.Cabang?.Area?.name}
+              </div>
             </div>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      title: "Agent Fronting",
-      dataIndex: "agentFrontingId",
-      key: "agentFrontingId",
-      render(value, record, index) {
-        return (
+      {
+        title: "Agent Fronting",
+        dataIndex: "agentFrontingId",
+        key: "agentFrontingId",
+        render: (_, record) => (
           <div>
             <div>{record.AgentFronting?.name}</div>
             <div className="text-xs opacity-80">
               {record.AgentFronting?.code}
             </div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Nomor Akad",
-      dataIndex: "dataakad",
-      key: "dataakad",
-      render(value, record, index) {
-        return (
+      {
+        title: "Nomor Akad",
+        dataIndex: "dataakad",
+        key: "dataakad",
+        render: (_, record) => (
           <div>
             {record.no_contract && <div>{record.no_contract}</div>}
             {record.date_contract && (
@@ -315,69 +364,63 @@ export default function Page() {
               </div>
             )}
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Mutasi & Takeover",
-      dataIndex: "produk",
-      key: "produk",
-      width: 350,
-      render(value, record, index) {
-        return (
+      {
+        title: "Mutasi & Takeover",
+        dataIndex: "produk",
+        key: "produk_mutasi",
+        width: 350,
+        render: (_, record) => (
           <div>
-            {record.JenisPembiayaan.status_mutasi && (
+            {record.JenisPembiayaan?.status_mutasi && (
               <div style={{ fontSize: 9 }}>
                 <SwapOutlined />{" "}
-                <Tag style={{ fontSize: 9 }} color={"red"}>
+                <Tag style={{ fontSize: 9 }} color="red">
                   {record.prev_payoffice}
                 </Tag>{" "}
                 <ArrowRightOutlined style={{ fontSize: 9 }} />{" "}
-                <Tag style={{ fontSize: 9 }} color={"blue"}>
-                  {record.PayOffice.code || record.PayOffice.name}
+                <Tag style={{ fontSize: 9 }} color="blue">
+                  {record.PayOffice?.code || record.PayOffice?.name}
                 </Tag>
               </div>
             )}
-            {record.JenisPembiayaan.status_takeover && (
-              <div style={{ fontSize: 9 }}>
+            {record.JenisPembiayaan?.status_takeover && (
+              <div style={{ fontSize: 9 }} className="mt-1">
                 <PayCircleOutlined />{" "}
-                <Tag color={"blue"} style={{ fontSize: 9 }}>
+                <Tag color="blue" style={{ fontSize: 9 }}>
                   {record.takeover_from} (
                   {moment(record.takeover_date).format("DD/MM/YYYY")})
                 </Tag>
               </div>
             )}
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Status Dropping",
-      dataIndex: "dropping_status",
-      key: "dropping_status",
-      width: 180,
-      render: (_, record, i) => {
-        return (
-          <div className="flex gap-1">
+      {
+        title: "Status Dropping",
+        dataIndex: "dropping_status",
+        key: "dropping_status",
+        width: 180,
+        render: (_, record) => (
+          <div className="flex gap-1 items-center">
             {GetDroppingStatusTag(record.dropping_status)}
-            {record.Dropping && record.Dropping.process_at && (
-              <div className="text-xs">
+            {record.Dropping?.process_at && (
+              <div className="text-xs text-opacity-80">
                 {moment(record.Dropping.process_at).format("DD/MM/YYYY HH:mm")}
               </div>
             )}
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Status Takeover",
-      dataIndex: "takeover_status",
-      key: "takeover_status",
-      width: 250,
-      render: (_, record, i) => {
-        return (
+      {
+        title: "Status Takeover",
+        dataIndex: "takeover_status",
+        key: "takeover_status",
+        width: 250,
+        render: (_, record) => (
           <div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
               {GetDroppingStatusTag(record.takeover_status)}
               <Button
                 size="small"
@@ -394,33 +437,28 @@ export default function Page() {
                     ],
                   })
                 }
-              ></Button>
-              <span className=" text-xs opacity-80">
+              />
+              <span className="text-xs opacity-80">
                 {moment(record.takeover_date_exc).format("DD/MM/YYYY")}
               </span>
             </div>
             <Paragraph
-              ellipsis={{
-                rows: 2,
-                expandable: "collapsible",
-              }}
-              style={{ fontSize: 11 }}
+              ellipsis={{ rows: 2, expandable: "collapsible" }}
+              style={{ fontSize: 11, margin: 0, marginTop: 4 }}
             >
               {record.takeover_desc}
             </Paragraph>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Status Mutasi",
-      dataIndex: "mutasi_status",
-      key: "mutasi_status",
-      width: 250,
-      render: (_, record, i) => {
-        return (
+      {
+        title: "Status Mutasi",
+        dataIndex: "mutasi_status",
+        key: "mutasi_status",
+        width: 250,
+        render: (_, record) => (
           <div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
               {GetDroppingStatusTag(record.mutasi_status)}
               <Button
                 size="small"
@@ -430,40 +468,32 @@ export default function Page() {
                   setViews({
                     open: true,
                     data: [
-                      {
-                        name: "File Mutasi",
-                        url: record.file_mutasi || "",
-                      },
+                      { name: "File Mutasi", url: record.file_mutasi || "" },
                     ],
                   })
                 }
-              ></Button>
+              />
               <span className="text-xs opacity-80">
                 {moment(record.mutasi_date_exc).format("DD/MM/YYYY")}
               </span>
             </div>
             <Paragraph
-              ellipsis={{
-                rows: 2,
-                expandable: "collapsible",
-              }}
-              style={{ fontSize: 11 }}
+              ellipsis={{ rows: 2, expandable: "collapsible" }}
+              style={{ fontSize: 11, margin: 0, marginTop: 4 }}
             >
               {record.mutasi_desc}
             </Paragraph>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Status Flagging",
-      dataIndex: "flagging_status",
-      key: "flagging_status",
-      width: 250,
-      render: (_, record, i) => {
-        return (
+      {
+        title: "Status Flagging",
+        dataIndex: "flagging_status",
+        key: "flagging_status",
+        width: 250,
+        render: (_, record) => (
           <div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
               {GetDroppingStatusTag(record.flagging_status)}
               <Button
                 size="small"
@@ -480,91 +510,88 @@ export default function Page() {
                     ],
                   })
                 }
-              ></Button>
+              />
               <span className="text-xs opacity-80">
                 {moment(record.flagging_date_exc).format("DD/MM/YYYY")}
               </span>
             </div>
             <Paragraph
-              ellipsis={{
-                rows: 2,
-                expandable: "collapsible",
-              }}
-              style={{ fontSize: 11 }}
+              ellipsis={{ rows: 2, expandable: "collapsible" }}
+              style={{ fontSize: 11, margin: 0, marginTop: 4 }}
             >
               {record.flagging_desc}
             </Paragraph>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Status Terima Bersih",
-      dataIndex: "tb_status",
-      key: "tb_status",
-      width: 320,
-      render: (_, record, i) => {
-        const desc = record.cash_desc
-          ? (JSON.parse(record.cash_desc) as ICashDesc[])
-          : [];
-        const total = desc.reduce((acc, curr) => acc + curr.amount, 0);
-        const tb = GetDapem(record).tb;
-        return (
-          <div>
-            <div className="flex gap-1">
-              {GetDroppingStatusTag(record.cash_status)}
-              <Button
-                size="small"
-                icon={<FileFilled />}
-                disabled={desc.length === 0}
-                onClick={() =>
-                  setViews({
-                    open: true,
-                    data: desc.map((d, i) => ({
-                      name: "File " + i + 1,
-                      url: d.file,
-                    })),
-                  })
-                }
-              ></Button>
-              <span className="text-xs opacity-80">
-                {IDRFormat(total)}/{IDRFormat(tb)} (
-                {((total / tb) * 100).toFixed(2)}%) ({IDRFormat(tb - total)})
-              </span>
+      {
+        title: "Status Terima Bersih",
+        dataIndex: "tb_status",
+        key: "tb_status",
+        width: 320,
+        render: (_, record) => {
+          const desc: ICashDesc[] = record.cash_desc
+            ? JSON.parse(record.cash_desc)
+            : [];
+          const total = desc.reduce((acc, curr) => acc + curr.amount, 0);
+          const tb = GetDapem(record).tb;
+          const percent = tb > 0 ? ((total / tb) * 100).toFixed(2) : "0.00";
+
+          return (
+            <div>
+              <div className="flex gap-1 items-center">
+                {GetDroppingStatusTag(record.cash_status)}
+                <Button
+                  size="small"
+                  icon={<FileFilled />}
+                  disabled={desc.length === 0}
+                  onClick={() =>
+                    setViews({
+                      open: true,
+                      data: desc.map((d, idx) => ({
+                        name: `File ${idx + 1}`,
+                        url: d.file,
+                      })),
+                    })
+                  }
+                />
+                <span className="text-xs opacity-80">
+                  {IDRFormat(total)}/{IDRFormat(tb)} ({percent}%) (
+                  {IDRFormat(tb - total)})
+                </span>
+              </div>
+              <Paragraph
+                ellipsis={{ rows: 1, expandable: "collapsible" }}
+                style={{ fontSize: 11, margin: 0, marginTop: 4 }}
+              >
+                {desc.map((d, i) => {
+                  const itemPercent =
+                    tb > 0 ? ((d.amount / tb) * 100).toFixed(2) : "0.00";
+                  return (
+                    <div key={i}>
+                      {d.desc} {moment(d.date).format("DD/MM/YY HH:mm")} (Rp.{" "}
+                      {IDRFormat(d.amount)}) ({itemPercent}%);
+                    </div>
+                  );
+                })}
+              </Paragraph>
             </div>
-            <Paragraph
-              ellipsis={{
-                rows: 1,
-                expandable: "collapsible",
-              }}
-              style={{ fontSize: 11 }}
-            >
-              {desc.map((d, i) => (
-                <div key={i}>
-                  {d.desc} {moment(d.date).format("DD/MM/YY HH:mm")}( Rp.{" "}
-                  {IDRFormat(d.amount)}) ({((d.amount / tb) * 100).toFixed(2)}
-                  %);
-                </div>
-              ))}
-            </Paragraph>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      title: "Status Berkas",
-      dataIndex: "berkas_status",
-      key: "berkas_status",
-      width: 250,
-      render: (_, record, i) => {
-        return (
+      {
+        title: "Status Berkas",
+        dataIndex: "berkas_status",
+        key: "berkas_status",
+        width: 250,
+        render: (_, record) => (
           <div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 items-center">
               {GetBerkasStatusTag(record.document_status)}
               <Button
                 size="small"
                 icon={<FileFilled />}
-                disabled={!record.Berkas || !record.Berkas.file_sub}
+                disabled={!record.Berkas?.file_sub}
                 onClick={() =>
                   setViews({
                     open: true,
@@ -580,166 +607,232 @@ export default function Page() {
                     ],
                   })
                 }
-              ></Button>
-              {record.Berkas && record.Berkas.process_at && (
+              />
+              {record.Berkas?.process_at && (
                 <span className="text-xs opacity-80">
                   Send : {moment(record.Berkas.process_at).format("DD/MM/YYYY")}
                 </span>
               )}
             </div>
             <Paragraph
-              ellipsis={{
-                rows: 2,
-                expandable: "collapsible",
-              }}
-              style={{ fontSize: 11 }}
+              ellipsis={{ rows: 2, expandable: "collapsible" }}
+              style={{ fontSize: 11, margin: 0, marginTop: 4 }}
             >
               {record.document_desc}
             </Paragraph>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Status Jaminan",
-      dataIndex: "Jaminan_status",
-      key: "Jaminan_status",
-      width: 350,
-      render: (_, record, i) => {
-        const isTbo =
-          moment().isAfter(record.tbo_date, "date") &&
-          (!record.Jaminan || !record.Jaminan.status);
-        return (
-          <div>
-            <div className="flex gap-1">
-              {GetBerkasStatusTag(record.guarantee_status)}
-              <Tag color={isTbo ? "red" : "blue"} variant="solid">
-                {isTbo ? "LEWAT TBO" : "MASA TBO"}
-              </Tag>
-              <Button
-                size="small"
-                icon={<FileFilled />}
-                disabled={!record.Jaminan || !record.Jaminan.file_sub}
-                onClick={() =>
-                  setViews({
-                    open: true,
-                    data: [
-                      {
-                        name: "Pengiriman",
-                        url: record.Jaminan?.file_sub || "",
-                      },
-                      {
-                        name: "Bukti Terima",
-                        url: record.Jaminan?.file_proof || "",
-                      },
-                    ],
-                  })
-                }
-              ></Button>
-              <div className="text-xs opacity-80">
-                <div>TBO : {moment(record.tbo_date).format("DD/MM/YYYY")}</div>
-                {record.Jaminan && record.Jaminan.process_at && (
+      {
+        title: "Status Jaminan",
+        dataIndex: "Jaminan_status",
+        key: "Jaminan_status",
+        width: 350,
+        render: (_, record) => {
+          const isTbo =
+            moment().isAfter(record.tbo_date, "date") &&
+            (!record.Jaminan || !record.Jaminan.status);
+          return (
+            <div>
+              <div className="flex gap-1 items-center">
+                {GetBerkasStatusTag(record.guarantee_status)}
+                <Tag color={isTbo ? "red" : "blue"} variant="solid">
+                  {isTbo ? "LEWAT TBO" : "MASA TBO"}
+                </Tag>
+                <Button
+                  size="small"
+                  icon={<FileFilled />}
+                  disabled={!record.Jaminan?.file_sub}
+                  onClick={() =>
+                    setViews({
+                      open: true,
+                      data: [
+                        {
+                          name: "Pengiriman",
+                          url: record.Jaminan?.file_sub || "",
+                        },
+                        {
+                          name: "Bukti Terima",
+                          url: record.Jaminan?.file_proof || "",
+                        },
+                      ],
+                    })
+                  }
+                />
+                <div className="text-xs opacity-80">
                   <div>
-                    Send :{" "}
-                    {moment(record.Jaminan.process_at).format("DD/MM/YYYY")}
+                    TBO : {moment(record.tbo_date).format("DD/MM/YYYY")}
                   </div>
-                )}
+                  {record.Jaminan?.process_at && (
+                    <div>
+                      Send :{" "}
+                      {moment(record.Jaminan.process_at).format("DD/MM/YYYY")}
+                    </div>
+                  )}
+                </div>
               </div>
+              <Paragraph
+                ellipsis={{ rows: 2, expandable: "collapsible" }}
+                style={{ fontSize: 11, margin: 0, marginTop: 4 }}
+              >
+                {record.guarantee_desc}
+              </Paragraph>
             </div>
-            <Paragraph
-              ellipsis={{
-                rows: 2,
-                expandable: "collapsible",
-              }}
-              style={{ fontSize: 11 }}
-            >
-              {record.guarantee_desc}
-            </Paragraph>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      title: "Progress",
-      dataIndex: "progress",
-      key: "progress",
-      width: 150,
-      render: (date, record) => {
-        let percent = 40;
-        if (record.takeover_status === "DISETUJUI") percent += 10;
-        if (record.mutasi_status === "DISETUJUI") percent += 10;
-        if (record.flagging_status === "DISETUJUI") percent += 10;
-        if (record.cash_status === "DISETUJUI") percent += 10;
-        if (record.document_status === "MITRA") percent += 10;
-        if (record.guarantee_status === "MITRA") percent += 10;
-        return <Progress percent={percent} />;
+      {
+        title: "Progress",
+        dataIndex: "progress",
+        key: "progress",
+        width: 150,
+        render: (_, record) => {
+          let percent = 40;
+          if (record.takeover_status === "DISETUJUI") percent += 10;
+          if (record.mutasi_status === "DISETUJUI") percent += 10;
+          if (record.flagging_status === "DISETUJUI") percent += 10;
+          if (record.cash_status === "DISETUJUI") percent += 10;
+          if (record.document_status === "MITRA") percent += 10;
+          if (record.guarantee_status === "MITRA") percent += 10;
+          return <Progress percent={percent} />;
+        },
       },
-    },
-    {
-      title: "Progres Tagihan",
-      dataIndex: "progres",
-      key: "progres",
-      width: 150,
-      render(value, record, index) {
-        const filter = record.Angsurans.filter((f) => f.date_paid !== null);
-        return (
-          <Tooltip title={`${filter.length} / ${record.tenor}`}>
-            <Progress
-              percent={parseFloat(
-                String(((filter.length / record.tenor) * 100).toFixed(2)),
-              )}
-            />
-          </Tooltip>
-        );
+      {
+        title: "Progres Tagihan",
+        dataIndex: "progres",
+        key: "progres",
+        width: 150,
+        render: (_, record) => {
+          const paidCount =
+            record.Angsurans?.filter((f) => f.date_paid !== null).length || 0;
+          const percent =
+            record.tenor > 0
+              ? parseFloat(((paidCount / record.tenor) * 100).toFixed(2))
+              : 0;
+          return (
+            <Tooltip title={`${paidCount} / ${record.tenor}`}>
+              <Progress percent={percent} />
+            </Tooltip>
+          );
+        },
       },
-    },
-    {
-      title: "Created",
-      dataIndex: "created_at",
-      key: "created_at",
-      render(value, record, index) {
-        return (
+      {
+        title: "Created",
+        dataIndex: "created_at",
+        key: "created_at",
+        render: (_, record) => (
           <div>
-            <div>{record.User.fullname}</div>
+            <div>{record.User?.fullname}</div>
             <div className="opacity-80 text-xs">
               {moment(record.created_at).format("DD/MM/YYYY")}
             </div>
           </div>
-        );
+        ),
       },
-    },
-    {
-      title: "Aksi",
-      key: "action",
-      width: 100,
-      render: (_, record) => (
-        <div className="flex gap-2">
-          {hasAccess("update") && (
-            <Button
-              icon={<EditOutlined />}
-              size="small"
-              type="primary"
-              onClick={() =>
-                setSelected({ ...selected, proses: true, selected: record })
-              }
-            ></Button>
-          )}
-          <Tooltip
-            title={`Detail Data ${record.Debitur.fullname} (${record.nopen})`}
-          >
-            <Button
-              icon={<FolderOutlined />}
-              type="primary"
-              size="small"
-              onClick={() =>
-                setSelected({ ...selected, upsert: true, selected: record })
-              }
-            ></Button>
-          </Tooltip>
-        </div>
-      ),
-    },
-  ];
+      {
+        title: "Aksi",
+        key: "action",
+        width: 100,
+        render: (_, record) => (
+          <div className="flex gap-2">
+            {hasAccess("update") && (
+              <Button
+                icon={<EditOutlined />}
+                size="small"
+                type="primary"
+                onClick={() =>
+                  setSelected((prev) => ({
+                    ...prev,
+                    proses: true,
+                    selected: record,
+                  }))
+                }
+              />
+            )}
+            <Tooltip
+              title={`Detail Data ${record.Debitur?.fullname || ""} (${record.nopen})`}
+            >
+              <Button
+                icon={<FolderOutlined />}
+                type="primary"
+                size="small"
+                onClick={() =>
+                  setSelected((prev) => ({
+                    ...prev,
+                    upsert: true,
+                    selected: record,
+                  }))
+                }
+              />
+            </Tooltip>
+          </div>
+        ),
+      },
+    ],
+    [pageProps.page, pageProps.limit, hasAccess],
+  );
+
+  const handleClearFilter = useCallback(() => {
+    setPageProps((prev) => ({
+      ...prev,
+      search: "",
+      sumdanId: "",
+      jenisPembiayaanId: "",
+      dropping_status: "",
+      takeover_status: "",
+      mutasi_status: "",
+      flagging_status: "",
+      cash_status: "",
+      payOfficeId: "",
+      agentFrontingId: "",
+      backdate: "",
+    }));
+  }, []);
+
+  const handleExportExcel = useCallback(() => {
+    ExportToExcel(
+      [{ sheetname: "alldata", data: MappingToExcelDapem(pageProps.data) }],
+      "nominatif",
+    );
+  }, [pageProps.data]);
+
+  const handleTableSummary = useCallback((pageData: readonly IDapem[]) => {
+    const totalPlafond = pageData.reduce(
+      (acc, item) => acc + (item.plafond || 0),
+      0,
+    );
+    const angsSumdan = pageData.reduce(
+      (acc, item) => acc + (GetDetailDapem(item).detail.angsuran_sumdan || 0),
+      0,
+    );
+    const totalAngs = pageData.reduce(
+      (acc, item) => acc + (GetDetailDapem(item).angsuran || 0),
+      0,
+    );
+    const admAngsuran = Math.ceil(totalAngs - angsSumdan);
+
+    return (
+      <Table.Summary.Row className="text-xs bg-blue-400">
+        <Table.Summary.Cell index={0} colSpan={2} className="text-center">
+          <b>SUMMARY</b>
+        </Table.Summary.Cell>
+        <Table.Summary.Cell index={3} className="text-center">
+          <b>{IDRFormat(totalPlafond)}</b>
+        </Table.Summary.Cell>
+        <Table.Summary.Cell index={4} className="text-center font-bold">
+          <div>
+            {IDRFormat(angsSumdan)} + {IDRFormat(admAngsuran)}
+          </div>
+          <div className="border-t border-gray-500">{IDRFormat(totalAngs)}</div>
+        </Table.Summary.Cell>
+        <Table.Summary.Cell
+          index={5}
+          colSpan={14}
+          className="text-center font-bold"
+        />
+      </Table.Summary.Row>
+    );
+  }, []);
 
   return (
     <Card
@@ -752,244 +845,182 @@ export default function Page() {
     >
       <div className="flex justify-between my-1 gap-2 overflow-auto">
         <div className="flex gap-2">
-          <FilterData
-            clearfilter={() =>
-              setPageProps((prev) => ({
-                ...prev,
-                search: "",
-                sumdanId: "",
-                jenisPembiayaanId: "",
-                dropping_status: "",
-                takeover_status: "",
-                mutasi_status: "",
-                flagging_status: "",
-                cash_status: "",
-                payOfficeId: "",
-                agentFrontingId: "",
-                backdate: "",
-              }))
-            }
-            children={
-              <>
-                <div className="my-2">
-                  <p>Periode :</p>
-                  <RangePicker
-                    size="small"
-                    value={pageProps.backdate}
-                    onChange={(date, dateStr) =>
-                      setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
-                    }
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                {user && !user.sumdanId && (
-                  <div className="my-2">
-                    <p>Mitra pembiayaan :</p>
-                    <Select
-                      size="small"
-                      placeholder="Pilih Mitra..."
-                      options={sumdans.map((s) => ({
-                        label: s.code,
-                        value: s.id,
-                      }))}
-                      value={pageProps.sumdanId}
-                      onChange={(e) =>
-                        setPageProps({ ...pageProps, sumdanId: e, page: 1 })
-                      }
-                      allowClear
-                      style={{ width: "100%" }}
-                    />
-                  </div>
-                )}
-                <div className="my-2">
-                  <p>Jenis Pembiayaan :</p>
-                  <Select
-                    size="small"
-                    placeholder="Pilih Jenis..."
-                    options={jeniss.map((s) => ({
-                      label: s.name,
-                      value: s.id,
-                    }))}
-                    value={pageProps.jenisPembiayaanId}
-                    onChange={(e) =>
-                      setPageProps({
-                        ...pageProps,
-                        jenisPembiayaanId: e,
-                        page: 1,
-                      })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Kantor Bayar :</p>
-                  <Select
-                    size="small"
-                    placeholder="Pilih Kantor Bayar..."
-                    options={pays.map((s) => ({
-                      label: s.code || s.name,
-                      value: s.id,
-                    }))}
-                    value={pageProps.payOfficeId}
-                    onChange={(e) =>
-                      setPageProps({
-                        ...pageProps,
-                        payOfficeId: e,
-                        page: 1,
-                      })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Agent Fronting :</p>
-                  <Select
-                    size="small"
-                    placeholder="Pilih Agent..."
-                    options={agents.map((s) => ({
-                      label: s.name,
-                      value: s.id,
-                    }))}
-                    value={pageProps.agentFrontingId}
-                    onChange={(e) =>
-                      setPageProps({
-                        ...pageProps,
-                        agentFrontingId: e,
-                        page: 1,
-                      })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status Dropping :</p>
-                  <Select
-                    size="small"
-                    placeholder="Status Dropping..."
-                    value={pageProps.dropping_status}
-                    options={[
-                      { label: "PENDING", value: "PENDING" },
-                      { label: "TRANSFER", value: "DISETUJUI" },
-                      { label: "LUNAS", value: "LUNAS" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({
-                        ...pageProps,
-                        dropping_status: e,
-                        page: 1,
-                      })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status Takeover :</p>
-                  <Select
-                    size="small"
-                    placeholder="Status Takeover..."
-                    value={pageProps.takeover_status}
-                    options={[
-                      { label: "DRAFT", value: "DRAFT" },
-                      { label: "PENDING", value: "PENDING" },
-                      { label: "PROSES", value: "PROSES" },
-                      { label: "SELESAI", value: "DISETUJUI" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({
-                        ...pageProps,
-                        takeover_status: e,
-                        page: 1,
-                      })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status Mutasi :</p>
-                  <Select
-                    size="small"
-                    placeholder="Status Mutasi..."
-                    value={pageProps.mutasi_status}
-                    options={[
-                      { label: "DRAFT", value: "DRAFT" },
-                      { label: "PENDING", value: "PENDING" },
-                      { label: "PROSES", value: "PROSES" },
-                      { label: "SELESAI", value: "DISETUJUI" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, mutasi_status: e, page: 1 })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status Flagging : </p>
-                  <Select
-                    size="small"
-                    placeholder="Status Flagging..."
-                    options={[
-                      { label: "DRAFT", value: "DRAFT" },
-                      { label: "PENDING", value: "PENDING" },
-                      { label: "PROSES", value: "PROSES" },
-                      { label: "SELESAI", value: "DISETUJUI" },
-                    ]}
-                    value={pageProps.flagging_status}
-                    onChange={(e) =>
-                      setPageProps({
-                        ...pageProps,
-                        flagging_status: e,
-                        page: 1,
-                      })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-                <div className="my-2">
-                  <p>Status Terima Bersih : </p>
-                  <Select
-                    size="small"
-                    placeholder="Status TB..."
-                    value={pageProps.cash_status}
-                    options={[
-                      { label: "DRAFT", value: "DRAFT" },
-                      { label: "PENDING", value: "PENDING" },
-                      { label: "PROSES", value: "PROSES" },
-                      { label: "SELESAI", value: "DISETUJUI" },
-                    ]}
-                    onChange={(e) =>
-                      setPageProps({ ...pageProps, cash_status: e, page: 1 })
-                    }
-                    allowClear
-                    style={{ width: "100%" }}
-                  />
-                </div>
-              </>
-            }
-          />
+          <FilterData clearfilter={handleClearFilter}>
+            <div className="my-2">
+              <p>Periode :</p>
+              <RangePicker
+                size="small"
+                value={pageProps.backdate}
+                onChange={(_, dateStr) =>
+                  setPageProps((prev) => ({
+                    ...prev,
+                    backdate: dateStr,
+                    page: 1,
+                  }))
+                }
+                style={{ width: "100%" }}
+              />
+            </div>
+            {user && !user.sumdanId && (
+              <div className="my-2">
+                <p>Mitra pembiayaan :</p>
+                <Select
+                  size="small"
+                  placeholder="Pilih Mitra..."
+                  options={sumdanOptions}
+                  value={pageProps.sumdanId}
+                  onChange={(e) =>
+                    setPageProps((prev) => ({ ...prev, sumdanId: e, page: 1 }))
+                  }
+                  allowClear
+                  style={{ width: "100%" }}
+                />
+              </div>
+            )}
+            <div className="my-2">
+              <p>Jenis Pembiayaan :</p>
+              <Select
+                size="small"
+                placeholder="Pilih Jenis..."
+                options={jenisOptions}
+                value={pageProps.jenisPembiayaanId}
+                onChange={(e) =>
+                  setPageProps((prev) => ({
+                    ...prev,
+                    jenisPembiayaanId: e,
+                    page: 1,
+                  }))
+                }
+                allowClear
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div className="my-2">
+              <p>Kantor Bayar :</p>
+              <Select
+                size="small"
+                placeholder="Pilih Kantor Bayar..."
+                options={payOptions}
+                value={pageProps.payOfficeId}
+                onChange={(e) =>
+                  setPageProps((prev) => ({ ...prev, payOfficeId: e, page: 1 }))
+                }
+                allowClear
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div className="my-2">
+              <p>Agent Fronting :</p>
+              <Select
+                size="small"
+                placeholder="Pilih Agent..."
+                options={agentOptions}
+                value={pageProps.agentFrontingId}
+                onChange={(e) =>
+                  setPageProps((prev) => ({
+                    ...prev,
+                    agentFrontingId: e,
+                    page: 1,
+                  }))
+                }
+                allowClear
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div className="my-2">
+              <p>Status Dropping :</p>
+              <Select
+                size="small"
+                placeholder="Status Dropping..."
+                value={pageProps.dropping_status}
+                options={DROPPING_OPTIONS}
+                onChange={(e) =>
+                  setPageProps((prev) => ({
+                    ...prev,
+                    dropping_status: e,
+                    page: 1,
+                  }))
+                }
+                allowClear
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div className="my-2">
+              <p>Status Takeover :</p>
+              <Select
+                size="small"
+                placeholder="Status Takeover..."
+                value={pageProps.takeover_status}
+                options={GENERAL_STATUS_OPTIONS}
+                onChange={(e) =>
+                  setPageProps((prev) => ({
+                    ...prev,
+                    takeover_status: e,
+                    page: 1,
+                  }))
+                }
+                allowClear
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div className="my-2">
+              <p>Status Mutasi :</p>
+              <Select
+                size="small"
+                placeholder="Status Mutasi..."
+                value={pageProps.mutasi_status}
+                options={GENERAL_STATUS_OPTIONS}
+                onChange={(e) =>
+                  setPageProps((prev) => ({
+                    ...prev,
+                    mutasi_status: e,
+                    page: 1,
+                  }))
+                }
+                allowClear
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div className="my-2">
+              <p>Status Flagging : </p>
+              <Select
+                size="small"
+                placeholder="Status Flagging..."
+                options={GENERAL_STATUS_OPTIONS}
+                value={pageProps.flagging_status}
+                onChange={(e) =>
+                  setPageProps((prev) => ({
+                    ...prev,
+                    flagging_status: e,
+                    page: 1,
+                  }))
+                }
+                allowClear
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div className="my-2">
+              <p>Status Terima Bersih : </p>
+              <Select
+                size="small"
+                placeholder="Status TB..."
+                value={pageProps.cash_status}
+                options={GENERAL_STATUS_OPTIONS}
+                onChange={(e) =>
+                  setPageProps((prev) => ({ ...prev, cash_status: e, page: 1 }))
+                }
+                allowClear
+                style={{ width: "100%" }}
+              />
+            </div>
+          </FilterData>
         </div>
         <div className="flex gap-2">
           <Button
             icon={<PrinterOutlined />}
             size="small"
             type="primary"
-            onClick={() =>
-              ExportToExcel(
-                [
-                  {
-                    sheetname: "alldata",
-                    data: MappingToExcelDapem(pageProps.data),
-                  },
-                ],
-                "nominatif",
-              )
-            }
+            onClick={handleExportExcel}
           >
             Excel
           </Button>
@@ -999,7 +1030,7 @@ export default function Page() {
             placeholder="Cari nama..."
             value={pageProps.search}
             onChange={(e) =>
-              setPageProps({ ...pageProps, search: e.target.value })
+              setPageProps((prev) => ({ ...prev, search: e.target.value }))
             }
           />
         </div>
@@ -1010,7 +1041,7 @@ export default function Page() {
         dataSource={pageProps.data}
         size="small"
         loading={loading}
-        rowKey={"id"}
+        rowKey="id"
         bordered
         scroll={{ x: "max-content", y: "48vh" }}
         pagination={{
@@ -1018,85 +1049,59 @@ export default function Page() {
           pageSize: pageProps.limit,
           total: pageProps.total,
           onChange: (page, pageSize) => {
-            setPageProps((prev) => ({
-              ...prev,
-              page,
-              limit: pageSize,
-            }));
+            setPageProps((prev) => ({ ...prev, page, limit: pageSize }));
           },
           pageSizeOptions: [50, 100, 500, 1000],
           showSizeChanger: true,
         }}
-        summary={(pageData) => {
-          const angs = pageData.reduce(
-            (acc, item) => acc + GetDetailDapem(item).angsuran,
-            0,
-          );
-          const angsSumdan = pageData.reduce(
-            (acc, item) => acc + GetDetailDapem(item).detail.angsuran_sumdan,
-            0,
-          );
-          const admAngsuran = Math.ceil(angs - angsSumdan);
-
-          return (
-            <Table.Summary.Row className="text-xs bg-blue-400">
-              <Table.Summary.Cell index={0} colSpan={2} className="text-center">
-                <b>SUMMARY</b>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={3} className="text-center">
-                <b>
-                  {IDRFormat(
-                    pageData.reduce((acc, item) => acc + item.plafond, 0),
-                  )}{" "}
-                </b>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell index={4} className="text-center font-bold">
-                <div>
-                  {IDRFormat(angsSumdan)} + {IDRFormat(admAngsuran)}
-                </div>
-                <div className="border-t border-gray-500">
-                  {IDRFormat(angs)}
-                </div>
-              </Table.Summary.Cell>
-              <Table.Summary.Cell
-                index={5}
-                colSpan={14}
-                className="text-center font-bold"
-              ></Table.Summary.Cell>
-            </Table.Summary.Row>
-          );
-        }}
+        summary={handleTableSummary}
       />
 
       {selected.selected && selected.upsert && (
         <DetailDapem
           open={selected.upsert}
           setOpen={(val: boolean) =>
-            setSelected({ ...selected, selected: undefined, upsert: val })
+            setSelected((prev) => ({
+              ...prev,
+              selected: undefined,
+              upsert: val,
+            }))
           }
           data={selected.selected}
-          key={"detail" + selected.selected.id}
-          allowprogres={true}
+          key={`detail${selected.selected.id}`}
+          allowprogres
         />
       )}
       <ViewFiles
-        setOpen={(v: boolean) => setViews({ ...views, open: v })}
-        data={{ ...views }}
+        setOpen={(v: boolean) => setViews((prev) => ({ ...prev, open: v }))}
+        data={views}
       />
       {selected.selected && selected.proses && (
         <UpdateStatus
           open={selected.proses}
           setOpen={(val: boolean) =>
-            setSelected({ ...selected, proses: val, selected: undefined })
+            setSelected((prev) => ({
+              ...prev,
+              proses: val,
+              selected: undefined,
+            }))
           }
           getData={getData}
           dapem={selected.selected}
-          key={"upsert" + selected.selected.id}
+          key={`upsert${selected.selected.id}`}
           hook={modal}
         />
       )}
     </Card>
   );
+}
+
+interface UpdateStatusProps {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+  getData: () => Promise<void>;
+  dapem: IDapem;
+  hook: HookAPI;
 }
 
 const UpdateStatus = ({
@@ -1105,47 +1110,50 @@ const UpdateStatus = ({
   getData,
   dapem,
   hook,
-}: {
-  open: boolean;
-  setOpen: Function;
-  getData: Function;
-  dapem: IDapem;
-  hook: HookAPI;
-}) => {
-  const [cashdesc, setCashdesc] = useState<ICashDesc[]>(
+}: UpdateStatusProps) => {
+  const nominalId = useId();
+  const [cashdesc, setCashdesc] = useState<ICashDesc[]>(() =>
     dapem.cash_desc
       ? (JSON.parse(dapem.cash_desc) as ICashDesc[])
-      : [defaultCashDesc],
+      : [DEFAULT_CASH_DESC],
   );
   const [data, setData] = useState<IDapem>(dapem);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     setLoading(true);
-    data.cash_desc = JSON.stringify(cashdesc);
-    await fetch("/api/dapem", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    })
-      .then((res) => res.json())
-      .then(async (res) => {
-        if (res.status === 200) {
-          hook.success({
-            title: "BERHASIL",
-            content: "Data Pembiayaan berhasil diupdate",
-          });
-          await getData();
-          setOpen(false);
-        } else {
-          hook.error({ title: "ERROR!!", content: res.msg });
-        }
-      });
-    setLoading(false);
+    const payload = { ...data, cash_desc: JSON.stringify(cashdesc) };
+    try {
+      const res = await fetch("/api/dapem", {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }).then((r) => r.json());
+
+      if (res.status === 200) {
+        hook.success({
+          title: "BERHASIL",
+          content: "Data Pembiayaan berhasil diupdate",
+        });
+        await getData();
+        setOpen(false);
+      } else {
+        hook.error({ title: "ERROR!!", content: res.msg });
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      hook.error({ title: "ERROR!!", content: "Terjadi kesalahan jaringan." });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleAddMore = useCallback(() => {
+    setCashdesc((prev) => [...prev, DEFAULT_CASH_DESC]);
+  }, []);
 
   return (
     <Modal
-      title={"Update Data " + dapem.id}
+      title={`Update Data ${dapem.id}`}
       open={open}
       onCancel={() => setOpen(false)}
       width={1200}
@@ -1161,7 +1169,7 @@ const UpdateStatus = ({
               class: "flex-1",
               type: "text",
               disabled: true,
-              value: `${dapem.Debitur.fullname} (${dapem.nopen})`,
+              value: `${dapem.Debitur?.fullname || ""} (${dapem.nopen})`,
             }}
           />
           <div className="flex flex-wrap gap-2 border-b py-2">
@@ -1172,15 +1180,13 @@ const UpdateStatus = ({
                 class: "flex-1",
                 mode: "vertical",
                 type: "select",
-                options: [
-                  { label: "DRAFT", value: "DRAFT" },
-                  { label: "PENDING", value: "PENDING" },
-                  { label: "PROSES", value: "PROSES" },
-                  { label: "SELESAI", value: "DISETUJUI" },
-                ],
+                options: GENERAL_STATUS_OPTIONS,
                 value: data.takeover_status,
                 onChange: (e: string) =>
-                  setData({ ...data, takeover_status: e as EDapemStatus }),
+                  setData((prev) => ({
+                    ...prev,
+                    takeover_status: e as EDapemStatus,
+                  })),
               }}
             />
             <FormInput
@@ -1192,7 +1198,10 @@ const UpdateStatus = ({
                 class: "flex-1",
                 value: moment(data.takeover_date_exc).format("YYYY-MM-DD"),
                 onChange: (e: string) =>
-                  setData({ ...data, takeover_date_exc: new Date(e) }),
+                  setData((prev) => ({
+                    ...prev,
+                    takeover_date_exc: new Date(e),
+                  })),
               }}
             />
             <FormInput
@@ -1202,7 +1211,8 @@ const UpdateStatus = ({
                 class: "flex-1",
                 type: "textarea",
                 value: data.takeover_desc,
-                onChange: (e: string) => setData({ ...data, takeover_desc: e }),
+                onChange: (e: string) =>
+                  setData((prev) => ({ ...prev, takeover_desc: e })),
               }}
             />
             <FormInput
@@ -1213,7 +1223,8 @@ const UpdateStatus = ({
                 class: "flex-1",
                 type: "upload",
                 value: data.file_takeover,
-                onChange: (e: string) => setData({ ...data, file_takeover: e }),
+                onChange: (e: string) =>
+                  setData((prev) => ({ ...prev, file_takeover: e })),
               }}
             />
           </div>
@@ -1225,15 +1236,13 @@ const UpdateStatus = ({
                 mode: "vertical",
                 class: "flex-1",
                 type: "select",
-                options: [
-                  { label: "DRAFT", value: "DRAFT" },
-                  { label: "PENDING", value: "PENDING" },
-                  { label: "PROSES", value: "PROSES" },
-                  { label: "SELESAI", value: "DISETUJUI" },
-                ],
+                options: GENERAL_STATUS_OPTIONS,
                 value: data.mutasi_status,
                 onChange: (e: string) =>
-                  setData({ ...data, mutasi_status: e as EDapemStatus }),
+                  setData((prev) => ({
+                    ...prev,
+                    mutasi_status: e as EDapemStatus,
+                  })),
               }}
             />
             <FormInput
@@ -1245,7 +1254,10 @@ const UpdateStatus = ({
                 class: "flex-1",
                 value: moment(data.mutasi_date_exc).format("YYYY-MM-DD"),
                 onChange: (e: string) =>
-                  setData({ ...data, mutasi_date_exc: new Date(e) }),
+                  setData((prev) => ({
+                    ...prev,
+                    mutasi_date_exc: new Date(e),
+                  })),
               }}
             />
             <FormInput
@@ -1256,7 +1268,8 @@ const UpdateStatus = ({
                 class: "flex-1",
                 type: "textarea",
                 value: data.mutasi_desc,
-                onChange: (e: string) => setData({ ...data, mutasi_desc: e }),
+                onChange: (e: string) =>
+                  setData((prev) => ({ ...prev, mutasi_desc: e })),
               }}
             />
             <FormInput
@@ -1267,7 +1280,8 @@ const UpdateStatus = ({
                 class: "flex-1",
                 type: "upload",
                 value: data.file_mutasi,
-                onChange: (e: string) => setData({ ...data, file_mutasi: e }),
+                onChange: (e: string) =>
+                  setData((prev) => ({ ...prev, file_mutasi: e })),
               }}
             />
           </div>
@@ -1279,15 +1293,13 @@ const UpdateStatus = ({
                 mode: "vertical",
                 type: "select",
                 class: "flex-1",
-                options: [
-                  { label: "DRAFT", value: "DRAFT" },
-                  { label: "PENDING", value: "PENDING" },
-                  { label: "PROSES", value: "PROSES" },
-                  { label: "SELESAI", value: "DISETUJUI" },
-                ],
+                options: GENERAL_STATUS_OPTIONS,
                 value: data.flagging_status,
                 onChange: (e: string) =>
-                  setData({ ...data, flagging_status: e as EDapemStatus }),
+                  setData((prev) => ({
+                    ...prev,
+                    flagging_status: e as EDapemStatus,
+                  })),
               }}
             />
             <FormInput
@@ -1299,7 +1311,10 @@ const UpdateStatus = ({
                 class: "flex-1",
                 value: moment(data.flagging_date_exc).format("YYYY-MM-DD"),
                 onChange: (e: string) =>
-                  setData({ ...data, flagging_date_exc: new Date(e) }),
+                  setData((prev) => ({
+                    ...prev,
+                    flagging_date_exc: new Date(e),
+                  })),
               }}
             />
             <FormInput
@@ -1310,7 +1325,8 @@ const UpdateStatus = ({
                 mode: "vertical",
                 class: "flex-1",
                 value: data.flagging_desc,
-                onChange: (e: string) => setData({ ...data, flagging_desc: e }),
+                onChange: (e: string) =>
+                  setData((prev) => ({ ...prev, flagging_desc: e })),
               }}
             />
             <FormInput
@@ -1321,7 +1337,8 @@ const UpdateStatus = ({
                 class: "flex-1",
                 type: "upload",
                 value: data.file_flagging,
-                onChange: (e: string) => setData({ ...data, file_flagging: e }),
+                onChange: (e: string) =>
+                  setData((prev) => ({ ...prev, file_flagging: e })),
               }}
             />
           </div>
@@ -1333,21 +1350,19 @@ const UpdateStatus = ({
               required: true,
               mode: "horizontal",
               type: "select",
-              options: [
-                { label: "DRAFT", value: "DRAFT" },
-                { label: "PENDING", value: "PENDING" },
-                { label: "PROSES", value: "PROSES" },
-                { label: "SELESAI", value: "DISETUJUI" },
-              ],
+              options: GENERAL_STATUS_OPTIONS,
               value: data.cash_status,
               onChange: (e: string) =>
-                setData({ ...data, cash_status: e as EDapemStatus }),
+                setData((prev) => ({
+                  ...prev,
+                  cash_status: e as EDapemStatus,
+                })),
             }}
           />
           {cashdesc.map((c, i) => (
             <div
               className="w-full flex flex-wrap gap-2 border-b border-gray-400 py-1"
-              key={i}
+              key={`${nominalId}-${i}`}
             >
               <FormInput
                 data={{
@@ -1356,13 +1371,14 @@ const UpdateStatus = ({
                   type: "text",
                   mode: "vertical",
                   class: "flex-1",
-                  value: IDRFormat(cashdesc[i].amount),
+                  value: IDRFormat(c.amount),
                   onChange: (e: string) =>
-                    setCashdesc(
-                      cashdesc.map((cd, id) => ({
-                        ...cd,
-                        ...(i === id && { amount: IDRToNumber(e || "0") }),
-                      })),
+                    setCashdesc((prev) =>
+                      prev.map((cd, id) =>
+                        i === id
+                          ? { ...cd, amount: IDRToNumber(e || "0") }
+                          : cd,
+                      ),
                     ),
                 }}
               />
@@ -1373,13 +1389,12 @@ const UpdateStatus = ({
                   type: "date",
                   mode: "vertical",
                   class: "flex-1",
-                  value: moment(cashdesc[i].date).format("YYYY-MM-DD"),
+                  value: moment(c.date).format("YYYY-MM-DD"),
                   onChange: (e: string) =>
-                    setCashdesc(
-                      cashdesc.map((cd, id) => ({
-                        ...cd,
-                        ...(i === id && { date: new Date(e) }),
-                      })),
+                    setCashdesc((prev) =>
+                      prev.map((cd, id) =>
+                        i === id ? { ...cd, date: new Date(e) } : cd,
+                      ),
                     ),
                 }}
               />
@@ -1390,13 +1405,12 @@ const UpdateStatus = ({
                   type: "textarea",
                   mode: "vertical",
                   class: "flex-1",
-                  value: cashdesc[i].desc,
+                  value: c.desc,
                   onChange: (e: string) =>
-                    setCashdesc(
-                      cashdesc.map((cd, id) => ({
-                        ...cd,
-                        ...(i === id && { desc: e }),
-                      })),
+                    setCashdesc((prev) =>
+                      prev.map((cd, id) =>
+                        i === id ? { ...cd, desc: e } : cd,
+                      ),
                     ),
                 }}
               />
@@ -1407,13 +1421,12 @@ const UpdateStatus = ({
                   mode: "vertical",
                   class: "flex-1",
                   type: "upload",
-                  value: cashdesc[i].file,
+                  value: c.file,
                   onChange: (e: string) =>
-                    setCashdesc(
-                      cashdesc.map((cd, id) => ({
-                        ...cd,
-                        ...(i === id && { file: e }),
-                      })),
+                    setCashdesc((prev) =>
+                      prev.map((cd, id) =>
+                        i === id ? { ...cd, file: e } : cd,
+                      ),
                     ),
                 }}
               />
@@ -1424,7 +1437,7 @@ const UpdateStatus = ({
               icon={<PlusCircleOutlined />}
               type="primary"
               block
-              onClick={() => setCashdesc([...cashdesc, defaultCashDesc])}
+              onClick={handleAddMore}
             >
               Add More
             </Button>
@@ -1433,11 +1446,4 @@ const UpdateStatus = ({
       </div>
     </Modal>
   );
-};
-
-const defaultCashDesc: ICashDesc = {
-  amount: 0,
-  date: new Date(),
-  desc: "",
-  file: "",
 };

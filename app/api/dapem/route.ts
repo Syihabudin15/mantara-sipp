@@ -10,7 +10,12 @@ import {
 } from "@prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
-import { ORDapem, WheresDapem } from "../utils/wheres";
+import {
+  AOInclude,
+  GetUserSession,
+  ORDapem,
+  WheresDapem,
+} from "../utils/wheres";
 
 export const GET = async (request: NextRequest) => {
   const params = Object.fromEntries(request.nextUrl.searchParams);
@@ -44,10 +49,7 @@ export const GET = async (request: NextRequest) => {
   const session = await getSession();
   if (!session)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-  const user = await prisma.user.findFirst({
-    where: { id: session.user.id },
-    include: { Role: true, Cabang: true },
-  });
+  const user = await GetUserSession(session);
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
 
@@ -135,10 +137,12 @@ export const GET = async (request: NextRequest) => {
         Debitur: true,
         ProdukPembiayaan: {
           include: {
-            Sumdan: { select: { name: true, code: true, dsr: true } },
+            Sumdan: {
+              select: { name: true, code: true, dsr: true, logo: true },
+            },
           },
         },
-        PayOffice: { select: { name: true, code: true } },
+        PayOffice: { select: { name: true, code: true, logo: true } },
         JenisPembiayaan: {
           select: { name: true, status_mutasi: true, status_takeover: true },
         },
@@ -149,28 +153,10 @@ export const GET = async (request: NextRequest) => {
             where: { date_paid: { not: null } },
           },
         }),
-        User: { select: { fullname: true } },
-        AO: {
-          include: {
-            Cabang: {
-              include: { Area: { select: { name: true } } },
-            },
-          },
-        },
-        AOCabang: {
-          include: {
-            Cabang: {
-              include: { Area: { select: { name: true } } },
-            },
-          },
-        },
-        AOArea: {
-          include: {
-            Cabang: {
-              include: { Area: { select: { name: true } } },
-            },
-          },
-        },
+        User: AOInclude(),
+        AO: AOInclude(),
+        AOCabang: AOInclude(),
+        AOArea: AOInclude(),
         Dropping: true,
         // }),
         AgentFronting: { select: { code: true, name: true, pic: true } },

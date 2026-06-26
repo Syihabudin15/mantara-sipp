@@ -1,5 +1,5 @@
 import {
-  GetAngsuran,
+  GetDetailDapem,
   GetRoman,
   IDRFormat,
 } from "@/components/utils/PembiayaanUtil";
@@ -8,14 +8,7 @@ import moment from "moment";
 import { Header, ListStyle, NumberToWordsID } from "../utils";
 
 export const SPKDR = (record: IDapem) => {
-  const angsuran = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin + record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded,
-    record.c_ned,
-  ).angsuran;
+  const angsuran = GetDetailDapem(record).angsuran;
 
   return `
   ${Header("SURAT PERNYATAAN DAN KUASA DEBET REKENING (SPKDR)", `No. ${record.id}/SPKDR/${(process.env.NEXT_PUBLIC_APP_SHORTNAME || "").replace("KOPJAS", "").replace(" ", "")}/${GetRoman(moment(record.date_contract).get("month") + 1)}/${moment(record.date_contract).format("YYYY")}`, undefined, undefined, undefined)}

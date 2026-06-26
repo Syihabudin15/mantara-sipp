@@ -1,3 +1,4 @@
+import { clearRoleCache } from "@/libs/Auth";
 import prisma from "@/libs/Prisma";
 import { Prisma, Role } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -60,6 +61,7 @@ export const PUT = async (request: NextRequest) => {
       where: { id: id },
       data: { ...updated, updated_at: new Date() },
     });
+    clearRoleCache(id);
     return NextResponse.json({
       status: 200,
       message: "Berhasil memperbarui data.",

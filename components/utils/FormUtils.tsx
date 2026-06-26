@@ -171,11 +171,13 @@ const UploadComponents = ({
       // Langkah 2: Upload file mentah langsung ke Azure Storage menggunakan PUT
       const resAzure = await fetch(sasData.uploadUrl, {
         method: "PUT",
-        body: fileObj, // Langsung kirim file mentah tanpa FormData wrapper
         headers: {
           "x-ms-blob-type": "BlockBlob",
-          "Content-Type": fileObj.type,
+          "x-ms-blob-content-type": fileObj.type || "application/octet-stream",
+          "x-ms-blob-content-disposition": "inline",
+          "Content-Type": fileObj.type || "application/octet-stream",
         },
+        body: fileObj,
       });
 
       if (resAzure.ok) {

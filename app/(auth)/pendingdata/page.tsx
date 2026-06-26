@@ -2,7 +2,7 @@
 
 import { FormInput, ViewFiles } from "@/components";
 import { printContract } from "@/components/pdfutils/akad/Akad";
-import { printForm } from "@/components/pdfutils/etc/printForm";
+// import { printForm } from "@/components/pdfutils/etc/printForm";
 import { printMonitoring } from "@/components/pdfutils/etc/printMonitoring";
 import { useUser } from "@/components/UserContext";
 import {
@@ -475,14 +475,14 @@ export default function Page() {
       width: 100,
       render: (_, record) => (
         <div className="flex gap-1 flex-wrap justify-center">
-          {hasAccess("write") && (
+          {/* {hasAccess("write") && (
             <Button
               icon={<PrinterOutlined />}
               type="primary"
               size="small"
               onClick={() => printForm(record)}
             ></Button>
-          )}
+          )} */}
           {hasAccess("update") && (
             <Link href={`/monitoring/upsert/${record.id}`}>
               <Button
@@ -650,7 +650,7 @@ export default function Page() {
           >
             PDF
           </Button>
-          {hasAccess("write") && (
+          {/* {hasAccess("write") && (
             <Button
               icon={<PrinterOutlined />}
               type="primary"
@@ -659,7 +659,7 @@ export default function Page() {
             >
               Form
             </Button>
-          )}
+          )} */}
           <Input.Search
             size="small"
             style={{ width: 170 }}

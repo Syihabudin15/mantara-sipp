@@ -1,32 +1,14 @@
-import {
-  GetAngsuran,
-  GetDapem,
-  IDRFormat,
-} from "@/components/utils/PembiayaanUtil";
+import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
 import { Header, ListNonStyle, ListStyle, NumberToWordsID } from "../utils";
 moment.locale("id");
 
 export const PK = (record: IDapem) => {
-  const angsuran = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin + record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded,
-    record.c_ned,
-  ).angsuran;
-  const angsuranSumdan = GetAngsuran(
-    record.plafond,
-    record.tenor,
-    record.c_margin_sumdan,
-    record.margin_type,
-    record.rounded_sumdan,
-  ).angsuran;
-  const admAngsuran = Math.ceil(angsuran - angsuranSumdan);
-
-  const dapem = GetDapem(record);
+  const detail = GetDetailDapem(record);
+  const angsuran = detail.angsuran;
+  const angsuranSumdan = detail.detail.angsuran_sumdan;
+  const admAngsuran = angsuran - angsuranSumdan;
 
   return `
   ${Header("PERJANJIAN KREDIT", record.no_contract, undefined, undefined, undefined)}
@@ -122,7 +104,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(record.plafond * ((record.c_adm_sumdan + record.c_adm + record.c_adm_mitra + record.c_adm_ff) / 100))}</p>
+          <p>${IDRFormat(detail.administrasi + detail.detail.adm_sumdan)}</p>
         </div>
       </div>
     </div>
@@ -133,7 +115,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(record.plafond * ((record.c_provisi_sumdan + record.c_fee_ao + record.c_fee_cabang + record.c_fee_area + record.c_fee_bpp + record.c_fee_bpb) / 100))}</p>
+          <p>${IDRFormat(detail.provisi + detail.detail.provisi_sumdan)}</p>
         </div>
       </div>
     </div>
@@ -144,7 +126,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(record.c_gov + record.c_flagging + record.c_infomation + record.c_stamp + record.c_mutasi + record.c_bop)}</p>
+          <p>${IDRFormat(detail.tatalaksana)}</p>
         </div>
       </div>
     </div>
@@ -155,7 +137,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(record.c_gov + record.c_flagging + record.c_infomation + record.c_stamp + record.c_mutasi)}</p>
+          <p>${IDRFormat(detail.asuransi)}</p>
         </div>
       </div>
     </div>
@@ -166,7 +148,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(record.c_account + record.c_account_sumdan)}</p>
+          <p>${IDRFormat(record.c_account_sumdan)}</p>
         </div>
       </div>
     </div>
@@ -177,7 +159,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4 font-bold">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(dapem.biaya)}</p>
+          <p>${IDRFormat(detail.biaya)}</p>
         </div>
       </div>
     </div>
@@ -210,7 +192,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
         <p>Rp.</p>
         <div class="text-right w-24">
-          <p >${IDRFormat(dapem.tb)}</p>
+          <p >${IDRFormat(detail.tb)}</p>
         </div>
       </div>
     </div>
@@ -248,7 +230,7 @@ export const PK = (record: IDapem) => {
     <div>
       ${ListStyle(
         [
-          `Penarikan fasilitas kredit yang diberikan KREDITUR kepada DEBITUR yang dicairkan, yaitu sebesar <span class="font-bold">Rp. ${IDRFormat(dapem.tb)} (${NumberToWordsID(dapem.tb)})</span>, jumlah tersebut setelah dikurangi dengan biaya-biaya yang terkait dengan fasilitas kredit.`,
+          `Penarikan fasilitas kredit yang diberikan KREDITUR kepada DEBITUR yang dicairkan, yaitu sebesar <span class="font-bold">Rp. ${IDRFormat(detail.tb)} (${NumberToWordsID(detail.tb)})</span>, jumlah tersebut setelah dikurangi dengan biaya-biaya yang terkait dengan fasilitas kredit.`,
           `Debitur menyetujui bahwa Dropping fasilitas kredit akan di transaksikan paling lambat 5 (lima) hari kerja sejak Perjanjian Kredit ini ditandatangani.`,
           `Penandatanganan Perjanjian ini merupakan tanda penerimaan yang sah atas seluruh jumlah hutang pokok sebagaimana dimaksud pasal 1 Plafond Kredit sebesar <span class="font-bold">Rp. ${IDRFormat(record.plafond)},- (${NumberToWordsID(record.plafond)})</span>, Perjanjian dan DEBITUR dengan ini mengaku benarbenar secara sah telah berhutang kepada KREDITUR atas jumlah hutang pokok tersebut demikian berikut bunga, denda dan biayabiaya lain serta lain-lain jumlah yang wajib dibayar oleh DEBITUR kepada KREDITUR berdasarkan Perjanjian ini.`,
           `
@@ -427,7 +409,7 @@ export const PK = (record: IDapem) => {
         <div class="h-28 flex items-center justify-center opacity-50">
         </div>
         <div>
-          <p class="w-full border-b">ARIF FIRMANSYAH</p>
+          <p class="w-full border-b">H ARIEF FIRMANSYAH</p>
           <p>KETUA KOPERASI</p>
         </div>
       </div>
