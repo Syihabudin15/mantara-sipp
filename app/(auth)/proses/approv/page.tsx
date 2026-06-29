@@ -148,6 +148,7 @@ export default function Page() {
       title: "Pemohon",
       dataIndex: "pemohon",
       key: "pemohon",
+      fixed: window && window.innerWidth > 600 ? "left" : false,
       render(value, record, index) {
         return (
           <div>
