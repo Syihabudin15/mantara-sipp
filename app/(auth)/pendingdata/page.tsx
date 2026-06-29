@@ -493,7 +493,7 @@ export default function Page() {
             </Link>
           )}
           {hasAccess("update") &&
-            ["DRAFT", "BATAL"].includes(record.dropping_status) && (
+            ["DRAFT", "BATAL", "DITOLAK"].includes(record.dropping_status) && (
               <Tooltip title={"Ajukan permohonan ini? (Naikan ke verifikasi)"}>
                 <Button
                   icon={<CheckCircleOutlined />}
@@ -805,6 +805,7 @@ const SendSubmission = ({
       body: JSON.stringify({
         ...data,
         verif_status: "PENDING",
+        slik_status: "PENDING",
         dropping_status: "PENDING",
       }),
     })
