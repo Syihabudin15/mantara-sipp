@@ -177,6 +177,7 @@ function GenerateAnuitas(dapem: Dapem): Angsuran[] {
   }
   return angsurans;
 }
+
 function GenerateFlat(dapem: Dapem): Angsuran[] {
   const prefix = `${dapem.id}TX`;
   const padLength = 3;

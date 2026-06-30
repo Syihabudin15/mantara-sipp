@@ -27,6 +27,7 @@ import {
   FileFilled,
   FolderOutlined,
   PayCircleOutlined,
+  PlusCircleOutlined,
   PrinterOutlined,
   ReadOutlined,
   RobotOutlined,
@@ -218,6 +219,7 @@ export default function Page() {
         title: "Pemohon",
         dataIndex: "pemohon",
         key: "pemohon",
+        fixed: window && window.innerWidth > 600 ? "left" : false,
         render: (_, record) => (
           <div>
             <p className="font-bold">{record.Debitur.fullname}</p>
@@ -231,7 +233,6 @@ export default function Page() {
         title: "Permohonan",
         dataIndex: "permohonan",
         key: "permohonan",
-        fixed: window && window.innerWidth > 600 ? "left" : false,
         render: (_, record) => (
           <div>
             <div>
@@ -622,6 +623,13 @@ export default function Page() {
     >
       <div className="flex justify-between my-1 gap-2 overflow-auto">
         <div className="flex gap-2">
+          {hasAccess("write") && (
+            <Link href={"/monitoring/upsert"}>
+              <Button type="primary" size="small" icon={<PlusCircleOutlined />}>
+                Tambah
+              </Button>
+            </Link>
+          )}
           <FilterData clearfilter={handleClearFilter}>
             <>
               {user && !user.sumdanId && (

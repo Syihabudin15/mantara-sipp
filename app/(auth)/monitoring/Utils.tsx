@@ -2408,7 +2408,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
               onChange: (e: string) => setData({ ...data, video_contract: e }),
             }}
           />
-          <div className="my-4">
+          <div className="my-4" hidden>
             <div className="flex gap-2">
               <p>Generate OCR</p>
               <Button

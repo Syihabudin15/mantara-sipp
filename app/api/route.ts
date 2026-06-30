@@ -31,9 +31,15 @@ export const GET = async (req: NextRequest) => {
           ...where,
         },
         include: {
-          Dropping: true,
-          Debitur: true,
-          Angsurans: true,
+          Dropping: { select: { process_at: true } },
+          Debitur: { select: { group_skep: true } },
+          Angsurans: {
+            where: {
+              date_pay: {
+                lte: moment().endOf("month").toDate(),
+              },
+            },
+          },
         },
       }),
       prisma.dapem.findMany({
@@ -49,8 +55,8 @@ export const GET = async (req: NextRequest) => {
           ...where,
         },
         include: {
-          Dropping: true,
-          Debitur: true,
+          Dropping: { select: { process_at: true } },
+          Debitur: { select: { group_skep: true } },
           Angsurans: {
             where: { date_paid: null },
           },
