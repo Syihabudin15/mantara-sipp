@@ -1007,7 +1007,7 @@ const PrintContractSubmission = ({
       }).then((r) => r.json());
       if (res.status === 200) {
         await getData();
-        printContract({ ...temp, Angsuran: res.data } as IDapem);
+        printContract({ ...temp, Angsurans: res.data } as IDapem);
       } else {
         hook.error({ content: res.msg });
       }
