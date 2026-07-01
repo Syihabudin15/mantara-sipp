@@ -69,7 +69,9 @@ export const GET = async (request: NextRequest) => {
             },
           },
         }),
-        ...(includeproduct && { ProdukPembiayaans: true }),
+        ...(includeproduct && {
+          ProdukPembiayaans: { include: { Sumdan: true } },
+        }),
       },
     }),
     prisma.sumdan.count({ where }),

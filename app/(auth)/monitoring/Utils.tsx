@@ -3,8 +3,8 @@
 import { FormInput } from "@/components";
 import { useUser } from "@/components/UserContext";
 import {
-  GetAngsuran,
   GetDapem,
+  GetDetailDapem,
   GetFullAge,
   GetMaxPlafond,
   GetMaxTenor,
@@ -154,36 +154,62 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
       tempProduk.length === 1 &&
       tempProduk[0].id !== data.produkPembiayaanId
     ) {
-      const findSumdan = newAv.find(
-        (s) => s.id === tempProduk[0].sumdanId,
-      ) as ISumdan;
+      // const findSumdan = newAv.find(
+      //   (s) => s.id === tempProduk[0].sumdanId,
+      // ) as ISumdan;
       const find = tempProduk[0];
+
       setData((prev) => ({
         ...prev,
-        produkPembiayaanId: find.id,
+        // produkPembiayaanId: find.id,
+        // ProdukPembiayaan: find,
+        // c_margin_sumdan: findSumdan.c_margin,
+        // c_margin: find.c_margin,
+        // c_adm_sumdan: findSumdan.c_adm_sumdan,
+        // c_adm: findSumdan.c_adm,
+        // c_adm_mitra: findSumdan.c_adm_mitra,
+        // c_adm_ff: findSumdan.c_adm_ff,
+        // c_provisi_sumdan: findSumdan.c_provisi_sumdan,
+        // c_fee_ao: findSumdan.c_fee_ao,
+        // c_fee_cabang: findSumdan.c_fee_cabang,
+        // c_fee_area: findSumdan.c_fee_area,
+        // c_fee_bpp: findSumdan.c_fee_bpp,
+        // c_fee_bpb: findSumdan.c_fee_bpb,
+        // c_account: findSumdan.c_account,
+        // c_account_sumdan: findSumdan.c_account_sumdan,
+        // c_gov: findSumdan.c_gov,
+        // c_stamp: findSumdan.c_stamps,
+        // c_flagging: findSumdan.c_flagging,
+        // c_infomation: findSumdan.c_information,
+        // c_insurance: find.c_insurance,
+        // rounded: findSumdan.rounded,
+        // c_ned: findSumdan.c_ned,
         ProdukPembiayaan: find,
-        Sumdan: findSumdan,
-        c_margin_sumdan: findSumdan.c_margin,
+        produkPembiayaanId: find.id,
+        c_margin_sumdan: find.Sumdan.c_margin,
         c_margin: find.c_margin,
-        c_adm_sumdan: findSumdan.c_adm_sumdan,
-        c_adm: findSumdan.c_adm,
-        c_adm_mitra: findSumdan.c_adm_mitra,
-        c_adm_ff: findSumdan.c_adm_ff,
-        c_provisi_sumdan: findSumdan.c_provisi_sumdan,
-        c_fee_ao: findSumdan.c_fee_ao,
-        c_fee_cabang: findSumdan.c_fee_cabang,
-        c_fee_area: findSumdan.c_fee_area,
-        c_fee_bpp: findSumdan.c_fee_bpp,
-        c_fee_bpb: findSumdan.c_fee_bpb,
-        c_account: findSumdan.c_account,
-        c_account_sumdan: findSumdan.c_account_sumdan,
-        c_gov: findSumdan.c_gov,
-        c_stamp: findSumdan.c_stamps,
-        c_flagging: findSumdan.c_flagging,
-        c_infomation: findSumdan.c_information,
+        c_adm_sumdan: find.Sumdan.c_adm_sumdan,
+        c_adm: find.Sumdan.c_adm,
+        c_adm_mitra: find.Sumdan.c_adm_mitra,
+        c_adm_ff: find.Sumdan.c_adm_ff,
+        c_provisi_sumdan: find.Sumdan.c_provisi_sumdan,
+        c_fee_ao: find.Sumdan.c_fee_ao,
+        c_fee_cabang: find.Sumdan.c_fee_cabang,
+        c_fee_area: find.Sumdan.c_fee_area,
+        c_fee_bpp: find.Sumdan.c_fee_bpp,
+        c_fee_bpb: find.Sumdan.c_fee_bpb,
+        c_account: find.Sumdan.c_account,
+        c_account_sumdan: find.Sumdan.c_account_sumdan,
+        c_gov: find.Sumdan.c_gov,
+        c_stamp: find.Sumdan.c_stamps,
+        c_flagging: find.Sumdan.c_flagging,
+        c_infomation: find.Sumdan.c_information,
         c_insurance: find.c_insurance,
-        rounded: findSumdan.rounded,
-        c_ned: findSumdan.c_ned,
+        c_ned: find.Sumdan.c_ned,
+        rounded: find.Sumdan.rounded,
+        rounded_sumdan: find.Sumdan.rounded_sumdan,
+        tbo: find.Sumdan.tbo,
+        c_margin_type: find.margin_type,
       }));
     }
     const maxTenn = GetMaxTenor(data.ProdukPembiayaan.max_paid, year, month);
@@ -207,14 +233,15 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
         ? data.ProdukPembiayaan.max_plafond
         : maxPlaff;
 
-    const angs = GetAngsuran(
-      data.plafond,
-      data.tenor,
-      data.c_margin + data.c_margin_sumdan,
-      data.margin_type,
-      data.rounded,
-      data.c_ned,
-    ).angsuran;
+    // const angs = GetAngsuran(
+    //   data.plafond,
+    //   data.tenor,
+    //   data.c_margin + data.c_margin_sumdan,
+    //   data.margin_type,
+    //   data.rounded,
+    //   data.c_ned,
+    // ).angsuran;
+    const detail = GetDetailDapem(data);
     setData((prev) => ({
       ...prev,
       tenor: prev.tenor > maxTen ? maxTen : prev.tenor,
@@ -224,7 +251,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
       ...temp,
       max_tenor: maxTen,
       max_plafond: maxPlaf,
-      angsuran: angs,
+      angsuran: detail.angsuran,
     });
   }, [
     data.created_at,
