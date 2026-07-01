@@ -422,7 +422,10 @@ export default function Page() {
                   class: `flex-1`,
                   value: data.c_margin_sumdan,
                   onChange: (e: number) =>
-                    setData((prev) => ({ ...prev, c_margin_sumdan: e })),
+                    setData((prev) => ({
+                      ...prev,
+                      c_margin_sumdan: parseFloat(e.toString() || "0"),
+                    })),
                 }}
               />
               <FormInput
@@ -433,7 +436,10 @@ export default function Page() {
                   class: `flex-1`,
                   value: data.c_margin,
                   onChange: (e: number) =>
-                    setData((prev) => ({ ...prev, c_margin: e })),
+                    setData((prev) => ({
+                      ...prev,
+                      c_margin: parseFloat(e.toString() || "0"),
+                    })),
                 }}
               />
             </div>
