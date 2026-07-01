@@ -1,546 +1,726 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Upload,
+  Button,
   Card,
-  Typography,
-  Tag,
   Progress,
+  Alert,
+  Spin,
+  Descriptions,
+  Tag,
   Row,
   Col,
   Statistic,
+  Tabs,
   Table,
-  Alert,
-  Spin,
   Empty,
+  Tooltip,
   Divider,
-  Space,
-  message,
+  theme, // Tetap diperlukan untuk properti internal seperti internal strokeColor Progress
 } from "antd";
-import type { UploadProps } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import {
-  InboxOutlined,
-  CheckCircleOutlined,
-  FilePdfOutlined,
-  SafetyCertificateOutlined,
-  BankOutlined,
-  WarningOutlined,
-} from "@ant-design/icons";
+  FileSearch,
+  UploadCloud,
+  AlertTriangle,
+  CheckCircle,
+  TrendingUp,
+  Activity,
+  ShieldAlert,
+  CheckSquare,
+  User,
+  Wallet,
+  Calendar,
+  Landmark,
+  Printer,
+} from "lucide-react";
 
-const { Dragger } = Upload;
-const { Title, Text, Paragraph } = Typography;
+import { printAnalyzeSlik } from "@/components/pdfutils/etc/printAnalyzeSlik";
 
-type LoanStatus = "ACTIVE" | "CLOSED";
-
-interface CreditItem {
-  instansi: string;
-  loan_status: LoanStatus;
-  collect: number;
-  loan_value: number;
-  loan_os: number;
-  overdue_amount: number;
-  start_date: string;
-  end_date: string | null;
-  risk_note: string;
-}
-
-interface CreditResult {
+export interface ApiResponse {
   msg: string;
-  status: number;
-  data: {
-    score: number;
-    risk_level: "LOW" | "MEDIUM" | "HIGH";
-    collect: number;
-    recommendation: "APPROVE" | "REVIEW" | "REJECT";
-    recommendation_reason: string;
-    summary: string;
-    metrics: {
-      total_lender: number;
-      active_loan: number;
-      closed_loan: number;
-      active_loan_value: number;
-      active_loan_os: number;
-      total_overdue: number;
-      worst_collect_history: number;
-      has_write_off: boolean;
-      has_restructured_loan: boolean;
-      utilization_ratio: number;
-    };
-    risks: string[];
-    data: CreditItem[];
-  };
+  data: ISlikResult;
+  rulesmessage: IRuleResult[];
+  score: number;
 }
 
-const formatRupiah = (value: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(value || 0);
-};
+// ---- Helpers ----------------------------------------------------------
 
-const formatDate = (value?: string | null) => {
+const formatRp = (value: number | null | undefined) =>
+  `Rp ${Number(value ?? 0).toLocaleString("id-ID")}`;
+
+const formatDate = (value: string | null) => {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("id-ID", {
+  const d = new Date(value as string);
+  if (isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("id-ID", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  }).format(new Date(value));
+  });
 };
 
-const getRiskColor = (risk: string) => {
-  if (risk === "LOW") return "success";
-  if (risk === "MEDIUM") return "warning";
-  return "error";
+const COLLECT_INFO: Record<number, { label: string; color: string }> = {
+  1: { label: "KOL 1 - Lancar", color: "green" },
+  2: { label: "KOL 2 - DPK", color: "blue" },
+  3: { label: "KOL 3 - Kurang Lancar", color: "orange" },
+  4: { label: "KOL 4 - Diragukan", color: "volcano" },
+  5: { label: "KOL 5 - Macet", color: "red" },
 };
 
-const getRecommendationColor = (recommendation: string) => {
-  if (recommendation === "APPROVE") return "green";
-  if (recommendation === "REVIEW") return "orange";
-  return "red";
+const getCollectInfo = (collect: number) =>
+  COLLECT_INFO[collect] ?? { label: `KOL ${collect}`, color: "default" };
+
+const getGradeInfo = (score: number) => {
+  if (score >= 85)
+    return { grade: "A", color: "#22c55e", status: "Sangat Baik" };
+  if (score >= 70) return { grade: "B", color: "#3b82f6", status: "Baik" };
+  if (score >= 50)
+    return { grade: "C", color: "#eab308", status: "Cukup / Perhatian" };
+  if (score >= 30)
+    return { grade: "D", color: "#f97316", status: "Kurang Baik" };
+  return { grade: "E", color: "#ef4444", status: "Risiko Tinggi" };
 };
 
-export default function CreditCheckPage() {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<CreditResult | null>(null);
-  const [fileName, setFileName] = useState<string>("");
+// ---- Facilities table ---------------------------------------------------
 
-  const scoreColor = useMemo(() => {
-    const score = result?.data.score || 0;
+const FacilitiesTable: React.FC<{ data: IFacilities[] }> = ({ data }) => {
+  const { token } = theme.useToken(); // Mengambil token token antd agar warna bar internal singkron
 
-    if (score >= 80) return "#16a34a";
-    if (score >= 60) return "#f59e0b";
-    return "#dc2626";
-  }, [result]);
-
-  const uploadProps: UploadProps = {
-    name: "file",
-    multiple: false,
-    accept: ".pdf",
-    showUploadList: false,
-    beforeUpload: async (file) => {
-      if (file.type !== "application/pdf") {
-        message.error("File harus berupa PDF");
-        return Upload.LIST_IGNORE;
-      }
-
-      setLoading(true);
-      setFileName(file.name);
-
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        /**
-         * Ganti endpoint ini dengan API kamu.
-         * Contoh response API harus mengikuti format JSON seperti yang kamu kirim.
-         */
-        const response = await fetch(
-          "https://console.syreldigital.web.id/api/ai/bank/slik",
-          {
-            method: "POST",
-            body: formData,
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Gagal memproses file PDF");
-        }
-
-        const json = await response.json();
-        setResult(json);
-
-        // Simulasi agar UI bisa langsung dicoba
-        // await new Promise((resolve) => setTimeout(resolve, 900));
-        // setResult(dummyResult);
-
-        message.success("PDF berhasil diproses");
-      } catch (error) {
-        console.error(error);
-        message.error("Gagal memproses PDF");
-      } finally {
-        setLoading(false);
-      }
-
-      return false;
-    },
-  };
-
-  const columns = [
+  const columns: ColumnsType<IFacilities> = [
     {
-      title: "Instansi",
-      dataIndex: "instansi",
-      key: "instansi",
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-            <BankOutlined />
+      title: "Fasilitas",
+      dataIndex: "name",
+      key: "name",
+      render: (name: string, row) => (
+        <div className="flex items-start gap-2">
+          <Landmark className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+          <div>
+            <div className="font-medium text-gray-800 dark:text-gray-200">
+              {name || "Tidak diketahui"}
+            </div>
+            <div className="text-xs text-gray-400 dark:text-gray-500">
+              {row.condition || "-"}
+            </div>
           </div>
-          <Text strong>{value}</Text>
         </div>
       ),
     },
     {
+      title: "Plafon / Outstanding",
+      key: "amount",
+      width: 220,
+      sorter: (a, b) => a.os - b.os,
+      render: (_, row) => {
+        const pct =
+          row.plafond > 0 ? Math.min(100, (row.os / row.plafond) * 100) : 0;
+        return (
+          <div>
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+              <span>{formatRp(row.os)}</span>
+              <span className="text-gray-300 dark:text-gray-600">
+                / {formatRp(row.plafond)}
+              </span>
+            </div>
+            <Progress
+              percent={pct}
+              showInfo={false}
+              size="small"
+              strokeColor={
+                pct > 80
+                  ? token.colorError
+                  : pct > 50
+                    ? token.colorWarning
+                    : token.colorPrimary
+              }
+            />
+          </div>
+        );
+      },
+    },
+    {
+      title: "Kolektibilitas",
+      dataIndex: "collect",
+      key: "collect",
+      width: 170,
+      filters: Object.entries(COLLECT_INFO).map(([k, v]) => ({
+        text: v.label,
+        value: Number(k),
+      })),
+      onFilter: (value, row) => row.collect === value,
+      sorter: (a, b) => a.collect - b.collect,
+      render: (collect: number) => {
+        const info = getCollectInfo(collect);
+        return <Tag color={info.color}>{info.label}</Tag>;
+      },
+    },
+    {
       title: "Status",
-      dataIndex: "loan_status",
-      key: "loan_status",
-      render: (value: LoanStatus) => (
-        <Tag color={value === "ACTIVE" ? "blue" : "default"}>
-          {value === "ACTIVE" ? "Aktif" : "Lunas"}
+      dataIndex: "status",
+      key: "status",
+      width: 110,
+      render: (status: boolean) => (
+        <Tag color={status ? "cyan" : "default"}>
+          {status ? "Aktif" : "Non-Aktif"}
         </Tag>
       ),
     },
     {
-      title: "Kol",
-      dataIndex: "collect",
-      key: "collect",
-      align: "center" as const,
-      render: (value: number) => (
-        <Tag color={value === 1 ? "green" : "red"}>Kol {value}</Tag>
+      title: "Periode",
+      key: "periode",
+      width: 190,
+      render: (_, row) => (
+        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+          <Calendar className="w-3.5 h-3.5" />
+          <span>
+            {formatDate(row.start_at)} &rarr; {formatDate(row.end_at)}
+          </span>
+        </div>
       ),
-    },
-    {
-      title: "Plafond",
-      dataIndex: "loan_value",
-      key: "loan_value",
-      align: "right" as const,
-      render: (value: number) => formatRupiah(value),
-    },
-    {
-      title: "Outstanding",
-      dataIndex: "loan_os",
-      key: "loan_os",
-      align: "right" as const,
-      render: (value: number) => (
-        <Text strong={value > 0}>{formatRupiah(value)}</Text>
-      ),
-    },
-    {
-      title: "Tunggakan",
-      dataIndex: "overdue_amount",
-      key: "overdue_amount",
-      align: "right" as const,
-      render: (value: number) => (
-        <Text type={value > 0 ? "danger" : "success"}>
-          {formatRupiah(value)}
-        </Text>
-      ),
-    },
-    {
-      title: "Mulai",
-      dataIndex: "start_date",
-      key: "start_date",
-      render: (value: string) => formatDate(value),
-    },
-    {
-      title: "Selesai",
-      dataIndex: "end_date",
-      key: "end_date",
-      render: (value: string | null) => formatDate(value),
     },
   ];
 
+  if (!data || data.length === 0) {
+    return (
+      <Empty
+        description="Tidak ada fasilitas pada kategori ini"
+        className="py-8"
+      />
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-8 overflow-hidden rounded-3xl bg-linear-to-r from-blue-700 via-indigo-700 to-slate-900 p-8 text-white shadow-xl">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-sm backdrop-blur">
-                <SafetyCertificateOutlined />
-                Sistem Analisis Kredit PDF
-              </div>
+    <Table
+      rowKey={(row, idx) => `${row.name}-${idx}`}
+      columns={columns}
+      dataSource={data}
+      size="small"
+      pagination={data.length > 8 ? { pageSize: 8 } : false}
+      className="mt-2"
+      scroll={{ x: true }}
+    />
+  );
+};
 
-              <Title level={2} className="mb-2! text-white!">
-                Credit Risk Analyzer
-              </Title>
+const InfoField: React.FC<{ label: string; value: React.ReactNode }> = ({
+  label,
+  value,
+}) => (
+  <div className="bg-slate-50 dark:bg-zinc-800/50 rounded-lg p-3 border border-gray-100 dark:border-zinc-700 min-w-0">
+    <div className="text-[11px] text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">
+      {label}
+    </div>
+    <div className="text-sm font-medium text-gray-800 dark:text-gray-200 wrap-break-word leading-snug">
+      {value}
+    </div>
+  </div>
+);
 
-              <Paragraph className="mb-0! max-w-2xl text-slate-100!">
-                Upload file PDF debitur, lalu sistem akan menampilkan skor,
-                rekomendasi, kolektibilitas, outstanding, tunggakan, dan riwayat
-                fasilitas kredit secara ringkas.
-              </Paragraph>
-            </div>
+// ---- Main component -------------------------------------------------------
 
-            <div className="rounded-2xl bg-white/10 px-5 py-4 text-center backdrop-blur">
-              <Text className="text-slate-200!">Format</Text>
-              <div className="mt-1 flex items-center justify-center gap-2 text-xl font-semibold">
-                <FilePdfOutlined />
-                PDF
-              </div>
-            </div>
-          </div>
-        </div>
+export const SlikAnalyzer: React.FC = () => {
+  const [result, setResult] = useState<ApiResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-        <Row gutter={[24, 24]}>
-          <Col xs={24} lg={8}>
-            <Card className="rounded-3xl border-0 shadow-sm">
-              <Title level={4}>Upload Dokumen</Title>
-              <Text type="secondary">
-                Pilih file PDF untuk dianalisis oleh sistem.
-              </Text>
+  const handleUpload = async (file: File) => {
+    setLoading(true);
+    setError(null);
 
-              <div className="mt-5">
-                <Dragger
-                  {...uploadProps}
-                  className="rounded-2xl! border-dashed! border-blue-300! bg-blue-50/40!"
-                >
-                  <p className="ant-upload-drag-icon">
-                    <InboxOutlined className="text-blue-600!" />
-                  </p>
-                  <p className="ant-upload-text font-semibold!">
-                    Klik atau tarik file PDF ke sini
-                  </p>
-                  <p className="ant-upload-hint">
-                    Hanya mendukung file dengan format PDF.
-                  </p>
-                </Dragger>
-              </div>
+    const formData = new FormData();
+    formData.append("file", file);
 
-              {fileName && (
-                <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-                  <Text type="secondary">File dipilih</Text>
-                  <div className="mt-1 flex items-center gap-2">
-                    <FilePdfOutlined className="text-red-500" />
-                    <Text strong>{fileName}</Text>
-                  </div>
-                </div>
-              )}
+    try {
+      const response = await fetch(
+        "https://console.syreldigital.web.id/api/ai/bank/slik",
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
 
-              <Divider />
+      if (!response.ok) throw new Error("Gagal memproses file.");
+      const data: ApiResponse = await response.json();
+      setResult(data);
+    } catch (err) {
+      setError("Gagal menganalisis SLIK. Pastikan file PDF valid.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-              <Alert
-                type="info"
-                showIcon
-                message="Catatan"
-                description="Endpoint API masih disiapkan sebagai placeholder. Ganti bagian fetch ke endpoint backend milik kamu."
-              />
-            </Card>
-          </Col>
+  const facilities = result?.data?.facilities ?? [];
 
-          <Col xs={24} lg={16}>
-            {loading ? (
-              <Card className="flex min-h-90 items-center justify-center rounded-3xl border-0 shadow-sm">
-                <div className="text-center">
-                  <Spin size="large" />
-                  <Title level={4} className="mt-5!">
-                    Menganalisis PDF...
-                  </Title>
-                  <Text type="secondary">
-                    Sistem sedang membaca data kredit debitur.
-                  </Text>
+  const { activeFacilities, problemFacilities, inactiveFacilities } =
+    useMemo(() => {
+      return {
+        activeFacilities: facilities.filter((f) => f.status === true),
+        problemFacilities: facilities.filter((f) => f.collect >= 3),
+        inactiveFacilities: facilities.filter((f) => f.status === false),
+      };
+    }, [facilities]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Spin size="large" />
+        <p className="mt-4 text-gray-600 dark:text-gray-300 font-medium">
+          Mengekstrak & Menganalisis SLIK via OCR...
+        </p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">
+          Proses ini memakan waktu 10-30 detik
+        </p>
+      </div>
+    );
+  }
+
+  const gradeInfo = result ? getGradeInfo(result.score) : null;
+
+  return (
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6 text-gray-800 dark:text-gray-200">
+      {/* Header Banner */}
+      <div className="text-center py-8 bg-linear-to-r from-blue-50/50 via-indigo-50/50 to-blue-50/50 dark:from-zinc-800/40 dark:via-zinc-800/60 dark:to-zinc-800/40 rounded-2xl border border-blue-100 dark:border-zinc-700 shadow-sm mb-4">
+        <FileSearch className="w-14 h-14 mx-auto text-blue-600 dark:text-blue-400 mb-3" />
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">
+          SLIK Credit Scoring Analyzer
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto mt-1 text-sm sm:text-base">
+          Unggah salinan PDF SLIK OJK untuk mendapatkan visualisasi metrik
+          finansial, deteksi risiko, dan penilaian kelayakan kredit instan.
+        </p>
+      </div>
+
+      {!result && (
+        <Card className="max-w-xl mx-auto shadow-md rounded-xl border-dashed border-2 dark:bg-zinc-900 dark:border-zinc-700">
+          <Upload.Dragger
+            accept=".pdf"
+            customRequest={({ file }) => handleUpload(file as File)}
+            showUploadList={false}
+            className="dark:bg-transparent"
+          >
+            <UploadCloud className="w-14 h-14 mx-auto text-blue-500 mb-3" />
+            <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              Klik atau seret file SLIK ke sini
+            </p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">
+              Mendukung format PDF resmi dari OJK / iDeb
+            </p>
+          </Upload.Dragger>
+        </Card>
+      )}
+
+      {error && (
+        <Alert
+          message="Analisis Gagal"
+          description={error}
+          type="error"
+          showIcon
+          className="max-w-xl mx-auto rounded-lg"
+        />
+      )}
+
+      {result && gradeInfo && (
+        <div className="space-y-6 dynamic-fade-in">
+          {/* Main Dashboard Panel: Scoring & Profile */}
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={8}>
+              <Card
+                className="text-center h-full shadow-sm flex flex-col justify-center items-center border-t-4 dark:bg-zinc-900 dark:border-zinc-700"
+                style={{ borderTopColor: gradeInfo.color }}
+              >
+                <h3 className="text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider text-xs mb-4">
+                  Kelayakan Kredit
+                </h3>
+                <Progress
+                  type="circle"
+                  percent={result.score}
+                  strokeColor={gradeInfo.color}
+                  format={() => (
+                    <div>
+                      <div
+                        className="text-4xl font-extrabold"
+                        style={{ color: gradeInfo.color }}
+                      >
+                        {gradeInfo.grade}
+                      </div>
+                      <div className="text-sm font-semibold text-gray-500 dark:text-gray-400 mt-1">
+                        {result.score} / 100
+                      </div>
+                    </div>
+                  )}
+                  size={160}
+                />
+                <div className="mt-4">
+                  <Tag
+                    color={
+                      result.score >= 70
+                        ? "green"
+                        : result.score >= 50
+                          ? "warning"
+                          : "red"
+                    }
+                    className="px-3 py-1 text-sm font-semibold rounded"
+                  >
+                    {gradeInfo.status}
+                  </Tag>
                 </div>
               </Card>
-            ) : !result ? (
-              <Card className="flex min-h-90 items-center justify-center rounded-3xl border-0 shadow-sm">
-                <Empty
-                  description={
-                    <span>
-                      Belum ada hasil analisis. Upload PDF terlebih dahulu.
+            </Col>
+
+            <Col xs={24} md={16}>
+              <Card
+                title={
+                  <div className="flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                    <User className="w-5 h-5 text-blue-500" />
+                    <span>Informasi Debitur</span>
+                  </div>
+                }
+                className="h-full shadow-sm dark:bg-zinc-900 dark:border-zinc-700"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <InfoField
+                    label="Nama Debitur"
+                    value={result.data.debitur?.fullname || "Tidak Terdeteksi"}
+                  />
+                  <InfoField
+                    label="Nomor Identitas"
+                    value={result.data.debitur?.nik || "-"}
+                  />
+                  <InfoField
+                    label="Kolektibilitas Tertinggi"
+                    value={
+                      <Tag
+                        color={
+                          getCollectInfo(result.data.summary.collect).color
+                        }
+                      >
+                        {getCollectInfo(result.data.summary.collect).label}
+                      </Tag>
+                    }
+                  />
+                  <InfoField
+                    label="Total Fasilitas"
+                    value={`${result.data.summary.total_facilities} Kontrak`}
+                  />
+                </div>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Financial Breakdown Cards */}
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mt-4 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />{" "}
+            Ringkasan Portofolio Kredit
+          </h2>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={12} lg={6}>
+              <Card className="shadow-sm border-l-4 border-l-blue-500 bg-slate-50 dark:bg-zinc-900 dark:border-zinc-700">
+                <Statistic
+                  title={
+                    <span className="dark:text-gray-400">
+                      Total Plafon Seluruhnya
                     </span>
                   }
+                  value={result.data.summary.total_plafond}
+                  precision={0}
+                  prefix={
+                    <Wallet className="w-4 h-4 inline mr-1 -mt-1 text-blue-500" />
+                  }
+                  formatter={(v) => formatRp(Number(v))}
+                  valueStyle={{ fontSize: "1.25rem", fontWeight: "bold" }}
                 />
               </Card>
-            ) : (
-              <div className="space-y-6">
-                <Row gutter={[24, 24]}>
-                  <Col xs={24} md={9}>
-                    <Card className="h-full rounded-3xl border-0 shadow-sm">
-                      <div className="text-center">
-                        <Progress
-                          type="dashboard"
-                          percent={result.data.score}
-                          strokeColor={scoreColor}
-                          size={170}
-                        />
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Card className="shadow-sm border-l-4 border-l-indigo-500 bg-slate-50 dark:bg-zinc-900 dark:border-zinc-700">
+                <Statistic
+                  title={
+                    <span className="dark:text-gray-400">
+                      Total Baki Debet (OS)
+                    </span>
+                  }
+                  value={result.data.summary.total_os}
+                  precision={0}
+                  formatter={(v) => formatRp(Number(v))}
+                  valueStyle={{ fontSize: "1.25rem", fontWeight: "bold" }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Card className="shadow-sm border-l-4 border-l-green-500 bg-slate-50 dark:bg-zinc-900 dark:border-zinc-700">
+                <Statistic
+                  title={
+                    <span className="dark:text-gray-400">
+                      Fasilitas Lunas (NOA)
+                    </span>
+                  }
+                  value={result.data.summary.paid_facilities_noa}
+                  suffix="Kontrak"
+                  valueStyle={{
+                    fontSize: "1.25rem",
+                    fontWeight: "bold",
+                    color: "#22c55e",
+                  }}
+                />
+              </Card>{" "}
+              {/* <-- SEBELUMNYA DI SINI SALAH TULIS MENJADI </Col> */}
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Card className="shadow-sm border-l-4 border-l-red-500 bg-slate-50 dark:bg-zinc-900 dark:border-zinc-700">
+                <Statistic
+                  title={
+                    <span className="dark:text-gray-400">
+                      Plafon Kredit Macet
+                    </span>
+                  }
+                  value={result.data.summary.problem_facilities_plafond}
+                  precision={0}
+                  formatter={(v) => formatRp(Number(v))}
+                  valueStyle={{
+                    fontSize: "1.25rem",
+                    fontWeight: "bold",
+                    color: "#ef4444",
+                  }}
+                />
+              </Card>
+            </Col>
+          </Row>
 
-                        <Title level={3} className="mb-1!">
-                          Score {result.data.score}
-                        </Title>
+          {/* Tabular Analysis Strategy (Active vs Problem vs Inactive) + Facility lists */}
+          <Card
+            className="shadow-sm dark:bg-zinc-900 dark:border-zinc-700"
+            title={
+              <span className="dark:text-gray-200">
+                Segmentasi & Daftar Fasilitas
+              </span>
+            }
+          >
+            <Tabs defaultActiveKey="active" type="card">
+              <Tabs.TabPane
+                tab={
+                  <span className="flex items-center gap-1">
+                    <Activity className="w-4 h-4 text-emerald-500" />
+                    Fasilitas Aktif ({activeFacilities.length})
+                  </span>
+                }
+                key="active"
+              >
+                <Descriptions bordered size="small" column={{ xs: 1, sm: 3 }}>
+                  <Descriptions.Item label="Jumlah Kontrak">
+                    {result.data.summary.active_facilities_noa}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Total Plafon">
+                    {formatRp(result.data.summary.active_facilities_plafond)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Sisa Baki Debet (OS)">
+                    {formatRp(result.data.summary.active_facilities_os)}
+                  </Descriptions.Item>
+                </Descriptions>
+                <Divider className="my-3" />
+                <FacilitiesTable data={activeFacilities} />
+              </Tabs.TabPane>
 
-                        <Tag
-                          color={getRiskColor(result.data.risk_level)}
-                          className="rounded-full px-4 py-1 text-sm"
-                        >
-                          Risk {result.data.risk_level}
-                        </Tag>
-                      </div>
-                    </Card>
-                  </Col>
+              <Tabs.TabPane
+                tab={
+                  <span className="flex items-center gap-1">
+                    <ShieldAlert className="w-4 h-4 text-red-500" />
+                    Fasilitas Bermasalah ({problemFacilities.length})
+                  </span>
+                }
+                key="problem"
+              >
+                <Descriptions bordered size="small" column={{ xs: 1, sm: 3 }}>
+                  <Descriptions.Item label="Jumlah Kontrak Macet">
+                    <span
+                      className={
+                        result.data.summary.problem_facilities_noa > 0
+                          ? "text-red-500 font-bold"
+                          : ""
+                      }
+                    >
+                      {result.data.summary.problem_facilities_noa}
+                    </span>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Plafon Bermasalah">
+                    {formatRp(result.data.summary.problem_facilities_plafond)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Baki Debet Bermasalah">
+                    {formatRp(result.data.summary.problem_facilities_os)}
+                  </Descriptions.Item>
+                </Descriptions>
+                <Divider className="my-3" />
+                <FacilitiesTable data={problemFacilities} />
+              </Tabs.TabPane>
 
-                  <Col xs={24} md={15}>
-                    <Card className="h-full rounded-3xl border-0 shadow-sm">
-                      <Space direction="vertical" size={14} className="w-full">
-                        <div>
-                          <Text type="secondary">Rekomendasi</Text>
-                          <div className="mt-2 flex flex-wrap items-center gap-3">
-                            <Tag
-                              color={getRecommendationColor(
-                                result.data.recommendation,
-                              )}
-                              className="rounded-full px-4 py-1 text-base font-semibold"
-                            >
-                              <CheckCircleOutlined />{" "}
-                              {result.data.recommendation}
-                            </Tag>
+              <Tabs.TabPane
+                tab={
+                  <span className="flex items-center gap-1">
+                    <CheckSquare className="w-4 h-4 text-gray-500" />
+                    Historis / Non-Aktif ({inactiveFacilities.length})
+                  </span>
+                }
+                key="inactive"
+              >
+                <Descriptions bordered size="small" column={{ xs: 1, sm: 3 }}>
+                  <Descriptions.Item label="Jumlah Histori">
+                    {result.data.summary.inactive_facilities_noa}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Total Historis Plafon">
+                    {formatRp(result.data.summary.inactive_facilities_plafond)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Total Outstanding Lunas">
+                    {formatRp(result.data.summary.inactive_facilities_os)}
+                  </Descriptions.Item>
+                </Descriptions>
+                <Divider className="my-3" />
+                <FacilitiesTable data={inactiveFacilities} />
+              </Tabs.TabPane>
 
-                            <Tag className="rounded-full px-4 py-1">
-                              Kol {result.data.collect}
-                            </Tag>
-                          </div>
-                        </div>
+              <Tabs.TabPane
+                tab={
+                  <span className="flex items-center gap-1">
+                    <Landmark className="w-4 h-4 text-blue-500" />
+                    Semua Fasilitas ({facilities.length})
+                  </span>
+                }
+                key="all"
+              >
+                <FacilitiesTable data={facilities} />
+              </Tabs.TabPane>
+            </Tabs>
+          </Card>
 
-                        <Alert
-                          type={
-                            result.data.recommendation === "APPROVE"
-                              ? "success"
-                              : result.data.recommendation === "REVIEW"
-                                ? "warning"
-                                : "error"
-                          }
-                          showIcon
-                          message={result.data.recommendation_reason}
-                        />
+          {/* Rule Messages & System Findings */}
+          <Card
+            title={
+              <span className="dark:text-gray-200">
+                Hasil Aturan (Rules Validation) & Catatan Risiko
+              </span>
+            }
+            className="shadow-sm border-gray-200 dark:bg-zinc-900 dark:border-zinc-700"
+          >
+            <div className="space-y-3">
+              {result.rulesmessage && result.rulesmessage.length > 0 ? (
+                result.rulesmessage.map((rule, index) => {
+                  if (!rule) return null;
+                  const isNegative = !rule.status;
+                  return (
+                    <Alert
+                      key={index}
+                      message={rule.msg}
+                      type={isNegative ? "warning" : "info"}
+                      showIcon
+                      icon={
+                        isNegative ? (
+                          <AlertTriangle className="w-4 h-4 text-orange-500" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4 text-blue-500" />
+                        )
+                      }
+                      className="rounded-lg"
+                    />
+                  );
+                })
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  Tidak ada catatan pelanggaran rule spesifik.
+                </p>
+              )}
+            </div>
+          </Card>
 
-                        <div className="rounded-2xl bg-slate-50 p-4">
-                          <Text type="secondary">Ringkasan</Text>
-                          <Paragraph className="mb-0! mt-1!">
-                            {result.data.summary}
-                          </Paragraph>
-                        </div>
-                      </Space>
-                    </Card>
-                  </Col>
-                </Row>
-
-                <Row gutter={[16, 16]}>
-                  <Col xs={12} md={6}>
-                    <Card className="rounded-2xl border-0 shadow-sm">
-                      <Statistic
-                        title="Total Lender"
-                        value={result.data.metrics.total_lender}
-                      />
-                    </Card>
-                  </Col>
-
-                  <Col xs={12} md={6}>
-                    <Card className="rounded-2xl border-0 shadow-sm">
-                      <Statistic
-                        title="Aktif"
-                        value={result.data.metrics.active_loan}
-                      />
-                    </Card>
-                  </Col>
-
-                  <Col xs={12} md={6}>
-                    <Card className="rounded-2xl border-0 shadow-sm">
-                      <Statistic
-                        title="Lunas"
-                        value={result.data.metrics.closed_loan}
-                      />
-                    </Card>
-                  </Col>
-
-                  <Col xs={12} md={6}>
-                    <Card className="rounded-2xl border-0 shadow-sm">
-                      <Statistic
-                        title="Kol Terburuk"
-                        value={`Kol ${result.data.metrics.worst_collect_history}`}
-                      />
-                    </Card>
-                  </Col>
-
-                  <Col xs={24} md={8}>
-                    <Card className="rounded-2xl border-0 shadow-sm">
-                      <Statistic
-                        title="Plafond Aktif"
-                        value={result.data.metrics.active_loan_value}
-                        formatter={(value) => formatRupiah(Number(value))}
-                      />
-                    </Card>
-                  </Col>
-
-                  <Col xs={24} md={8}>
-                    <Card className="rounded-2xl border-0 shadow-sm">
-                      <Statistic
-                        title="Outstanding Aktif"
-                        value={result.data.metrics.active_loan_os}
-                        formatter={(value) => formatRupiah(Number(value))}
-                      />
-                    </Card>
-                  </Col>
-
-                  <Col xs={24} md={8}>
-                    <Card className="rounded-2xl border-0 shadow-sm">
-                      <Statistic
-                        title="Total Tunggakan"
-                        value={result.data.metrics.total_overdue}
-                        formatter={(value) => formatRupiah(Number(value))}
-                        valueStyle={{
-                          color:
-                            result.data.metrics.total_overdue > 0
-                              ? "#dc2626"
-                              : "#16a34a",
-                        }}
-                      />
-                    </Card>
-                  </Col>
-                </Row>
-
-                <Card className="rounded-3xl border-0 shadow-sm">
-                  <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <Title level={4} className="mb-1!">
-                        Riwayat Fasilitas Kredit
-                      </Title>
-                      <Text type="secondary">
-                        Daftar fasilitas kredit aktif maupun yang sudah lunas.
-                      </Text>
-                    </div>
-
-                    {result.data.risks.length === 0 ? (
-                      <Tag
-                        color="green"
-                        className="rounded-full px-4 py-1 text-sm"
-                      >
-                        Tidak ada risiko terdeteksi
-                      </Tag>
-                    ) : (
-                      <Tag
-                        color="red"
-                        className="rounded-full px-4 py-1 text-sm"
-                      >
-                        <WarningOutlined /> {result.data.risks.length} Risiko
-                      </Tag>
-                    )}
-                  </div>
-
-                  <Table
-                    rowKey={(record) =>
-                      `${record.instansi}-${record.start_date}`
-                    }
-                    columns={columns}
-                    dataSource={result.data.data}
-                    pagination={false}
-                    scroll={{ x: 1000 }}
-                    expandable={{
-                      expandedRowRender: (record) => (
-                        <div className="rounded-xl bg-slate-50 p-4">
-                          <Text strong>Catatan Risiko:</Text>
-                          <Paragraph className="mb-0! mt-1!">
-                            {record.risk_note}
-                          </Paragraph>
-                        </div>
-                      ),
-                    }}
-                  />
-                </Card>
-              </div>
-            )}
-          </Col>
-        </Row>
-      </div>
-    </main>
+          {/* Bottom Printing Area */}
+          <div className="my-4 flex justify-between items-center p-4 rounded-xl border border-gray-100 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xs">
+            <div>
+              <h2 className="text-lg font-bold m-0 text-gray-800 dark:text-gray-200">
+                Hasil Analisis Valid
+              </h2>
+              <p className="text-xs text-gray-400 dark:text-gray-500 m-0">
+                Data siap dicetak ke format dokumen fisik / PDF
+              </p>
+            </div>
+            <Button
+              type="primary"
+              icon={<Printer className="w-4 h-4" />}
+              size="large"
+              className="bg-emerald-600 hover:bg-emerald-700 border-none flex items-center gap-2"
+              onClick={() =>
+                printAnalyzeSlik(result.data, result.score, result.rulesmessage)
+              }
+            >
+              Cetak Hasil Analisa SLIK
+            </Button>
+          </div>
+          {/* Bottom Action Trigger */}
+          <div className="text-center pt-4">
+            <Tooltip title="Reset hasil dan unggah file SLIK lainnya">
+              <Button
+                type="primary"
+                size="large"
+                onClick={() => setResult(null)}
+                className="shadow-md bg-blue-600 hover:bg-blue-700"
+              >
+                Analisis Ulang File SLIK Baru
+              </Button>
+            </Tooltip>
+          </div>
+        </div>
+      )}
+    </div>
   );
+};
+
+export interface IDebitur {
+  fullname: string | null;
+  nik: string | null;
+  gender: string | null;
+  birthplace: string | null;
+  birthdate: string | null;
+  npwp: string | null;
+  address: string | null;
 }
+
+export interface IFacilities {
+  name: string;
+  os: number;
+  plafond: number;
+  condition: string;
+  start_at: string | null;
+  end_at: string | null;
+  collect: number;
+  status: boolean;
+}
+
+export interface ISummary {
+  collect: number;
+  total_plafond: number;
+  total_os: number;
+  total_facilities: number;
+  active_facilities_plafond: number;
+  active_facilities_os: number;
+  active_facilities_noa: number;
+  problem_facilities_plafond: number;
+  problem_facilities_os: number;
+  problem_facilities_noa: number;
+  inactive_facilities_plafond: number;
+  inactive_facilities_os: number;
+  inactive_facilities_noa: number;
+  paid_facilities_plafond: number;
+  paid_facilities_noa: number;
+}
+
+export interface ISlikResult {
+  debitur: IDebitur;
+  summary: ISummary;
+  facilities: IFacilities[];
+}
+
+export interface IRuleResult {
+  status: boolean;
+  msg: string;
+  score: number;
+}
+
+export default SlikAnalyzer;
