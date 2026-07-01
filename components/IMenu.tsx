@@ -67,7 +67,7 @@ export const listMenuUI: IMenuType[] = [
     key: "/simulasi",
     icon: <CalculatorOutlined />,
     needaccess: true,
-    availableAccess: ["read", "update", "showpercent", "update_bop"],
+    availableAccess: ["read", "update", "showpercent", "update_bop", "deviasi"],
   },
   {
     label: "Monitoring Pembiayaan",

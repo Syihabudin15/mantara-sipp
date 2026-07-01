@@ -21,6 +21,7 @@ import {
   IUserDapem,
 } from "@/libs/IInterfaces";
 import {
+  BranchesOutlined,
   CalculatorOutlined,
   DollarCircleOutlined,
   FolderOutlined,
@@ -1706,14 +1707,14 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                 <div className="flex gap-8 flex-col sm:flex-row items-end">
                   <div className="flex-1 flex-col gap-1">
                     <div className="flex justify-between border-b border-dashed my-2">
-                      <div className="flex-1">Adm Sumdan</div>
+                      <div className="flex-1">Adm Sumdan (%)</div>
                       <div className="flex gap-2 flex-2">
                         <Input
                           size="small"
-                          style={{ width: 80 }}
-                          suffix={
-                            <span className="text-xs italic opacity-70">%</span>
-                          }
+                          style={{ width: 100 }}
+                          // suffix={
+                          //   <span className="text-xs italic opacity-70">%</span>
+                          // }
                           value={data.c_adm_sumdan}
                           onChange={(e) =>
                             setData({
@@ -1738,10 +1739,10 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                       <div className="flex gap-2 flex-2">
                         <Input
                           size="small"
-                          style={{ width: 80 }}
-                          suffix={
-                            <span className="text-xs italic opacity-70">%</span>
-                          }
+                          style={{ width: 100 }}
+                          // suffix={
+                          //   <span className="text-xs italic opacity-70">%</span>
+                          // }
                           value={data.c_provisi_sumdan}
                           onChange={(e) =>
                             setData({
@@ -1784,10 +1785,10 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                       <div className="flex gap-2 flex-2">
                         <Input
                           size="small"
-                          style={{ width: 80 }}
-                          suffix={
-                            <span className="text-xs italic opacity-70">%</span>
-                          }
+                          style={{ width: 100 }}
+                          // suffix={
+                          //   <span className="text-xs italic opacity-70">%</span>
+                          // }
                           value={data.c_insurance}
                           onChange={(e) =>
                             setData({
@@ -1807,18 +1808,15 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                         />
                       </div>
                     </div>
-                    <div className="flex justify-between border-b border-dashed my-2">
-                      <div className="flex-1">Adm Koperasi</div>
-                      <div className="flex gap-2 flex-2">
+                    <div className="flex items-center justify-between border-b border-dashed my-2 py-1">
+                      <div className="w-1/3 text-gray-700 font-medium">
+                        Adm Koperasi
+                      </div>
+                      <div className="flex items-center gap-2 flex-1 justify-end">
                         <Tooltip title="Adm Koperasi">
                           <Input
                             size="small"
-                            style={{ width: 60 }}
-                            suffix={
-                              <span className="text-xs italic opacity-70">
-                                %
-                              </span>
-                            }
+                            style={{ width: 65 }}
                             value={data.c_adm}
                             onChange={(e) =>
                               setData({
@@ -1826,18 +1824,13 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                                 c_adm: Number(e.target.value || 0),
                               })
                             }
-                            type={"number"}
+                            type="number"
                           />
                         </Tooltip>
                         <Tooltip title="Adm Mitra">
                           <Input
                             size="small"
-                            style={{ width: 60 }}
-                            suffix={
-                              <span className="text-xs italic opacity-70">
-                                %
-                              </span>
-                            }
+                            style={{ width: 65 }}
                             value={data.c_adm_mitra}
                             onChange={(e) =>
                               setData({
@@ -1845,18 +1838,13 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                                 c_adm_mitra: Number(e.target.value || 0),
                               })
                             }
-                            type={"number"}
+                            type="number"
                           />
                         </Tooltip>
                         <Tooltip title="Adm FF">
                           <Input
                             size="small"
-                            style={{ width: 60 }}
-                            suffix={
-                              <span className="text-xs italic opacity-70">
-                                %
-                              </span>
-                            }
+                            style={{ width: 65 }}
                             value={data.c_adm_ff}
                             onChange={(e) =>
                               setData({
@@ -1864,10 +1852,9 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                                 c_adm_ff: Number(e.target.value || 0),
                               })
                             }
-                            type={"number"}
+                            type="number"
                           />
                         </Tooltip>
-                        {/* <div className="flex-2"> */}
                         <Input
                           size="small"
                           disabled
@@ -1879,24 +1866,23 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                           style={{
                             textAlign: "right",
                             color: "black",
-                            flex: 2,
+                            maxWidth: 150,
+                            flex: 1,
                           }}
                         />
-                        {/* </div> */}
                       </div>
                     </div>
-                    <div className="flex justify-between border-b border-dashed my-2">
-                      <div className="flex-1">Provisi 1</div>
-                      <div className="flex gap-2 flex-2">
+
+                    {/* Baris 2: Prov AO */}
+                    <div className="flex items-center justify-between border-b border-dashed my-2 py-1">
+                      <div className="w-1/3 text-gray-700 font-medium">
+                        Prov AO
+                      </div>
+                      <div className="flex items-center gap-2 flex-1 justify-end">
                         <Tooltip title="Fee AO">
                           <Input
                             size="small"
-                            style={{ width: 60 }}
-                            suffix={
-                              <span className="text-xs italic opacity-70">
-                                %
-                              </span>
-                            }
+                            style={{ width: 65 }}
                             value={data.c_fee_ao}
                             onChange={(e) =>
                               setData({
@@ -1904,18 +1890,13 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                                 c_fee_ao: Number(e.target.value || 0),
                               })
                             }
-                            type={"number"}
+                            type="number"
                           />
                         </Tooltip>
                         <Tooltip title="Fee Cabang">
                           <Input
                             size="small"
-                            style={{ width: 60 }}
-                            suffix={
-                              <span className="text-xs italic opacity-70">
-                                %
-                              </span>
-                            }
+                            style={{ width: 65 }}
                             value={data.c_fee_cabang}
                             onChange={(e) =>
                               setData({
@@ -1923,18 +1904,13 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                                 c_fee_cabang: Number(e.target.value || 0),
                               })
                             }
-                            type={"number"}
+                            type="number"
                           />
                         </Tooltip>
                         <Tooltip title="Fee Area">
                           <Input
                             size="small"
-                            style={{ width: 60 }}
-                            suffix={
-                              <span className="text-xs italic opacity-70">
-                                %
-                              </span>
-                            }
+                            style={{ width: 65 }}
                             value={data.c_fee_area}
                             onChange={(e) =>
                               setData({
@@ -1942,7 +1918,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                                 c_fee_area: Number(e.target.value || 0),
                               })
                             }
-                            type={"number"}
+                            type="number"
                           />
                         </Tooltip>
                         <Input
@@ -1958,23 +1934,23 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                           style={{
                             textAlign: "right",
                             color: "black",
-                            flex: 2,
+                            maxWidth: 150,
+                            flex: 1,
                           }}
                         />
                       </div>
                     </div>
-                    <div className="flex justify-between border-b border-dashed my-2">
-                      <div className="flex-1">Provisi 2</div>
-                      <div className="flex gap-2 flex-2">
+
+                    {/* Baris 3: Prov BPP & BPB */}
+                    <div className="flex items-center justify-between border-b border-dashed my-2 py-1">
+                      <div className="w-1/3 text-gray-700 font-medium">
+                        Prov BPP & BPB
+                      </div>
+                      <div className="flex items-center gap-2 flex-1 justify-end">
                         <Tooltip title="Fee BPP">
                           <Input
                             size="small"
-                            style={{ width: 60 }}
-                            suffix={
-                              <span className="text-xs italic opacity-70">
-                                %
-                              </span>
-                            }
+                            style={{ width: 65 }}
                             value={data.c_fee_bpp}
                             onChange={(e) =>
                               setData({
@@ -1982,18 +1958,13 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                                 c_fee_bpp: Number(e.target.value || 0),
                               })
                             }
-                            type={"number"}
+                            type="number"
                           />
                         </Tooltip>
                         <Tooltip title="Fee BPB">
                           <Input
                             size="small"
-                            style={{ width: 60 }}
-                            suffix={
-                              <span className="text-xs italic opacity-70">
-                                %
-                              </span>
-                            }
+                            style={{ width: 65 }}
                             value={data.c_fee_bpb}
                             onChange={(e) =>
                               setData({
@@ -2001,9 +1972,11 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                                 c_fee_bpb: Number(e.target.value || 0),
                               })
                             }
-                            type={"number"}
+                            type="number"
                           />
                         </Tooltip>
+                        {/* Spacer kosong agar input IDRFormat tetap sejajar dengan baris di atasnya */}
+                        <div style={{ width: 65 }} />
                         <Input
                           size="small"
                           disabled
@@ -2014,7 +1987,8 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                           style={{
                             textAlign: "right",
                             color: "black",
-                            flex: 2,
+                            maxWidth: 150,
+                            flex: 1,
                           }}
                         />
                       </div>
@@ -2207,7 +2181,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                       <div className="flex gap-2 flex-2">
                         <Input
                           size="small"
-                          style={{ width: 80 }}
+                          style={{ width: 100 }}
                           suffix={
                             <span className="text-xs italic opacity-70">%</span>
                           }
@@ -2242,7 +2216,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
             key: "ao_agent",
             label: (
               <div className="flex items-center gap-2">
-                <CalculatorOutlined />
+                <BranchesOutlined />
                 <span>Agent & AO</span>
               </div>
             ),
