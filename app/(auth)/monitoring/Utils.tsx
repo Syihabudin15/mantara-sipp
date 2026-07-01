@@ -196,8 +196,8 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
         GetMaxPlafond(
           data.c_margin + data.c_margin_sumdan,
           data.tenor,
-          (data.Debitur.salary -
-            data.c_ned * (data.ProdukPembiayaan.Sumdan?.dsr || 0)) /
+          ((data.Debitur.salary - data.c_ned) *
+            (data.ProdukPembiayaan.Sumdan?.dsr || 0)) /
             100,
         ),
       ),
