@@ -185,6 +185,8 @@ export default function Page() {
     data.c_fee_bpp,
     data.c_fee_bpb,
     data.c_account,
+    data.c_margin,
+    data.c_margin_sumdan,
   ]);
 
   const handleSearch = async () => {
