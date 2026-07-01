@@ -148,6 +148,44 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
       return { ...s, ProdukPembiayaans: prod };
     });
     setSumdanAv(newAv);
+    const tempProduk = newAv.flatMap((a) => a.ProdukPembiayaans);
+    if (
+      !record &&
+      tempProduk.length === 1 &&
+      tempProduk[0].id !== data.produkPembiayaanId
+    ) {
+      const findSumdan = newAv.find(
+        (s) => s.id === tempProduk[0].sumdanId,
+      ) as ISumdan;
+      const find = tempProduk[0];
+      setData((prev) => ({
+        ...prev,
+        produkPembiayaanId: find.id,
+        ProdukPembiayaan: find,
+        Sumdan: findSumdan,
+        c_margin_sumdan: findSumdan.c_margin,
+        c_margin: find.c_margin,
+        c_adm_sumdan: findSumdan.c_adm_sumdan,
+        c_adm: findSumdan.c_adm,
+        c_adm_mitra: findSumdan.c_adm_mitra,
+        c_adm_ff: findSumdan.c_adm_ff,
+        c_provisi_sumdan: findSumdan.c_provisi_sumdan,
+        c_fee_ao: findSumdan.c_fee_ao,
+        c_fee_cabang: findSumdan.c_fee_cabang,
+        c_fee_area: findSumdan.c_fee_area,
+        c_fee_bpp: findSumdan.c_fee_bpp,
+        c_fee_bpb: findSumdan.c_fee_bpb,
+        c_account: findSumdan.c_account,
+        c_account_sumdan: findSumdan.c_account_sumdan,
+        c_gov: findSumdan.c_gov,
+        c_stamp: findSumdan.c_stamps,
+        c_flagging: findSumdan.c_flagging,
+        c_infomation: findSumdan.c_information,
+        c_insurance: find.c_insurance,
+        rounded: findSumdan.rounded,
+        c_ned: findSumdan.c_ned,
+      }));
+    }
     const maxTenn = GetMaxTenor(data.ProdukPembiayaan.max_paid, year, month);
     const maxTen =
       parseInt(String(maxTenn)) > data.ProdukPembiayaan.max_tenor
@@ -158,7 +196,8 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
         GetMaxPlafond(
           data.c_margin + data.c_margin_sumdan,
           data.tenor,
-          (data.Debitur.salary * (data.ProdukPembiayaan.Sumdan?.dsr || 0)) /
+          (data.Debitur.salary -
+            data.c_ned * (data.ProdukPembiayaan.Sumdan?.dsr || 0)) /
             100,
         ),
       ),

@@ -55,6 +55,7 @@ import {
 import { HookAPI } from "antd/es/modal/useModal";
 import moment from "moment";
 import { useEffect, useState } from "react";
+import dayjs from "dayjs";
 
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
@@ -410,7 +411,6 @@ export default function Page() {
           {hasAccess("update") && (
             <Button
               icon={<CheckCircleOutlined />}
-              type="primary"
               size="small"
               onClick={() => setCek({ open: true, msg: [] })}
             >
@@ -434,9 +434,15 @@ export default function Page() {
                   <DatePicker
                     size="small"
                     picker="month"
-                    value={pageProps.backdate}
+                    value={
+                      pageProps.backdate ? dayjs(pageProps.backdate) : undefined
+                    }
                     onChange={(date, dateStr) =>
-                      setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
+                      setPageProps((prev) => ({
+                        ...prev,
+                        backdate: dateStr,
+                        page: 1,
+                      }))
                     }
                     style={{ width: "100%" }}
                   />

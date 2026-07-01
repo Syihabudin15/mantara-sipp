@@ -25,7 +25,6 @@ export const GET = async (req: NextRequest) => {
   });
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-  console.log({ backdate, page, limit, sumdanId, paid_status });
 
   const whereFunc = WheresDapem(user);
   const where: Prisma.DapemWhereInput = {
