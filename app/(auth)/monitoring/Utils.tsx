@@ -3,9 +3,9 @@
 import { FormInput } from "@/components";
 import { useUser } from "@/components/UserContext";
 import {
-  GetDapem,
   GetDetailDapem,
   GetFullAge,
+  getInitialDapemDetail,
   GetMaxPlafond,
   GetMaxTenor,
   IDRFormat,
@@ -15,6 +15,7 @@ import {
   IAgentFronting,
   IDapem,
   IInsurance,
+  IOutputDapemDetail,
   IPayOffice,
   IProdukPembiayaan,
   ISumdan,
@@ -72,6 +73,9 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
   const [payOffices, setPayOffices] = useState<IPayOffice[]>([]);
   const [insurances, setInsurances] = useState<IInsurance[]>([]);
   const [temp, setItemp] = useState<ITemp>(defaultTemp);
+  const [details, setDetails] = useState<IOutputDapemDetail>(
+    getInitialDapemDetail,
+  );
   const { modal } = App.useApp();
   const user = useUser();
 
@@ -221,6 +225,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
     //   data.c_ned,
     // ).angsuran;
     const detail = GetDetailDapem(data);
+    setDetails(detail);
     setData((prev) => ({
       ...prev,
       tenor: prev.tenor > maxTen ? maxTen : prev.tenor,
@@ -1726,9 +1731,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                         <Input
                           size="small"
                           disabled
-                          value={IDRFormat(
-                            (data.plafond * data.c_adm_sumdan) / 100,
-                          )}
+                          value={IDRFormat(details.detail.adm_sumdan)}
                           style={{ textAlign: "right", color: "black" }}
                         />
                       </div>
@@ -1754,9 +1757,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                         <Input
                           size="small"
                           disabled
-                          value={IDRFormat(
-                            (data.plafond * data.c_provisi_sumdan) / 100,
-                          )}
+                          value={IDRFormat(details.detail.provisi_sumdan)}
                           style={{ textAlign: "right", color: "black" }}
                         />
                       </div>
@@ -1800,9 +1801,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                         <Input
                           size="small"
                           disabled
-                          value={IDRFormat(
-                            (data.plafond * data.c_insurance) / 100,
-                          )}
+                          value={IDRFormat(details.asuransi)}
                           style={{ textAlign: "right", color: "black" }}
                         />
                       </div>
@@ -1857,11 +1856,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                         <Input
                           size="small"
                           disabled
-                          value={IDRFormat(
-                            data.plafond *
-                              ((data.c_adm + data.c_adm_mitra + data.c_adm_ff) /
-                                100),
-                          )}
+                          value={IDRFormat(details.administrasi)}
                           style={{
                             textAlign: "right",
                             color: "black",
@@ -1924,11 +1919,9 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                           size="small"
                           disabled
                           value={IDRFormat(
-                            (data.plafond *
-                              (data.c_fee_ao +
-                                data.c_fee_cabang +
-                                data.c_fee_area)) /
-                              100,
+                            details.detail.fee_ao +
+                              details.detail.fee_cabang +
+                              details.detail.fee_area,
                           )}
                           style={{
                             textAlign: "right",
@@ -1980,8 +1973,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                           size="small"
                           disabled
                           value={IDRFormat(
-                            (data.plafond * (data.c_fee_bpp + data.c_fee_bpb)) /
-                              100,
+                            details.detail.fee_bpp + details.detail.fee_bpb,
                           )}
                           style={{
                             textAlign: "right",
@@ -2094,9 +2086,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                         <Input
                           size="small"
                           disabled
-                          value={IDRFormat(
-                            data.c_bop * (data.c_bop_area / 100),
-                          )}
+                          value={IDRFormat(details.detail.bop_area)}
                           style={{ textAlign: "right", color: "black" }}
                         />
                       </div>
@@ -2124,7 +2114,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     <div className="flex justify-between border-t mt-3 text-red-500 font-bold">
                       <div className="flex-1">Total Biaya</div>
                       <div className="text-right">
-                        {IDRFormat(GetDapem(data).biaya)}
+                        {IDRFormat(details.biaya)}
                       </div>
                     </div>
                   </div>
@@ -2167,9 +2157,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                     <div className="my-5"></div>
                     <div className="flex justify-between border-b border-dashed my-2 font-bold text-blue-600">
                       <span>Terima Kotor</span>
-                      <span>
-                        {IDRFormat(data.plafond - GetDapem(data).biaya)}
-                      </span>
+                      <span>{IDRFormat(details.tk)}</span>
                     </div>
                     <div className="flex gap-2 justify-between items-center my-2">
                       <div className="flex-1">Nominal Takeover</div>
@@ -2216,7 +2204,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
 
                     <div className="flex justify-between border-b border-dashed my-2 font-bold text-green-600">
                       <span>Terima Bersih</span>
-                      <span>{IDRFormat(GetDapem(data).tb)}</span>
+                      <span>{IDRFormat(details.tb)}</span>
                     </div>
                   </div>
                 </div>
