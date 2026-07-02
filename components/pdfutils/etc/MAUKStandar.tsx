@@ -21,7 +21,7 @@ import { ListKeyValue, styles } from "./RendererUtils";
 export const MAUKStandar = ({ data }: { data: IDapem }) => {
   const detail = GetDetailDapem(data);
 
-  const dapem = GetDapem(data);
+  // const dapem = GetDapem(data);
 
   return (
     <PDFViewer className="w-full h-full">
@@ -285,13 +285,8 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                         value: `${((detail.angsuran / data.Debitur.salary) * 100).toFixed(2)}%`,
                       },
                       {
-                        key: "Angsuran Asli",
-                        value: `${IDRFormat(detail.angsuran)}`,
-                        currency: true,
-                      },
-                      {
                         key: "Pembulatan",
-                        value: `${IDRFormat(data.rounded)} (Rp. ${detail.angsuran - detail.detail.angsuran})`,
+                        value: `${IDRFormat(data.rounded)}`,
                         currency: true,
                       },
                     ]}
@@ -318,16 +313,10 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                     rightvalue
                     data={[
                       {
-                        key: "Biaya Adm Mitra",
+                        key: "Biaya Provisi",
                         value: IDRFormat(
-                          data.plafond * (data.c_adm_sumdan / 100),
-                        ),
-                        currency: true,
-                      },
-                      {
-                        key: "Biaya Provisi Mitra",
-                        value: IDRFormat(
-                          data.plafond * (data.c_provisi_sumdan / 100),
+                          detail.detail.provisi_sumdan +
+                            detail.detail.adm_sumdan,
                         ),
                         currency: true,
                       },
@@ -338,51 +327,23 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                       },
                       {
                         key: "Biaya Asuransi",
-                        value: IDRFormat(
-                          data.plafond * (data.c_insurance / 100),
-                        ),
+                        value: IDRFormat(detail.asuransi),
                         currency: true,
                       },
                       {
-                        key: "Biaya Adm Koperasi",
-                        value: IDRFormat(
-                          data.plafond *
-                            ((data.c_adm + data.c_adm_mitra + data.c_adm_ff) /
-                              100),
-                        ),
-                        currency: true,
-                      },
-                      {
-                        key: "Biaya Provisi Koperasi",
-                        value: IDRFormat(
-                          data.plafond *
-                            ((data.c_fee_ao +
-                              data.c_fee_cabang +
-                              data.c_fee_area +
-                              data.c_fee_bpp +
-                              data.c_fee_bpb) /
-                              100),
-                        ),
+                        key: "Biaya Administrasi",
+                        value: IDRFormat(detail.administrasi),
                         currency: true,
                       },
                       {
                         key: "Biaya Tatalaksana",
-                        value: IDRFormat(
-                          data.c_gov +
-                            data.c_flagging +
-                            data.c_infomation +
-                            data.c_account +
-                            data.c_stamp +
-                            data.c_account +
-                            data.c_bop +
-                            data.c_mutasi,
-                        ),
+                        value: IDRFormat(detail.tatalaksana + detail.provisi),
                         currency: true,
                       },
 
                       {
                         key: "TOTAL BIAYA",
-                        value: IDRFormat(dapem.biaya),
+                        value: IDRFormat(detail.biaya),
                         currency: true,
                         style: {
                           fontWeight: "bold",
@@ -399,7 +360,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                     data={[
                       {
                         key: "Terima Kotor",
-                        value: `${IDRFormat(data.plafond - dapem.biaya)}`,
+                        value: `${IDRFormat(detail.tk)}`,
                         currency: true,
                         style: {
                           borderBottom: "1px solid #aaa",
@@ -422,7 +383,7 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                       },
                       {
                         key: "TERIMA BERSIH",
-                        value: `${IDRFormat(dapem.tb)}`,
+                        value: `${IDRFormat(detail.tb)}`,
                         style: { fontWeight: "bold" },
                         currency: true,
                       },
