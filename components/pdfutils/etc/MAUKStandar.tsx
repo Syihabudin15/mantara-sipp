@@ -313,16 +313,8 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                     rightvalue
                     data={[
                       {
-                        key: "Biaya Provisi",
-                        value: IDRFormat(
-                          detail.detail.provisi_sumdan +
-                            detail.detail.adm_sumdan,
-                        ),
-                        currency: true,
-                      },
-                      {
-                        key: "Biaya Buka Rekening Mitra",
-                        value: IDRFormat(data.c_account_sumdan),
+                        key: "Biaya Administrasi",
+                        value: IDRFormat(detail.administrasi),
                         currency: true,
                       },
                       {
@@ -331,16 +323,23 @@ export const MAUKStandar = ({ data }: { data: IDapem }) => {
                         currency: true,
                       },
                       {
-                        key: "Biaya Administrasi",
-                        value: IDRFormat(detail.administrasi),
-                        currency: true,
-                      },
-                      {
                         key: "Biaya Tatalaksana",
                         value: IDRFormat(detail.tatalaksana + detail.provisi),
                         currency: true,
                       },
-
+                      {
+                        key: "Biaya Provisi",
+                        value: IDRFormat(
+                          detail.detail.provisi_sumdan +
+                            detail.detail.adm_sumdan,
+                        ),
+                        currency: true,
+                      },
+                      {
+                        key: "Biaya Buka Rekening",
+                        value: IDRFormat(data.c_account_sumdan),
+                        currency: true,
+                      },
                       {
                         key: "TOTAL BIAYA",
                         value: IDRFormat(detail.biaya),
