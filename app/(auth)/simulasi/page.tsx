@@ -117,6 +117,7 @@ export default function Page() {
         c_insurance: find.c_insurance,
         rounded: findSumdan.rounded,
         c_ned: findSumdan.c_ned,
+        c_bop_area: findSumdan.c_bop_area,
       }));
     }
     const maxTenn = GetMaxTenor(data.ProdukPembiayaan.max_paid, year, month);
@@ -162,6 +163,7 @@ export default function Page() {
     data.tenor,
     data.Debitur.birthdate,
     data.Debitur.salary,
+    data.c_bop_area,
     data.c_bop,
     data.margin_type,
     data.ProdukPembiayaan,
@@ -211,7 +213,7 @@ export default function Page() {
         fetch("/api/jenis?limit=100")
           .then((res) => res.json())
           .then((res) => setJenis(res.data)),
-        fetch("/api/sumdan?limit=1000&includes=true&includeproduct=true")
+        fetch("/api/sumdan?limit=500&includes=true&includeproduct=true")
           .then((res) => res.json())
           .then((res) => setSumdan(res.data)),
       ]);
@@ -414,34 +416,38 @@ export default function Page() {
           </div>
           {hasAccess("deviasi") ? (
             <div className="w-full flex gap-2">
-              <FormInput
-                data={{
-                  label: "Margin Sumdan",
-                  type: "number",
-                  mode: "vertical",
-                  class: `flex-1`,
-                  value: data.c_margin_sumdan,
-                  onChange: (e: number) =>
-                    setData((prev) => ({
-                      ...prev,
-                      c_margin_sumdan: parseFloat(e.toString() || "0"),
-                    })),
-                }}
-              />
-              <FormInput
-                data={{
-                  label: "Margin Kop",
-                  type: "number",
-                  mode: "vertical",
-                  class: `flex-1`,
-                  value: data.c_margin,
-                  onChange: (e: number) =>
-                    setData((prev) => ({
-                      ...prev,
-                      c_margin: parseFloat(e.toString() || "0"),
-                    })),
-                }}
-              />
+              <div className="flex-1">
+                <div>Margin Sumdan</div>
+                <div>
+                  <Input
+                    value={data.c_margin_sumdan || 0}
+                    type="number"
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_margin_sumdan: parseFloat(
+                          e.target.value.toString() || "0",
+                        ),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="flex-1">
+                <div>Margin Sumdan</div>
+                <div>
+                  <Input
+                    value={data.c_margin || 0}
+                    type="number"
+                    onChange={(e) =>
+                      setData({
+                        ...data,
+                        c_margin: parseFloat(e.target.value.toString() || "0"),
+                      })
+                    }
+                  />
+                </div>
+              </div>
             </div>
           ) : (
             <FormInput
@@ -676,7 +682,7 @@ export default function Page() {
                     type={"number"}
                   />
                 </Tooltip>
-                <Tooltip title="AO Cabang">
+                <Tooltip title="Cabang">
                   <Input
                     size="small"
                     style={{ flex: 1, minWidth: 50 }}
@@ -754,22 +760,6 @@ export default function Page() {
                     details.detail.fee_bpp + details.detail.fee_bpb,
                   )}
                   style={{ textAlign: "right", color: "black", width: 130 }}
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-between items-center py-1 border-b border-dashed flex-wrap">
-              <div className="w-[150]">Biaya Tatalaksana</div>
-              <div className="flex-1 flex gap-2 justify-end">
-                <Input
-                  size="small"
-                  value={IDRFormat(data.c_gov)}
-                  style={{ textAlign: "right", color: "black", width: 130 }}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      c_gov: IDRToNumber(e.target.value || "0"),
-                    }))
-                  }
                 />
               </div>
             </div>
@@ -855,6 +845,29 @@ export default function Page() {
               </div>
             </div>
             <div className="flex gap-2 justify-between items-center py-1 border-b border-dashed flex-wrap">
+              <div className="w-[150]">BOP Pembiayaan Area</div>
+              <div className="flex-1 flex gap-2 justify-end">
+                <Input
+                  size="small"
+                  style={{ flex: 1, minWidth: 50 }}
+                  value={data.c_bop_area}
+                  onChange={(e) =>
+                    setData((prev) => ({
+                      ...prev,
+                      c_bop_area: parseFloat(e.target.value || "0"),
+                    }))
+                  }
+                  type={"number"}
+                />
+                <Input
+                  size="small"
+                  disabled
+                  value={IDRFormat(details.detail.bop_area)}
+                  style={{ textAlign: "right", color: "black", width: 130 }}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-between items-center py-1 border-b border-dashed flex-wrap">
               <div className="w-[150]">BOP Pembiayaan</div>
               <div className="flex-1 flex gap-2 justify-end">
                 <Input
@@ -884,21 +897,14 @@ export default function Page() {
                   style={{ width: 80 }}
                   disabled
                   suffix={<span className="text-xs italic opacity-70">%</span>}
-                  value={
-                    data.c_adm_sumdan +
-                    data.c_adm +
-                    data.c_adm_mitra +
-                    data.c_adm_ff
-                  }
+                  value={data.c_adm + data.c_adm_mitra + data.c_adm_ff}
                   type={"number"}
                   hidden={!hasAccess("showpercent")}
                 />
                 <Input
                   size="small"
                   disabled
-                  value={IDRFormat(
-                    details.administrasi + details.detail.adm_sumdan,
-                  )}
+                  value={IDRFormat(details.administrasi)}
                   style={{ textAlign: "right", color: "black" }}
                 />
               </div>
@@ -938,14 +944,7 @@ export default function Page() {
                   // disabled={!hasAccess("update")}
                   disabled
                   suffix={<span className="text-xs italic opacity-70">%</span>}
-                  value={
-                    data.c_provisi_sumdan +
-                    data.c_fee_ao +
-                    data.c_fee_cabang +
-                    data.c_fee_area +
-                    data.c_fee_bpp +
-                    data.c_fee_bpb
-                  }
+                  value={data.c_provisi_sumdan + details.detail.adm_sumdan}
                   // onChange={(e) =>
                   //   setData({ ...data, c_provisi: Number(e.target.value || "0") })
                   // }
@@ -956,7 +955,7 @@ export default function Page() {
                   size="small"
                   disabled
                   value={IDRFormat(
-                    details.provisi + details.detail.provisi_sumdan,
+                    details.detail.provisi_sumdan + details.detail.adm_sumdan,
                   )}
                   style={{ textAlign: "right", color: "black" }}
                 />
@@ -967,15 +966,11 @@ export default function Page() {
               <div className="flex gap-2 flex-2">
                 <Input
                   size="small"
-                  disabled={!hasAccess("update")}
-                  value={IDRFormat(data.c_gov)}
+                  disabled={true}
+                  value={IDRFormat(
+                    details.tatalaksana + details.provisi - data.c_bop,
+                  )}
                   style={{ textAlign: "right", color: "black" }}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      c_gov: IDRToNumber(e.target.value || "0"),
-                    }))
-                  }
                 />
               </div>
             </div>
@@ -991,75 +986,6 @@ export default function Page() {
                     setData((prev) => ({
                       ...prev,
                       c_account_sumdan: IDRToNumber(e.target.value || "0"),
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-between items-center my-1 border-b border-dashed">
-              <div className="flex-1">Biaya Flagging</div>
-              <div className="flex gap-2 flex-2">
-                <Input
-                  size="small"
-                  disabled={!hasAccess("update")}
-                  value={IDRFormat(data.c_flagging)}
-                  style={{ textAlign: "right", color: "black" }}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      c_flagging: IDRToNumber(e.target.value || "0"),
-                    }))
-                  }
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-between items-center my-1 border-b border-dashed">
-              <div className="flex-1">Biaya Informasi</div>
-              <div className="flex gap-2 flex-2">
-                <Input
-                  size="small"
-                  disabled={!hasAccess("update")}
-                  value={IDRFormat(data.c_infomation)}
-                  style={{ textAlign: "right", color: "black" }}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      c_infomation: IDRToNumber(e.target.value || "0"),
-                    }))
-                  }
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-between items-center my-1 border-b border-dashed">
-              <div className="flex-1">Biaya Materai</div>
-              <div className="flex gap-2 flex-2">
-                <Input
-                  size="small"
-                  disabled={!hasAccess("update")}
-                  value={IDRFormat(data.c_stamp)}
-                  style={{ textAlign: "right", color: "black" }}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      c_stamp: IDRToNumber(e.target.value || "0"),
-                    }))
-                  }
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 justify-between items-center my-1 border-b border-dashed">
-              <div className="flex-1">Biaya Mutasi</div>
-              <div className="flex gap-2 flex-2">
-                <Input
-                  size="small"
-                  disabled={!hasAccess("update")}
-                  value={IDRFormat(data.c_mutasi)}
-                  style={{ textAlign: "right", color: "black" }}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      c_mutasi: IDRToNumber(e.target.value || "0"),
                     }))
                   }
                 />
@@ -1303,25 +1229,23 @@ const ModalDetailPembiayaan = ({
             <div className="flex flex-col gap-1">
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Administrasi</span>
-                <span>
-                  {IDRFormat(detail.administrasi + detail.detail.adm_sumdan)}
-                </span>
+                <span>{IDRFormat(detail.administrasi)}</span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Asuransi</span>
-                <span>
-                  {IDRFormat((data.plafond * data.c_insurance) / 100)}
-                </span>
+                <span>{IDRFormat(detail.asuransi)}</span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Provisi</span>
                 <span>
-                  {IDRFormat(detail.provisi + detail.detail.provisi_sumdan)}
+                  {IDRFormat(
+                    detail.detail.provisi_sumdan + detail.detail.adm_sumdan,
+                  )}
                 </span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Tatalaksana</span>
-                <span>{IDRFormat(detail.tatalaksana)}</span>
+                <span>{IDRFormat(detail.tatalaksana + detail.provisi)}</span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Buka Rekening</span>
@@ -1429,6 +1353,7 @@ const defaultData: IDapemSimulasi = {
   c_flagging: 0,
   c_infomation: 0,
   c_takeover: 0,
+  c_bop_area: 0,
   c_bop: 0,
   max_plafond: 0,
   max_tenor: 0,

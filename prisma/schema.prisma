@@ -129,6 +129,7 @@ model Sumdan {
   c_flagging    Int
   c_information Int
   c_ned         Int       @default(0)
+  c_bop_area    Float     @default(0)
   max_bop       Int
   rounded       Int       @default(1)
   dsr           Float
@@ -365,6 +366,7 @@ model Dapem {
   c_ned          Int         @default(0)
   c_takeover     Int
   c_bop          Int
+  c_bop_area     Float       @default(0)
   tbo            Int
   rounded        Int
   rounded_sumdan Int         @default(0)
@@ -500,7 +502,6 @@ model Dapem {
   @@index([no_contract])
   @@index([date_contract])
   @@index([date_end])
-  @@index([created_at])
 }
 
 model AIAnalysis {

@@ -59,14 +59,7 @@ export const BPK = (record: IDapem) => {
       },
       {
         key: "Biaya Administrasi",
-        value: IDRFormat(
-          record.plafond *
-            ((record.c_adm_sumdan +
-              record.c_adm +
-              record.c_adm_mitra +
-              record.c_adm_ff) /
-              100),
-        ),
+        value: IDRFormat(detail.administrasi),
         currency: true,
       },
       {
@@ -77,38 +70,23 @@ export const BPK = (record: IDapem) => {
       {
         key: "Biaya Provisi",
         value: IDRFormat(
-          record.plafond *
-            ((record.c_provisi_sumdan +
-              record.c_fee_ao +
-              record.c_fee_cabang +
-              record.c_fee_area +
-              record.c_fee_bpp +
-              record.c_fee_bpb) /
-              100),
+          detail.detail.adm_sumdan + detail.detail.provisi_sumdan,
         ),
         currency: true,
       },
       {
         key: "Biaya Tatalaksana",
-        value: IDRFormat(
-          record.c_gov +
-            record.c_flagging +
-            record.c_infomation +
-            record.c_stamp +
-            record.c_mutasi +
-            record.c_account +
-            record.c_bop,
-        ),
+        value: IDRFormat(detail.tatalaksana + detail.provisi),
         currency: true,
       },
       {
         key: "Biaya Asuransi",
-        value: IDRFormat(record.plafond * (record.c_insurance / 100)),
+        value: IDRFormat(detail.asuransi),
         currency: true,
       },
       {
         key: `Total Potongan`,
-        value: IDRFormat(record.plafond - dapem.biaya),
+        value: IDRFormat(dapem.biaya),
         currency: true,
         classStyle: "border-t font-bold",
       },

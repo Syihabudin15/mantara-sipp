@@ -74,7 +74,13 @@ export const SIPage4Vima = (
         <p class="w-44">Atas Nama : </p>
         <p class="w-4">:</p>
         <p class="w-40">${dapem.Debitur.fullname}</p>
-        </div>
+      </div>
+      <div class="flex gap-2">
+        <p class="w-4"></p>
+        <p class="w-44">Nama Bank : </p>
+        <p class="w-4">:</p>
+        <p class="w-40">${dapem.Debitur.account_name}</p>
+      </div>
         <div class="flex gap-2">
         <p class="w-4"></p>
         <p class="w-44">Uang Sejumlah :</p>
@@ -127,12 +133,6 @@ export const SIPage4Vima = (
           <p class="w-28 text-right">${IDRFormat(tb)}</p>
         </div>
       </div>
-      <div class="flex gap-2">
-        <p class="w-4"></p>
-        <p class="w-44">Terbilang : </p>
-        <p class="w-4">:</p>
-        <p class="flex-1 italic">${NumberToWordsID(tb)} Rupiah</p>
-      </div>
     </div>
 
     ${
@@ -172,12 +172,6 @@ export const SIPage4Vima = (
             <p class="w-28 text-right">${IDRFormat(dapem.c_takeover)}</p>
           </div>
         </div>
-        <div class="flex gap-2">
-          <p class="w-4"></p>
-          <p class="w-44">Terbilang : </p>
-          <p class="w-4">:</p>
-          <p class="flex-1 italic">${NumberToWordsID(dapem.c_takeover)} Rupiah</p>
-        </div>
       </div>
       `
         : ""
@@ -191,9 +185,10 @@ export const SIPage4Vima = (
       <p >Demikian Standing Instruction (SI) ini dibuat dengan sebenar-benarnya untuk dapat dipergunakan sebagaimana mestinya.</p>
     </div>
 
-    <div class="my-5 flex justify-around gap-10 items-end text-center">
+    <div class="mt-5 flex justify-around gap-10 items-end text-center">
       <div class="flex-1 flex flex-col justify-end text-center">
-        <p>${process.env.NEXT_PUBLIC_APP_COMPANY_CITY}, ${moment(record.created_at).format("DD-MM-YYYY")}</p>
+      <p>${process.env.NEXT_PUBLIC_APP_COMPANY_CITY}, ${moment(record.created_at).format("DD-MM-YYYY")}</p>
+      <p>Dibuat Oleh,</p>
 
         <div class="h-28 flex items-center justify-center opacity-50">
           <p>Materai 10.000</p>
@@ -205,7 +200,6 @@ export const SIPage4Vima = (
       </div>
 
       <div class="flex-1 flex flex-col justify-end text-center">
-        <p>Dibuat Oleh,</p>
         <p>${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</p>
 
         <div class="h-28"></div>
@@ -213,6 +207,16 @@ export const SIPage4Vima = (
         <div class="h-10">
           <p class="w-full border-b">${process.env.NEXT_PUBLIC_APP_SI_NAME}</p>
           <p>${process.env.NEXT_PUBLIC_APP_SI_POSITION}</p>
+        </div>
+      </div>
+      <div class="flex-1 flex flex-col justify-end text-center">
+        <p>${record.Sumdan.name}</p>
+
+        <div class="h-28"></div>
+
+        <div class="h-10">
+          <p class="w-full border-b h-6">${"  "}</p>
+          <p>${"  "}</p>
         </div>
       </div>
     </div>

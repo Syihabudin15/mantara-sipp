@@ -104,7 +104,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(detail.administrasi + detail.detail.adm_sumdan)}</p>
+          <p>${IDRFormat(detail.administrasi)}</p>
         </div>
       </div>
     </div>
@@ -115,7 +115,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(detail.provisi + detail.detail.provisi_sumdan)}</p>
+          <p>${IDRFormat(detail.detail.adm_sumdan + detail.detail.provisi_sumdan)}</p>
         </div>
       </div>
     </div>
@@ -126,7 +126,7 @@ export const PK = (record: IDapem) => {
       <div class="flex-1 flex gap-4">
       <p>Rp.</p>
         <div class="text-right w-20">
-          <p>${IDRFormat(detail.tatalaksana)}</p>
+          <p>${IDRFormat(detail.tatalaksana + detail.provisi)}</p>
         </div>
       </div>
     </div>

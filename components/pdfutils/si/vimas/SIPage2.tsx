@@ -1,56 +1,11 @@
 import { IDropping } from "@/libs/IInterfaces";
 import moment from "moment";
-import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
+import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 moment.locale("id");
 
 export const SIPage2Vima = (record: IDropping) => {
   const dapem = record.Dapems[0];
-  const angs = GetAngsuran(
-    dapem.plafond,
-    dapem.tenor,
-    dapem.c_margin + dapem.c_margin_sumdan,
-    dapem.margin_type,
-    dapem.rounded,
-    dapem.c_ned,
-  ).angsuran;
-  const angsSumdan = GetAngsuran(
-    dapem.plafond,
-    dapem.tenor,
-    dapem.c_margin_sumdan,
-    dapem.margin_type,
-    dapem.rounded,
-  ).angsuran;
-
-  const adm =
-    dapem.plafond * ((dapem.c_adm + dapem.c_adm_mitra + dapem.c_adm_ff) / 100);
-  const provisi =
-    dapem.plafond *
-    ((dapem.c_fee_ao +
-      dapem.c_fee_cabang +
-      dapem.c_fee_area +
-      dapem.c_fee_bpp +
-      dapem.c_fee_bpb) /
-      100);
-  const provisi_admsumdan =
-    dapem.plafond * ((dapem.c_adm_sumdan + dapem.c_provisi_sumdan) / 100);
-  const asuransi = dapem.plafond * (dapem.c_insurance / 100);
-  const tatalaksana =
-    dapem.c_gov +
-    dapem.c_flagging +
-    dapem.c_infomation +
-    dapem.c_stamp +
-    dapem.c_bop +
-    dapem.c_mutasi;
-  const biaya =
-    adm +
-    provisi +
-    provisi_admsumdan +
-    dapem.c_account_sumdan +
-    asuransi +
-    tatalaksana +
-    dapem.c_account;
-  const blokir = dapem.c_blokir * angs;
-  const tb = dapem.plafond - (biaya + dapem.c_takeover + blokir);
+  const detail = GetDetailDapem(dapem);
   const ao = dapem.AO || dapem.AOCabang || dapem.AOArea;
 
   return `
@@ -85,17 +40,23 @@ export const SIPage2Vima = (record: IDropping) => {
           classStyle: "font-bold",
           value: `Rp. ${IDRFormat(dapem.plafond)}`,
         },
-        { key: "Administrasi", value: `Rp. ${IDRFormat(adm + provisi)}` },
-        { key: "Asuransi", value: `Rp. ${IDRFormat(asuransi)}` },
-        { key: "Tata Laksana", value: `Rp. ${IDRFormat(tatalaksana)}` },
-        { key: "Provisi", value: `Rp. ${IDRFormat(provisi_admsumdan)}` },
+        { key: "Administrasi", value: `Rp. ${IDRFormat(detail.administrasi)}` },
+        { key: "Asuransi", value: `Rp. ${IDRFormat(detail.asuransi)}` },
+        {
+          key: "Tata Laksana",
+          value: `Rp. ${IDRFormat(detail.tatalaksana + detail.provisi)}`,
+        },
+        {
+          key: "Provisi",
+          value: `Rp. ${IDRFormat(detail.detail.adm_sumdan + detail.detail.provisi_sumdan)}`,
+        },
         {
           key: "Pembukaan Tabungan",
           value: `Rp. ${IDRFormat(dapem.c_account_sumdan)}`,
         },
         {
           key: `Blokir Angsuran di muka ${dapem.c_blokir} Angsuran`,
-          value: `Rp. ${IDRFormat(dapem.c_blokir * angs)}`,
+          value: `Rp. ${IDRFormat(dapem.c_blokir * detail.angsuran)}`,
         },
         {
           key: "Nominal Pelunasan",
@@ -104,7 +65,7 @@ export const SIPage2Vima = (record: IDropping) => {
         {
           key: "Nominal Diterima",
           classStyle: "font-bold",
-          value: `Rp. ${IDRFormat(tb)}`,
+          value: `Rp. ${IDRFormat(detail.tb)}`,
         },
         { key: "No. Rekening", value: "" },
         { key: "Cabang", value: ao?.Cabang.name },

@@ -158,9 +158,6 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
       tempProduk.length === 1 &&
       tempProduk[0].id !== data.produkPembiayaanId
     ) {
-      // const findSumdan = newAv.find(
-      //   (s) => s.id === tempProduk[0].sumdanId,
-      // ) as ISumdan;
       const find = tempProduk[0];
 
       setData((prev) => ({
@@ -179,6 +176,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
         c_fee_area: find.Sumdan.c_fee_area,
         c_fee_bpp: find.Sumdan.c_fee_bpp,
         c_fee_bpb: find.Sumdan.c_fee_bpb,
+        c_bop_area: find.Sumdan.c_bop_area,
         c_account: find.Sumdan.c_account,
         c_account_sumdan: find.Sumdan.c_account_sumdan,
         c_gov: find.Sumdan.c_gov,
@@ -267,6 +265,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
     data.c_account_sumdan,
     data.c_account,
     data.c_bop,
+    data.c_bop_area,
   ]);
 
   const handleOCR = async () => {
@@ -1994,22 +1993,6 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                       </div>
                     </div>
                     <div className="flex justify-between border-b border-dashed my-2">
-                      <div className="flex-1">Tatalaksana</div>
-                      <div className="flex gap-2 flex-2">
-                        <Input
-                          size="small"
-                          value={IDRFormat(data.c_gov)}
-                          style={{ textAlign: "right", color: "black" }}
-                          onChange={(e) =>
-                            setData({
-                              ...data,
-                              c_gov: IDRToNumber(e.target.value || "0"),
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-between border-b border-dashed my-2">
                       <div className="flex-1">Rekening Koperasi</div>
                       <div className="flex gap-2 flex-2">
                         <Input
@@ -2090,13 +2073,41 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                         />
                       </div>
                     </div>
+                    <div className="flex justify-between border-b border-dashed my-2">
+                      <div className="flex-1">BOP Pembiayaan Area</div>
+                      <div className="flex gap-2 flex-2">
+                        <Input
+                          size="small"
+                          style={{ width: 100 }}
+                          // suffix={
+                          //   <span className="text-xs italic opacity-70">%</span>
+                          // }
+                          value={data.c_bop_area}
+                          onChange={(e) =>
+                            setData({
+                              ...data,
+                              c_bop_area: Number(e.target.value || 0),
+                            })
+                          }
+                          type={"number"}
+                        />
+                        <Input
+                          size="small"
+                          disabled
+                          value={IDRFormat(
+                            data.c_bop * (data.c_bop_area / 100),
+                          )}
+                          style={{ textAlign: "right", color: "black" }}
+                        />
+                      </div>
+                    </div>
                     <div className="flex gap-2 justify-between items-center my-2">
                       <div className="flex-1">BOP Pembiayaan</div>
                       <div className="flex gap-2 flex-2">
                         <Input
                           size="small"
                           value={IDRFormat(data.c_bop || 0)}
-                          style={{ textAlign: "right", color: "red" }}
+                          style={{ textAlign: "right" }}
                           onChange={(e) =>
                             setData({
                               ...data,
@@ -2680,6 +2691,7 @@ const defaultData: IDapem = {
   c_fee_bpb: 0,
   c_ned: 0,
   c_bop: 0,
+  c_bop_area: 0,
   tbo: 0,
   rounded: 0,
   rounded_sumdan: 0,

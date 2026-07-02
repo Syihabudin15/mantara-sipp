@@ -113,7 +113,7 @@ export const SIPage1Vima = (record: IDropping) => {
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(detail.detail.adm + detail.detail.adm_ff + detail.detail.adm_mita)}</p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(detail.administrasi)}</p>
             </div>
           </div>
           <div class="flex gap-2 ml-2">
@@ -122,7 +122,7 @@ export const SIPage1Vima = (record: IDropping) => {
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(detail.detail.fee_ao + detail.detail.fee_cabang + detail.detail.fee_area + detail.detail.fee_bpb + detail.detail.fee_bpp + dapem.c_account)}</p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(detail.tatalaksana + detail.provisi)}</p>
             </div>
           </div>
           <div class="flex gap-2 font-bold">

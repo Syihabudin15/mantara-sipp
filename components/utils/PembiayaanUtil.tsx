@@ -160,6 +160,8 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
   const fee_bpp = dapem.plafond * (dapem.c_fee_bpp / 100);
   const fee_bpb = dapem.plafond * (dapem.c_fee_bpb / 100);
   const provisi = fee_ao + fee_cabang + fee_area + fee_bpp + fee_bpb;
+  const bop_area = dapem.c_bop * (dapem.c_bop_area / 100);
+
   const administrasi = adm + adm_mita + adm_ff;
   const tatalaksana =
     dapem.c_gov +
@@ -168,6 +170,7 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
     dapem.c_stamp +
     dapem.c_account +
     dapem.c_mutasi +
+    bop_area +
     dapem.c_bop;
   const angsuran = ValidateAngsuran(dapem);
   const angsuran_sumdan = ValidateAngsuran(dapem, true);
@@ -198,6 +201,7 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
       fee_bpb,
       angsuran,
       angsuran_sumdan,
+      bop_area,
     },
     angsuran: angs,
     tatalaksana,
@@ -324,6 +328,7 @@ export const getInitialDapemDetail = (): IOutputDapemDetail => ({
     fee_bpb: 0,
     angsuran: 0,
     angsuran_sumdan: 0,
+    bop_area: 0,
   },
   angsuran: 0,
   tatalaksana: 0,

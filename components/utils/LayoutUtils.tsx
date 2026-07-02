@@ -211,8 +211,38 @@ export const DetailDapem = ({
       width={1300}
       style={{ top: 10 }}
     >
-      <div className="flex flex-col sm:flex-row gap-4 h-[80vh]">
-        <div className="w-full sm:w-[42%] h-full overflow-auto">
+      <div className="flex flex-col sm:flex-row gap-4 sm:h-[80vh]">
+        <div className="w-full sm:w-[42%] min-h-[300] h-full overflow-auto">
+          {/* <div className="bg-white p-4 rounded-lg border">
+            <Descriptions
+              title={
+                <div>
+                  <UserOutlined /> Data Debitur
+                </div>
+              }
+              bordered
+              size="small"
+              column={1}
+              labelStyle={{ width: 180 }}
+            >
+              <Descriptions.Item label="Nama Pemohon">
+                {data.Debitur.fullname}
+              </Descriptions.Item>
+              <Descriptions.Item label="NIK">
+                {data.Debitur.nik}
+              </Descriptions.Item>
+              <Descriptions.Item label="Tempat Tgl Lahir">
+                {data.Debitur.birthplace},{" "}
+                {dayjs(data.Debitur.birthdate).format("DD-MM-YYYY")}
+              </Descriptions.Item>
+              <Descriptions.Item label="Telepon">
+                {data.Debitur.phone}
+              </Descriptions.Item>
+              <Descriptions.Item label="Alamat">
+                {data.Debitur.address}
+              </Descriptions.Item>
+            </Descriptions>
+          </div> */}
           <div className="p-2 rounded bg-gray-800 text-gray-50 font-bold my-2">
             Data Debitur
           </div>
@@ -451,6 +481,16 @@ export const DetailDapem = ({
                 }}
               />
             )}
+            <FormInput
+              data={{
+                label: "Geo Location",
+                mode: "vertical",
+                type: "text",
+                class: "flex-1",
+                disabled: true,
+                value: data.geolocation,
+              }}
+            />
           </div>
           <div className="p-2 rounded bg-gray-800 text-gray-50 font-bold my-2">
             Data Rumah & Pekerjaan
@@ -956,17 +996,19 @@ export const DetailDapem = ({
                 Rincian Biaya
               </Divider>
               <div className="my-1 flex">
-                <div className="w-[40%]">Adm Sumdan</div>
+                <div className="w-[40%]">Adm Sumdan ({data.c_adm_sumdan}%)</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_adm_sumdan / 100))}
+                  {IDRFormat(detail.detail.adm_sumdan)}
                 </div>
               </div>
               <div className="my-1 flex">
-                <div className="w-[40%]">Provisi Sumdan</div>
+                <div className="w-[40%]">
+                  Provisi Sumdan ({data.c_provisi_sumdan}%)
+                </div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_provisi_sumdan / 100))}
+                  {IDRFormat(detail.detail.provisi_sumdan)}
                 </div>
               </div>
               <div className="my-1 flex">
@@ -977,73 +1019,66 @@ export const DetailDapem = ({
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed">
-                <div className="w-[40%]">Asuransi</div>
+                <div className="w-[40%]">Asuransi ({data.c_insurance}%)</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_insurance / 100))}
+                  {IDRFormat(detail.asuransi)}
                 </div>
               </div>
               <div className="my-1 flex">
-                <div className="w-[40%]">Adm Koperasi</div>
+                <div className="w-[40%]">Adm Koperasi ({data.c_adm}%)</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_adm / 100))}
+                  {IDRFormat(detail.detail.adm)}
                 </div>
               </div>
               <div className="my-1 flex">
-                <div className="w-[40%]">Adm Mitra</div>
+                <div className="w-[40%]">Adm Mitra ({data.c_adm_mitra}%)</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_adm_mitra / 100))}
-                </div>
-              </div>
-              <div className="my-1 flex">
-                <div className="w-[40%]">Adm FF</div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_adm_ff / 100))}
-                </div>
-              </div>
-              <div className="my-1 flex">
-                <div className="w-[40%]">Fee AO</div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_fee_ao / 100))}
-                </div>
-              </div>
-              <div className="my-1 flex">
-                <div className="w-[40%]">Fee Cabang</div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_fee_cabang / 100))}
-                </div>
-              </div>
-              <div className="my-1 flex">
-                <div className="w-[40%]">Fee Area</div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_fee_area / 100))}
-                </div>
-              </div>
-              <div className="my-1 flex">
-                <div className="w-[40%]">Fee BPP</div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_fee_bpp / 100))}
-                </div>
-              </div>
-              <div className="my-1 flex">
-                <div className="w-[40%]">Fee BPB</div>
-                <div className="w-[5%]">:</div>
-                <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond * (data.c_fee_bpb / 100))}
+                  {IDRFormat(detail.detail.adm_mita)}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed">
-                <div className="w-[40%]">Tatalaksana</div>
+                <div className="w-[40%]">Adm FF ({data.c_adm_ff}%)</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.c_gov)}
+                  {IDRFormat(detail.detail.adm_ff)}
+                </div>
+              </div>
+              <div className="my-1 flex">
+                <div className="w-[40%]">Fee AO ({data.c_fee_ao}%)</div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(detail.detail.fee_ao)}
+                </div>
+              </div>
+              <div className="my-1 flex">
+                <div className="w-[40%]">Fee Cabang ({data.c_fee_cabang}%)</div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(detail.detail.fee_cabang)}
+                </div>
+              </div>
+              <div className="my-1 flex">
+                <div className="w-[40%]">Fee Area ({data.c_fee_area}%)</div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(detail.detail.fee_area)}
+                </div>
+              </div>
+              <div className="my-1 flex">
+                <div className="w-[40%]">Fee BPP ({data.c_fee_bpp}%)</div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(detail.detail.fee_bpp)}
+                </div>
+              </div>
+              <div className="my-1 flex">
+                <div className="w-[40%]">Fee BPB ({data.c_fee_bpb}%)</div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(detail.detail.fee_bpb)}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed">
@@ -1079,6 +1114,13 @@ export const DetailDapem = ({
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
                   {IDRFormat(data.c_mutasi)}
+                </div>
+              </div>
+              <div className="my-1 flex border-b border-dashed">
+                <div className="w-[40%]">BOP Area </div>
+                <div className="w-[5%]">:</div>
+                <div className="flex-1 justify-end text-right">
+                  {IDRFormat(detail.detail.bop_area)}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed">

@@ -214,6 +214,7 @@ export interface IOutputDapemDetail {
     fee_area: number;
     fee_bpp: number;
     fee_bpb: number;
+    bop_area: number;
     angsuran: number;
     angsuran_sumdan: number;
   };

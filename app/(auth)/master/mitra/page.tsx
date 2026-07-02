@@ -207,11 +207,11 @@ export default function Page() {
       render(value, record, index) {
         return (
           <div className="text-xs text-blue-400">
-            <p>Tatalaksana : {IDRFormat(record.c_gov)}</p>
             <p>Rekening : {IDRFormat(record.c_account)}</p>
             <p>Materai : {IDRFormat(record.c_stamps)}</p>
             <p>Flagging : {IDRFormat(record.c_flagging)}</p>
-            <p>Sistem Informasi : {IDRFormat(record.c_information)}</p>
+            <p>Informasi : {IDRFormat(record.c_information)}</p>
+            <p>BOP Area : {IDRFormat(record.c_bop_area)}</p>
           </div>
         );
       },
@@ -671,7 +671,7 @@ function UpsertSumdan({
                   <Divider style={{ margin: 5 }}>Pembiayaan Mitra</Divider>
                   <FormInput
                     data={{
-                      label: "Admin",
+                      label: "Admin %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_adm_sumdan,
@@ -691,7 +691,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Provisi",
+                      label: "Provisi %",
                       mode: "horizontal",
                       type: "text",
                       value: data.c_provisi_sumdan,
@@ -717,7 +717,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "DSR/DBR",
+                      label: "DSR/DBR %",
                       mode: "horizontal",
                       type: "number",
                       value: data.dsr,
@@ -740,7 +740,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Suku Bunga",
+                      label: "Suku Bunga %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_margin,
@@ -763,7 +763,7 @@ function UpsertSumdan({
                   <Divider style={{ margin: 5 }}>Pembiayaan Koperasi</Divider>
                   <FormInput
                     data={{
-                      label: "Admin Koperasi",
+                      label: "Admin Koperasi %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_adm,
@@ -773,7 +773,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Admin Mitra",
+                      label: "Admin Mitra %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_adm_mitra,
@@ -783,7 +783,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Admin FF",
+                      label: "Admin FF %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_adm_ff,
@@ -793,21 +793,11 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Total Admin",
+                      label: "Total Admin %",
                       mode: "horizontal",
                       type: "text",
                       disabled: true,
                       value: `${data.c_adm_sumdan}% + ${data.c_adm + data.c_adm_mitra + data.c_adm_ff}% = ${data.c_adm_sumdan + data.c_adm + data.c_adm_mitra + data.c_adm_ff}%`,
-                    }}
-                  />
-                  <FormInput
-                    data={{
-                      label: "Tatalaksana",
-                      mode: "horizontal",
-                      type: "text",
-                      value: IDRFormat(data.c_gov || 0),
-                      onChange: (e: any) =>
-                        setData({ ...data, c_gov: IDRToNumber(e) }),
                     }}
                   />
                   <FormInput
@@ -852,7 +842,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Fee AO",
+                      label: "Fee AO %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_fee_ao,
@@ -862,7 +852,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Fee Cabang",
+                      label: "Fee Cabang %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_fee_cabang,
@@ -872,7 +862,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Fee Area",
+                      label: "Fee Area %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_fee_area,
@@ -882,7 +872,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Fee BPP",
+                      label: "Fee BPP %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_fee_bpp,
@@ -892,7 +882,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Fee BPB",
+                      label: "Fee BPB %",
                       mode: "horizontal",
                       type: "number",
                       value: data.c_fee_bpb,
@@ -902,7 +892,7 @@ function UpsertSumdan({
                   />
                   <FormInput
                     data={{
-                      label: "Total Provisi",
+                      label: "Total Provisi %",
                       mode: "horizontal",
                       type: "text",
                       disabled: true,
@@ -940,6 +930,16 @@ function UpsertSumdan({
                       value: IDRFormat(data.max_bop),
                       onChange: (e: any) =>
                         setData({ ...data, max_bop: IDRToNumber(e || "0") }),
+                    }}
+                  />
+                  <FormInput
+                    data={{
+                      label: "BOP Area %",
+                      mode: "horizontal",
+                      type: "number",
+                      value: data.c_bop_area,
+                      onChange: (e: any) =>
+                        setData({ ...data, c_bop_area: parseFloat(e || "0") }),
                     }}
                   />
                   <FormInput
@@ -1568,6 +1568,7 @@ const defaultSumdan: ISumdan = {
   c_fee_bpb: 0,
   c_ned: 0,
   max_bop: 0,
+  c_bop_area: 0,
   dsr: 0,
   ProdukPembiayaans: [],
   pic: null,

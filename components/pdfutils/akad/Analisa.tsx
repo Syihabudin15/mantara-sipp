@@ -154,7 +154,7 @@ export const AnalisaPerhitungan = (record: IDapem) => {
         ${ListNonStyle([
           {
             key: "Biaya Administrasi",
-            value: IDRFormat(detail.administrasi + detail.detail.adm_sumdan),
+            value: IDRFormat(detail.administrasi),
             currency: true,
           },
           {
@@ -169,12 +169,14 @@ export const AnalisaPerhitungan = (record: IDapem) => {
           },
           {
             key: "Biaya Provisi",
-            value: IDRFormat(detail.provisi + detail.detail.provisi_sumdan),
+            value: IDRFormat(
+              detail.detail.provisi_sumdan + detail.detail.adm_sumdan,
+            ),
             currency: true,
           },
           {
             key: "Biaya Tatalaksana",
-            value: IDRFormat(detail.tatalaksana),
+            value: IDRFormat(detail.tatalaksana + detail.provisi),
             currency: true,
           },
           {
