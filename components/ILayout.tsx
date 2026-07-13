@@ -89,7 +89,7 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
     getNotif(); // Panggil sekali saat user pertama kali siap
 
     // Naikkan interval menjadi 10 atau 15 detik agar meringankan beban server database Anda
-    const interval = setInterval(getNotif, 1000 * 10);
+    const interval = setInterval(getNotif, 1000 * 60 * 3);
 
     return () => clearInterval(interval);
   }, [user, getNotif]);
@@ -106,7 +106,6 @@ export default function ILayout({ children }: { children: React.ReactNode }) {
 
   const isMobile = windowWidth < 600;
 
-  // ... (Sisa kode return JSX ke bawah tetap sama seperti kode Anda sebelumnya)
   return (
     <Layout style={{ minHeight: "100vh", backgroundColor: "#f0f2f5" }}>
       {/* ... kode komponen Anda tetap dipertahankan ... */}

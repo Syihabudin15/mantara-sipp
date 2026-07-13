@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useId } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import moment from "moment";
 import { JenisPembiayaan, Sumdan } from "@prisma/client";
@@ -8,6 +8,7 @@ import {
   App,
   Button,
   Card,
+  DatePicker,
   Input,
   Modal,
   Select,
@@ -46,7 +47,7 @@ import {
   GetStatusTag,
   MappingToExcelDapem,
 } from "@/components/utils/CompUtils";
-import { DetailDapem } from "@/components/utils/LayoutUtils";
+
 import {
   GetDetailDapem,
   GetRoman,
@@ -61,8 +62,10 @@ import {
   IViewFiles,
 } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
-
 const { Paragraph } = Typography;
+import { DetailDapem } from "@/components/utils/LayoutUtils";
+import dayjs from "dayjs";
+const { RangePicker } = DatePicker;
 
 interface IActionTableAkad<T> extends IActionTable<T> {
   cetakAkad: boolean;
@@ -78,6 +81,7 @@ export default function Page() {
     sumdanId: "",
     jenisPembiayaanId: "",
     agentFrontingId: "",
+    backdate: "",
   });
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<IActionTableAkad<IDapem>>({
@@ -107,6 +111,7 @@ export default function Page() {
         limit: pageProps.limit.toString(),
         ...(pageProps.search && { search: pageProps.search }),
         ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
+        ...(pageProps.backdate && { backdate: pageProps.backdate }),
         ...(pageProps.jenisPembiayaanId && {
           jenisPembiayaanId: pageProps.jenisPembiayaanId,
         }),
@@ -135,6 +140,7 @@ export default function Page() {
     pageProps.sumdanId,
     pageProps.jenisPembiayaanId,
     pageProps.agentFrontingId,
+    pageProps.backdate,
   ]);
 
   // Debouncer pencarian
@@ -608,6 +614,7 @@ export default function Page() {
       sumdanId: "",
       jenisPembiayaanId: "",
       agentFrontingId: "",
+      backdate: "",
       page: 1,
     }));
   }, []);
@@ -631,19 +638,70 @@ export default function Page() {
             </Link>
           )}
           <FilterData clearfilter={handleClearFilter}>
-            <>
-              {user && !user.sumdanId && (
-                <div className="my-2">
-                  <p>Mitra pembiayaan :</p>
+            <div className="p-1">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-3.5">
+                <div className="col-span-2 flex flex-col space-y-1">
+                  <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                    Periode
+                  </label>
+                  <RangePicker
+                    size="small"
+                    value={
+                      Array.isArray(pageProps.backdate) &&
+                      pageProps.backdate.length === 2
+                        ? [
+                            dayjs(pageProps.backdate[0]),
+                            dayjs(pageProps.backdate[1]),
+                          ]
+                        : null
+                    }
+                    onChange={(date, dateStr) =>
+                      setPageProps((prev) => ({
+                        ...prev,
+                        backdate: dateStr,
+                        page: 1,
+                      }))
+                    }
+                    style={{ width: "100%" }}
+                  />
+                </div>
+
+                {user && !user.sumdanId && (
+                  <div className="flex flex-col space-y-1">
+                    <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide truncate">
+                      Mitra Pembiayaan
+                    </label>
+                    <Select
+                      size="small"
+                      placeholder="Mitra..."
+                      options={sumdanOptions}
+                      value={pageProps.sumdanId}
+                      onChange={(e) =>
+                        setPageProps((prev) => ({
+                          ...prev,
+                          sumdanId: e,
+                          page: 1,
+                        }))
+                      }
+                      allowClear
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                )}
+
+                <div className="flex flex-col space-y-1">
+                  <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide truncate">
+                    Jenis Pembiayaan
+                  </label>
                   <Select
                     size="small"
-                    placeholder="Pilih Mitra..."
-                    options={sumdanOptions}
-                    value={pageProps.sumdanId}
+                    placeholder="Jenis..."
+                    options={jenisOptions}
+                    value={pageProps.jenisPembiayaanId}
                     onChange={(e) =>
                       setPageProps((prev) => ({
                         ...prev,
-                        sumdanId: e,
+                        jenisPembiayaanId: e,
                         page: 1,
                       }))
                     }
@@ -651,44 +709,29 @@ export default function Page() {
                     style={{ width: "100%" }}
                   />
                 </div>
-              )}
-              <div className="my-2">
-                <p>Jenis pembiayaan :</p>
-                <Select
-                  size="small"
-                  placeholder="Pilih Jenis..."
-                  options={jenisOptions}
-                  value={pageProps.jenisPembiayaanId}
-                  onChange={(e) =>
-                    setPageProps((prev) => ({
-                      ...prev,
-                      jenisPembiayaanId: e,
-                      page: 1,
-                    }))
-                  }
-                  allowClear
-                  style={{ width: "100%" }}
-                />
+
+                <div className="flex flex-col space-y-1">
+                  <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide truncate">
+                    Agent Fronting
+                  </label>
+                  <Select
+                    size="small"
+                    placeholder="Agent..."
+                    options={agentOptions}
+                    value={pageProps.agentFrontingId}
+                    onChange={(e) =>
+                      setPageProps((prev) => ({
+                        ...prev,
+                        agentFrontingId: e,
+                        page: 1,
+                      }))
+                    }
+                    allowClear
+                    style={{ width: "100%" }}
+                  />
+                </div>
               </div>
-              <div className="my-2">
-                <p>Agent Fronting :</p>
-                <Select
-                  size="small"
-                  placeholder="Pilih Agent..."
-                  options={agentOptions}
-                  value={pageProps.agentFrontingId}
-                  onChange={(e) =>
-                    setPageProps((prev) => ({
-                      ...prev,
-                      agentFrontingId: e,
-                      page: 1,
-                    }))
-                  }
-                  allowClear
-                  style={{ width: "100%" }}
-                />
-              </div>
-            </>
+            </div>
           </FilterData>
         </div>
         <div className="flex gap-2">

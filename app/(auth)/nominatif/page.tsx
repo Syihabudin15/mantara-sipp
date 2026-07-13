@@ -44,6 +44,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import dayjs from "dayjs";
 import moment from "moment";
 import { useEffect, useState, useCallback, useMemo } from "react";
 const { RangePicker } = DatePicker;
@@ -181,6 +182,23 @@ export default function Page() {
       isMounted = false;
     };
   }, []);
+
+  const sumdanOptions = useMemo(
+    () => sumdans.map((s) => ({ label: s.code, value: s.id })),
+    [sumdans],
+  );
+  const jenisOptions = useMemo(
+    () => jeniss.map((s) => ({ label: s.name, value: s.id })),
+    [jeniss],
+  );
+  const agentOptions = useMemo(
+    () => agents.map((s) => ({ label: s.name, value: s.id })),
+    [agents],
+  );
+  const paysOptions = useMemo(
+    () => pays.map((s) => ({ label: s.name, value: s.id })),
+    [agents],
+  );
 
   // OPTIMASI 3: Gunakan useMemo untuk definisi kolom agar Table AntD tidak membuat ulang objek kolom di setiap render
   const columns: TableProps<IDapem>["columns"] = useMemo(
@@ -800,7 +818,15 @@ export default function Page() {
                   </label>
                   <RangePicker
                     size="small"
-                    value={pageProps.backdate}
+                    value={
+                      Array.isArray(pageProps.backdate) &&
+                      pageProps.backdate.length === 2
+                        ? [
+                            dayjs(pageProps.backdate[0]),
+                            dayjs(pageProps.backdate[1]),
+                          ]
+                        : null
+                    }
                     onChange={(date, dateStr) =>
                       setPageProps((prev) => ({
                         ...prev,
@@ -820,10 +846,7 @@ export default function Page() {
                     <Select
                       size="small"
                       placeholder="Mitra..."
-                      options={sumdans.map((s) => ({
-                        label: s.code,
-                        value: s.id,
-                      }))}
+                      options={sumdanOptions}
                       value={pageProps.sumdanId}
                       onChange={(e) =>
                         setPageProps((prev) => ({
@@ -845,10 +868,7 @@ export default function Page() {
                   <Select
                     size="small"
                     placeholder="Jenis..."
-                    options={jeniss.map((s) => ({
-                      label: s.name,
-                      value: s.id,
-                    }))}
+                    options={jenisOptions}
                     value={pageProps.jenisPembiayaanId}
                     onChange={(e) =>
                       setPageProps((prev) => ({
@@ -869,10 +889,7 @@ export default function Page() {
                   <Select
                     size="small"
                     placeholder="Agent..."
-                    options={agents.map((s) => ({
-                      label: s.name,
-                      value: s.id,
-                    }))}
+                    options={agentOptions}
                     value={pageProps.agentFrontingId}
                     onChange={(e) =>
                       setPageProps((prev) => ({
@@ -893,10 +910,7 @@ export default function Page() {
                   <Select
                     size="small"
                     placeholder="Kantor..."
-                    options={pays.map((s) => ({
-                      label: s.code || s.name,
-                      value: s.id,
-                    }))}
+                    options={paysOptions}
                     value={pageProps.payOfficeId}
                     onChange={(e) =>
                       setPageProps((prev) => ({

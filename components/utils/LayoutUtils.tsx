@@ -6,7 +6,6 @@ import moment from "moment";
 import { IDapem, IViewFiles } from "@/libs/IInterfaces";
 import { FormInput } from "..";
 import {
-  GetDapem,
   GetDetailDapem,
   GetFullAge,
   IDRFormat,
@@ -1134,14 +1133,14 @@ export const DetailDapem = ({
                 <div className="w-[40%]">Total Biaya</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(GetDapem(data).biaya)}
+                  {IDRFormat(detail.biaya)}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed text-blue-500 font-bold mt-5">
                 <div className="w-[40%]">Terima Kotor</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(data.plafond - GetDapem(data).biaya)}
+                  {IDRFormat(detail.tk)}
                 </div>
               </div>
               <div className="my-1 flex border-b border-dashed">
@@ -1164,7 +1163,7 @@ export const DetailDapem = ({
                 <div className="w-[40%]">Terima Bersih</div>
                 <div className="w-[5%]">:</div>
                 <div className="flex-1 justify-end text-right">
-                  {IDRFormat(GetDapem(data).tb)}
+                  {IDRFormat(detail.tb)}
                 </div>
               </div>
             </div>

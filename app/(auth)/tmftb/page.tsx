@@ -58,6 +58,7 @@ import {
   IPayOffice,
   IViewFiles,
 } from "@/libs/IInterfaces";
+import dayjs from "dayjs";
 
 const { Paragraph } = Typography;
 const { RangePicker } = DatePicker;
@@ -850,7 +851,15 @@ export default function Page() {
               <p>Periode :</p>
               <RangePicker
                 size="small"
-                value={pageProps.backdate}
+                value={
+                  Array.isArray(pageProps.backdate) &&
+                  pageProps.backdate.length === 2
+                    ? [
+                        dayjs(pageProps.backdate[0]),
+                        dayjs(pageProps.backdate[1]),
+                      ]
+                    : null
+                }
                 onChange={(_, dateStr) =>
                   setPageProps((prev) => ({
                     ...prev,
