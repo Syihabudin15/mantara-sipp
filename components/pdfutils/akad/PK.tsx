@@ -1,7 +1,7 @@
 import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
-import moment from "moment";
 import { Header, ListNonStyle, ListStyle, NumberToWordsID } from "../utils";
+import moment from "moment";
 moment.locale("id");
 
 export const PK = (record: IDapem) => {
@@ -9,18 +9,24 @@ export const PK = (record: IDapem) => {
   const angsuran = detail.angsuran;
   const angsuranSumdan = detail.detail.angsuran_sumdan;
   const admAngsuran = angsuran - angsuranSumdan;
+  const city = (record.city || record.Debitur.city)
+    ?.toLocaleLowerCase()
+    .replace("KABUPATEN", "")
+    .replace("KOTA", "")
+    .toUpperCase();
+  const date_contract = moment(record.date_contract);
 
   return `
   ${Header("PERJANJIAN KREDIT", record.no_contract, undefined, undefined, undefined)}
   
-  <p>Perjanjian Kredit ini (Selanjutnya disebut "PERJANJIAN") di buat di Pekalongan pada hari Senin, tanggal 11 Mei 2026 oleh dan antara sebagai berikut :</p>
+  <p>Perjanjian Kredit ini (Selanjutnya disebut "PERJANJIAN") di buat di ${city} pada hari ${date_contract.format("DDD")}, tanggal ${date_contract.format("DD MMM YYYY")} oleh dan antara sebagai berikut :</p>
   <div class="my-2 ml-2 flex gap-2">
     <div class="w-5">I.</div>
-    <p>Nama <span class="font-bold">H ARIEF FIRMANSYAH</span>, dengan jabatan Ketua <span class="font-bold">${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</span> (<span class="font-bold">${process.env.NEXT_PUBLIC_APP_SHORTNAME || "-"}</span>), bertindak berdasarkan Surat Kuasa Substitusi No. ${record.ProdukPembiayaan.Sumdan.sk_no || "-"} tanggal ${moment(record.ProdukPembiayaan.Sumdan.sk_date || new Date()).format("DD-MM-YYYY")} dalam perjanjian ini bertindak untuk dan atas nama <span class="font-bold">${record.ProdukPembiayaan.Sumdan.name}</span> yang berkedudukan di ${record.ProdukPembiayaan.Sumdan.address}, berdasarkan Perjanjian Kerjasama Penerusan Pinjaman Nomor ${record.ProdukPembiayaan.Sumdan.contract_no} dan Nomor ${record.ProdukPembiayaan.Sumdan.contract_no2} tanggal ${moment(record.ProdukPembiayaan.Sumdan.contract_date || new Date()).format("DD-MM-YYYY")} (Selanjutnya disebut <span class="font-bold">"KREDITUR"</span>)</p>
+    <p>Nama <span class="font-bold">H ARIEF FIRMANSYAH</span>, dengan jabatan Ketua <span class="font-bold">${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</span> (<span class="font-bold">${process.env.NEXT_PUBLIC_APP_SHORTNAME || "-"}</span>), bertindak berdasarkan Surat Kuasa Substitusi No. ${record.ProdukPembiayaan.Sumdan.sk_no || "________________"} tanggal ${moment(record.ProdukPembiayaan.Sumdan.sk_date) || "________________"} dalam perjanjian ini bertindak untuk dan atas nama <span class="font-bold">${record.ProdukPembiayaan.Sumdan.name}</span> yang berkedudukan di ${record.ProdukPembiayaan.Sumdan.address}, berdasarkan Perjanjian Kerjasama Penerusan Pinjaman Nomor ${record.ProdukPembiayaan.Sumdan.contract_no || "________________"} dan Nomor ${record.ProdukPembiayaan.Sumdan.contract_no2 || "________________"} tanggal ${moment(record.ProdukPembiayaan.Sumdan.contract_date) || "________________"} (Selanjutnya disebut <span class="font-bold">"KREDITUR"</span>)</p>
   </div>
   <div class="my-2 ml-2 flex gap-2">
     <div class="w-5">II.</div>
-    <p>Nama <span class="font-bold">${record.Debitur.fullname}</span>, Pemegang Kartu Tanda Penduduk (KTP) No. <span class="font-bold">${record.Debitur.nik}</span> bertempat di ${record.Debitur.address}, Kelurahan ${record.Debitur.ward}, Kecamatan ${record.Debitur.district}, Kota/Kabupaten ${record.Debitur.city}, Provinsi ${record.Debitur.province} ${record.Debitur.pos_code} bertindak untuk dan atas nama diri sendiri. (Selanjutnya disebut <span class="font-bold">"DEBITUR"</span>)</p>
+    <p>Nama <span class="font-bold">${record.Debitur.fullname}</span>, Pemegang Kartu Tanda Penduduk (KTP) No. <span class="font-bold">${record.Debitur.nik}</span> bertempat di ${record.Debitur.address}, Kelurahan ${record.Debitur.ward}, Kecamatan ${record.Debitur.district}, Kota/Kabupaten ${city}, Provinsi ${record.Debitur.province} ${record.Debitur.pos_code} bertindak untuk dan atas nama diri sendiri. (Selanjutnya disebut <span class="font-bold">"DEBITUR"</span>)</p>
   </div>
 
   <p>Kreditur dan Debitur selanjutnya secara bersama-sama disebut 'PARA PIHAK'. Berdasarkan surat persetujuan pemberian kredit, Para Pihak telah sepakat untuk membuat perjanjian ini dengan syarat dan ketentuan sebagai berikut :</p>
@@ -404,7 +410,7 @@ export const PK = (record: IDapem) => {
   <div class="mt-10">
     <div class="flex justify-between gap-6 items-end">
       <div class="flex-1 text-center">
-        <p >${(record.Debitur.city || "KOTA BANDUNG").toLowerCase().replace("kota", "").replace("kabupaten", "").toUpperCase()}, ${moment(record.date_contract).format("DD-MM-YYYY")}</p>
+        <p >${city}, ${date_contract.format("DD-MM-YYYY")}</p>
         <p class="font-bold">${process.env.NEXT_PUBLIC_APP_COMPANY_NAME}</p>
         <div class="h-28 flex items-center justify-center opacity-50">
         </div>

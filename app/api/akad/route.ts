@@ -1,8 +1,4 @@
-import {
-  GetAngsuran,
-  GetDetailDapem,
-  GetRoman,
-} from "@/components/utils/PembiayaanUtil";
+import { GetAngsuran, GetDetailDapem } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
 import { Angsuran, Dapem } from "@prisma/client";
@@ -112,13 +108,20 @@ export const PATCH = async (req: NextRequest) => {
       },
     });
     const datecontract = moment(created_at || find.date_contract || new Date());
+    const sumdan =
+      find.ProdukPembiayaan.Sumdan.code === "VIMA"
+        ? "PTBPRVIMA"
+        : find.ProdukPembiayaan.Sumdan.code
+            .replace(" ", "")
+            .replace("BPR", "")
+            .replace("BANK", "");
     return NextResponse.json(
       {
         msg: "Berhasil memperbarui data akad!",
         status: 200,
         data: find.no_contract
           ? find.no_contract
-          : `${String(count + 1).padStart(3, "0")}/${process.env.NEXT_PUBLIC_APP_CODE_FILE || ""}-PK/${find.ProdukPembiayaan.Sumdan.code.replace(" ", "").replace("BPR", "").replace("BANK", "")}/${GetRoman(datecontract.month())}/${datecontract.format("MMYYYY")}`,
+          : `${String(count + 1).padStart(3, "0")}/${process.env.NEXT_PUBLIC_APP_CODE_FILE || ""}-PK/${sumdan}/${datecontract.format("MM-YYYY")}`,
       },
       { status: 200 },
     );
@@ -143,7 +146,7 @@ function GenerateAnuitas(dapem: Dapem): Angsuran[] {
   const prefix = `${dapem.id}TX`;
   const padLength = 3;
 
-  let angsurans: Angsuran[] = [];
+  const angsurans: Angsuran[] = [];
 
   let sisa = dapem.plafond;
   const detail = GetDetailDapem(dapem as IDapem);
@@ -182,7 +185,7 @@ function GenerateFlat(dapem: Dapem): Angsuran[] {
   const prefix = `${dapem.id}TX`;
   const padLength = 3;
 
-  let angsurans: Angsuran[] = [];
+  const angsurans: Angsuran[] = [];
 
   const angsuran = GetAngsuran(
     dapem.plafond,

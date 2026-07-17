@@ -138,7 +138,17 @@ export const GET = async (request: NextRequest) => {
         ProdukPembiayaan: {
           include: {
             Sumdan: {
-              select: { name: true, code: true, dsr: true, logo: true },
+              select: {
+                name: true,
+                code: true,
+                dsr: true,
+                logo: true,
+                sk_date: true,
+                sk_no: true,
+                contract_date: true,
+                contract_no: true,
+                contract_no2: true,
+              },
             },
           },
         },

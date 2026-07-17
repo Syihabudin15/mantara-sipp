@@ -35,9 +35,9 @@ import {
   SwapOutlined,
 } from "@ant-design/icons";
 
-import { FormInput, ViewFiles } from "@/components";
-import { printContract } from "@/components/pdfutils/akad/Akad";
+// import { FormInput, ViewFiles } from "@/components";
 // import { printForm } from "@/components/pdfutils/etc/printForm";
+import { printContract } from "@/components/pdfutils/akad/Akad";
 import { printMonitoring } from "@/components/pdfutils/etc/printMonitoring";
 import { useUser } from "@/components/UserContext";
 import {
@@ -50,7 +50,7 @@ import {
 
 import {
   GetDetailDapem,
-  GetRoman,
+  // GetRoman,
   IDRFormat,
 } from "@/components/utils/PembiayaanUtil";
 import {
@@ -63,9 +63,29 @@ import {
 } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 const { Paragraph } = Typography;
-import { DetailDapem } from "@/components/utils/LayoutUtils";
+// import { DetailDapem } from "@/components/utils/LayoutUtils";
 import dayjs from "dayjs";
+import dynamic from "next/dynamic";
 const { RangePicker } = DatePicker;
+
+const DetailDapem = dynamic(
+  () => import("@/components/utils/LayoutUtils").then((mod) => mod.DetailDapem),
+  {
+    ssr: false,
+  },
+);
+const FormInput = dynamic(
+  () => import("@/components").then((mod) => mod.FormInput),
+  {
+    ssr: false,
+  },
+);
+const ViewFiles = dynamic(
+  () => import("@/components").then((mod) => mod.ViewFiles),
+  {
+    ssr: false,
+  },
+);
 
 interface IActionTableAkad<T> extends IActionTable<T> {
   cetakAkad: boolean;
@@ -1108,7 +1128,7 @@ const PrintContractSubmission = ({
                 onClick={() =>
                   setTemp((prev) => ({
                     ...prev,
-                    no_contract: `${data.id}/FAS-PKPP/${GetRoman(new Date(prev.date_contract || new Date()).getMonth() + 1)}/${moment(prev.date_contract || new Date()).format("YYYY")}`,
+                    no_contract: `${data.id.replace("P", "")}/${process.env.NEXT_PUBLIC_APP_CODE_FILE || "MANTARA"}-${data.ProdukPembiayaan.Sumdan.code === "VIMA" ? "PTBPRVIMA" : data.ProdukPembiayaan.Sumdan.code.replace(" ", "").replace("BPR", "").replace("BANK", "")}/${moment(prev.date_contract || new Date()).format("DD-YYYY")}`,
                   }))
                 }
               />
