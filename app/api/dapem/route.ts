@@ -148,6 +148,7 @@ export const GET = async (request: NextRequest) => {
                 contract_date: true,
                 contract_no: true,
                 contract_no2: true,
+                address: true,
               },
             },
           },
