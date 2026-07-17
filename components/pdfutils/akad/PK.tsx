@@ -11,8 +11,8 @@ export const PK = (record: IDapem) => {
   const admAngsuran = angsuran - angsuranSumdan;
   const city = (record.city || record.Debitur.city)
     ?.toLocaleLowerCase()
-    .replace("KABUPATEN", "")
-    .replace("KOTA", "")
+    .replace("kabupaten", "")
+    .replace("kota", "")
     .toUpperCase();
   const date_contract = moment(record.date_contract);
 
