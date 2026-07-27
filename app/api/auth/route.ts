@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import prisma from "@/libs/Prisma";
 import { getSession, signIn, signOut } from "@/libs/Auth";
-import { IPermission, IUser } from "@/libs/IInterfaces";
+import { IPermission } from "@/libs/IInterfaces";
 
 export const POST = async (req: NextRequest) => {
-  const credential = await req.json();
-  if (!credential || !credential.username || !credential.password) {
+  const { username, password } = await req.json();
+  if (!username || !password) {
     return NextResponse.json(
       { msg: "Mohon lengkapi username & password!", status: 404 },
       { status: 404 },
@@ -14,30 +14,12 @@ export const POST = async (req: NextRequest) => {
   }
 
   try {
-    const find = await prisma.user.findUnique({
-      where: { username: credential.username },
-      select: {
-        id: true,
-        username: true,
-        fullname: true,
-        email: true,
-        phone: true,
-        target: true,
-        status: true,
-        created_at: true,
-        updated_at: true,
-        roleId: true,
-        sumdanId: true,
-        cabangId: true,
-        agentFrontingId: true,
-        pkwt_status: true,
-        position: true,
-        nip: true,
-        nik: true,
-        password: true,
-        Sumdan: { select: { name: true } },
-        Cabang: { select: { name: true, Area: { select: { name: true } } } },
+    const find = await prisma.user.findFirst({
+      where: { username: username },
+      include: {
         Role: true,
+        Sumdan: true,
+        Cabang: { include: { Area: true } },
       },
     });
     if (!find) {
@@ -46,10 +28,7 @@ export const POST = async (req: NextRequest) => {
         { status: 401 },
       );
     }
-    const comparePass = await bcrypt.compare(
-      credential.password,
-      find.password,
-    );
+    const comparePass = await bcrypt.compare(password, find.password);
     if (!comparePass) {
       return NextResponse.json(
         { msg: "Username atau password salah!", status: 401 },
@@ -57,49 +36,15 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    const {
-      id,
-      roleId,
-      sumdanId,
-      cabangId,
-      agentFrontingId,
-      username,
-      fullname,
-      email,
-      phone,
-      target,
-      status,
-      created_at,
-      updated_at,
-      position,
-      nip,
-      nik,
-      Role,
-      Sumdan,
-      Cabang,
-    } = find;
+    const { Sumdan, Cabang, Role, password: userPass, ...payload } = find;
     await signIn({
-      id,
-      roleId,
-      sumdanId,
-      cabangId,
-      agentFrontingId,
-      username,
-      fullname,
-      email,
-      phone,
-      target,
-      status,
-      created_at,
-      updated_at,
-      position,
-      nip,
-      nik,
-      Role,
+      ...payload,
       sumdan: Sumdan ? Sumdan.name : null,
       cabang: Cabang.name || "",
       area: Cabang.Area.name || "",
-    } as IUser);
+      password: userPass,
+      Role: { ...Role, permission: "[]" },
+    });
     const access = JSON.parse(Role.permission) as IPermission[];
     if (access.some((a) => a.path === "/dashboard")) {
       return NextResponse.json({ msg: "OK", status: 200 }, { status: 200 });
@@ -123,29 +68,12 @@ export const GET = async () => {
     );
   }
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { id: session.user.id },
-      select: {
-        id: true,
-        username: true,
-        fullname: true,
-        email: true,
-        phone: true,
-        target: true,
-        status: true,
-        roleId: true,
-        sumdanId: true,
-        cabangId: true,
-        agentFrontingId: true,
-        pkwt_status: true,
-        position: true,
-        nip: true,
-        nik: true,
-        created_at: true,
-        updated_at: true,
+      include: {
         Role: true,
-        Cabang: { select: { name: true, Area: { select: { name: true } } } },
-        Sumdan: { select: { name: true } },
+        Cabang: { include: { Area: true } },
+        Sumdan: true,
       },
     });
     if (!user) {
@@ -187,6 +115,12 @@ export const DELETE = async (req: NextRequest) => {
         { status: 401 },
       );
     }
+    const user = await prisma.user.findFirst({
+      where: { id: session.user.id },
+      include: {
+        Role: true,
+      },
+    });
     await signOut();
     return NextResponse.json({ msg: "OK", status: 200 }, { status: 200 });
   } catch (err) {

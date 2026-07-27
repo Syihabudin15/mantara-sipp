@@ -2,10 +2,11 @@ import { cookies } from "next/headers";
 import { jwtVerify, SignJWT } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 import { JwtPayload } from "jsonwebtoken";
-import { hasAccess } from "./Permission";
+// import { hasAccess } from "./Permission";
 import { IUser } from "./IInterfaces";
-import { listMenuServer } from "@/components/IMenu";
+// import { listMenuServer } from "@/components/IMenu";
 import prisma from "./Prisma";
+import { getAccessForPath } from "./AccessUtils";
 import { Role } from "@prisma/client";
 
 const secretKey = new TextEncoder().encode(process.env.APP_KEY || "secretcode");
@@ -36,16 +37,28 @@ export async function signIn(user: IUser) {
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const session = await encrypt({ user, expires });
 
-  (await cookies()).set("session", session, { expires });
+  (await cookies()).set("session", session, {
+    expires,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
 }
 
 export async function signOut() {
-  (await cookies()).set("session", "", { expires: new Date(0) });
+  (await cookies()).set("session", "", {
+    expires: new Date(0),
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
 }
 export async function getSession(): Promise<JwtPayload | null> {
   const session = (await cookies()).get("session")?.value;
   if (!session) return null;
-  const result: JwtPayload | null = await decrypt(session).catch(() => null);
+  const result: JwtPayload = await decrypt(session);
   return result;
 }
 
@@ -118,3 +131,169 @@ export function clearRoleCache(roleId?: string) {
     roleCache.clear();
   }
 }
+
+function hasAccess(role: Role, path: string, action: string): boolean {
+  return getUserAccess(role, path).includes(action);
+}
+function getUserAccess(role: Role, path: string): string[] {
+  try {
+    const permissions: { path: string; access: string[] }[] = JSON.parse(
+      role.permission || "[]",
+    );
+
+    return getAccessForPath(permissions, path);
+  } catch {
+    return [];
+  }
+}
+
+export const listMenuServer: { key: string; needaccess: boolean }[] = [
+  {
+    key: "/dash",
+    needaccess: false,
+  },
+  {
+    key: "/dashboard",
+    needaccess: true,
+  },
+  {
+    key: "/dashboardbis",
+    needaccess: true,
+  },
+  {
+    key: "/dashboard_fronting",
+    needaccess: true,
+  },
+  {
+    key: "/simulasi",
+    needaccess: true,
+  },
+  {
+    key: "/monitoring",
+    needaccess: true,
+  },
+  {
+    key: "/pendingdata",
+    needaccess: true,
+  },
+  {
+    key: "/proses/verif",
+    needaccess: true,
+  },
+  {
+    key: "/proses/slik",
+    needaccess: true,
+  },
+  {
+    key: "/proses/approv",
+    needaccess: true,
+  },
+  {
+    key: "/pencairan/print",
+    needaccess: true,
+  },
+  {
+    key: "/pencairan/dropping",
+    needaccess: true,
+  },
+  {
+    key: "/ttpb/print",
+    needaccess: true,
+  },
+  {
+    key: "/ttpb/dropping",
+    needaccess: true,
+  },
+  {
+    key: "/ttpj/print",
+    needaccess: true,
+  },
+  {
+    key: "/ttpj/dropping",
+    needaccess: true,
+  },
+  {
+    key: "/nominatif",
+    needaccess: true,
+  },
+  {
+    key: "/tmftb",
+    needaccess: true,
+  },
+  {
+    key: "/tagihan",
+    needaccess: true,
+  },
+  {
+    key: "/debitur",
+    needaccess: true,
+  },
+  {
+    key: "/pelunasan",
+    needaccess: true,
+  },
+  {
+    key: "/lapkeu/coa",
+    needaccess: true,
+  },
+  {
+    key: "/lapkeu/jurnal",
+    needaccess: true,
+  },
+  {
+    key: "/lapkeu/neraca",
+    needaccess: true,
+  },
+  {
+    key: "/lapkeu/neraca-rugilaba",
+    needaccess: true,
+  },
+  {
+    key: "/lapkeu/rugilaba",
+    needaccess: true,
+  },
+  {
+    key: "/database",
+    needaccess: true,
+  },
+  {
+    key: "/master/users",
+    needaccess: true,
+  },
+  {
+    key: "/profile",
+    needaccess: false,
+  },
+  {
+    key: "/master/roles",
+    needaccess: true,
+  },
+  {
+    key: "/master/mitra",
+    needaccess: true,
+  },
+  {
+    key: "/master/user",
+    needaccess: true,
+  },
+  {
+    key: "/master/area",
+    needaccess: true,
+  },
+  {
+    key: "/master/jenis",
+    needaccess: true,
+  },
+  {
+    key: "/master/agent",
+    needaccess: true,
+  },
+  {
+    key: "/master/payoffice",
+    needaccess: true,
+  },
+  {
+    key: "/master/insurance",
+    needaccess: true,
+  },
+];
