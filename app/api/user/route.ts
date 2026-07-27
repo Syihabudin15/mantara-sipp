@@ -26,9 +26,17 @@ export const GET = async (request: NextRequest) => {
   const session = await getSession();
   if (!session)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
-  const user = await prisma.user.findFirst({
+  const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    include: { Role: true, Cabang: true },
+    select: {
+      id: true,
+      sumdanId: true,
+      agentFrontingId: true,
+      cabangId: true,
+      roleId: true,
+      Role: { select: { data_status: true } },
+      Cabang: { select: { areaId: true } },
+    },
   });
   if (!user)
     return NextResponse.json({ data: [], status: 200 }, { status: 200 });
@@ -199,7 +207,10 @@ export const PATCH = async (request: NextRequest) => {
     confirmPassword: string;
   } = await request.json();
   try {
-    const find = await prisma.user.findFirst({ where: { id: body.id } });
+    const find = await prisma.user.findUnique({
+      where: { id: body.id },
+      select: { id: true, password: true, cabangId: true },
+    });
 
     if (!find) {
       return NextResponse.json(
@@ -247,7 +258,10 @@ export async function generateUserNIP(cabangId: string) {
   const prefix = `${moment().year()}${moment().month()}`;
   const padLength = 4;
   const lastRecord = await prisma.user.count({});
-  const cabang = await prisma.cabang.findFirst({ where: { id: cabangId } });
+  const cabang = await prisma.cabang.findUnique({
+    where: { id: cabangId },
+    select: { areaId: true, id: true },
+  });
   return `${prefix}${cabang ? cabang.areaId.replace("KW", "") : "001"}${cabang ? cabang.id.replace("UP", "") : "0001"}${String(
     lastRecord,
   ).padStart(padLength, "0")}`;

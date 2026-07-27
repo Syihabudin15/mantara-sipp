@@ -45,7 +45,7 @@ export async function signOut() {
 export async function getSession(): Promise<JwtPayload | null> {
   const session = (await cookies()).get("session")?.value;
   if (!session) return null;
-  const result: JwtPayload = await decrypt(session);
+  const result: JwtPayload | null = await decrypt(session).catch(() => null);
   return result;
 }
 

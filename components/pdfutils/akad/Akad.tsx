@@ -2,13 +2,6 @@ import moment from "moment";
 import { AnalisaPerhitungan } from "./Analisa";
 import { IDapem } from "@/libs/IInterfaces";
 import { JadwalAngsuran } from "./KartuAngsuran";
-import { PerjanjianKredit } from "./PerjanjianKredit";
-// import { SPKDR } from "./SKPDR";
-// import { BuktiPencairan } from "./BuktiPencairan";
-// import { Pemotongan } from "./Pemotongan";
-// import { Kesanggupan } from "./Kesanggupan";
-import { PenyerahanJaminan } from "./PenyerahanJaminan";
-import { FormCeklist1 } from "./FormCeklist1";
 import { PersetujuanPencairan } from "./PersetujuanPencairan";
 import { BPK } from "./BPK";
 import { SPK } from "./SPK";
@@ -18,6 +11,7 @@ import { TTPJ } from "./TTPJ";
 import { DocChecklist1 } from "./DC1";
 import { DocChecklist2 } from "./DC2";
 import { PK } from "./PK";
+import { FormDSR } from "../etc/forms/formDSR";
 
 moment.locale("id");
 
@@ -108,6 +102,9 @@ const generateContractHtml = (record: IDapem) => {
       </div>
       <div class="page text-justify" style="font-size: 11px;">
         ${TTPJ(record)}
+      </div>
+      <div class="page text-justify" style="font-size: 11px;">
+        ${FormDSR()}
       </div>
       <div class="page text-justify" style="font-size: 11px;">
         ${DocChecklist1(record)}

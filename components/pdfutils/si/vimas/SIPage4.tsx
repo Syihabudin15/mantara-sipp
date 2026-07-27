@@ -1,7 +1,7 @@
 import { ICashDesc, IDapem, IDropping } from "@/libs/IInterfaces";
 import moment from "moment";
 import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
-import { ListNonStyle, NumberToWordsID } from "../../utils";
+import { ListNonStyle } from "../../utils";
 moment.locale("id");
 
 export const SIPage4Vima = (
@@ -149,19 +149,19 @@ export const SIPage4Vima = (
           <p class="w-4"></p>
           <p class="w-44">No. Rekening : </p>
           <p class="w-4">:</p>
-          <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NUMBER}</p>
+          <p class="flex-1">_______________________________________________</p>
         </div>
         <div class="flex gap-2">
           <p class="w-4"></p>
           <p class="w-44">Atas Nama : </p>
           <p class="w-4">:</p>
-          <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_NAME}</p>
+          <p class="flex-1">_______________________________________________</p>
         </div>
         <div class="flex gap-2">
           <p class="w-4"></p>
           <p class="w-44">Nama Bank : </p>
           <p class="w-4">:</p>
-          <p class="flex-1">${process.env.NEXT_PUBLIC_APP_COMPANY_ACCOUNT_BANK}</p>
+          <p class="flex-1">_______________________________________________</p>
           </div>
         <div class="flex gap-2">
           <p class="w-4"></p>
@@ -169,7 +169,7 @@ export const SIPage4Vima = (
           <p class="w-4">:</p>
           <div class="w-28 flex justify-between gap-2">
             <p class="w-4">Rp. </p>
-            <p class="w-28 text-right">${IDRFormat(dapem.c_takeover)}</p>
+            <p class="w-28">_______________________________________________</p>
           </div>
         </div>
       </div>

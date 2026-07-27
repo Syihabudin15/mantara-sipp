@@ -252,7 +252,7 @@ export const PUT = async (req: NextRequest) => {
     ...saved
   } = data;
   try {
-    const prevDapem = await prisma.dapem.findFirst({ where: { id } });
+    const prevDapem = await prisma.dapem.findUnique({ where: { id } });
     if (!prevDapem)
       return NextResponse.json(
         { msg: "Not Found", status: 404 },
@@ -260,7 +260,7 @@ export const PUT = async (req: NextRequest) => {
       );
     await prisma.$transaction(async (tx) => {
       if (prevDapem.nopen !== Debitur.nopen) {
-        const findSameWithNewNopen = await tx.debitur.findFirst({
+        const findSameWithNewNopen = await tx.debitur.findUnique({
           where: { nopen: Debitur.nopen },
         });
         if (!findSameWithNewNopen) {
@@ -305,7 +305,7 @@ export const PATCH = async (req: NextRequest) => {
       { status: 404 },
     );
 
-  const find = await prisma.dapem.findFirst({
+  const find = await prisma.dapem.findUnique({
     where: { id },
     include: {
       Debitur: true,

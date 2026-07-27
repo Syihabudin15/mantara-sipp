@@ -1,7 +1,6 @@
 import moment from "moment";
 import { IDapem } from "@/libs/IInterfaces";
 import { FormPermohonan } from "./forms/formPermohonan";
-import { FormDSR } from "./forms/formDSR";
 import { FormIdeb } from "./forms/formIdeb";
 
 moment.locale("id");
@@ -61,9 +60,6 @@ const generateForm = (record?: IDapem) => {
       </div>
       <div class="page-break" style="font-size: 12px;margin: 10mm;">
         ${FormIdeb(record)}
-      </div>
-      <div class="page-break" style="font-size: 12px;margin: 10mm;">
-        ${FormDSR(record)}
       </div>
     </body>
   </html>

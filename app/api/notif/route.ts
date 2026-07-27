@@ -7,9 +7,17 @@ export const GET = async (req: NextRequest) => {
   const session = await getSession();
   if (!session)
     return NextResponse.json({ data: null, status: 400 }, { status: 400 });
-  const user = await prisma.user.findFirst({
+  const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    include: { Role: true, Cabang: true },
+    select: {
+      id: true,
+      cabangId: true,
+      sumdanId: true,
+      agentFrontingId: true,
+      roleId: true,
+      Role: { select: { data_status: true } },
+      Cabang: { select: { areaId: true } },
+    },
   });
   if (!user)
     return NextResponse.json({ data: null, status: 400 }, { status: 400 });

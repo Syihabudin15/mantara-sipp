@@ -1,70 +1,97 @@
-import { IDapem } from "@/libs/IInterfaces";
-import { Header, ListNonStyle, ListStyle } from "../../utils";
-import moment from "moment";
+import { Header, ListStyle } from "../../utils";
 
-export const FormDSR = (record?: IDapem) => {
-  const ao = record?.AO || record?.AOCabang || record?.AOArea;
+export const FormDSR = () => {
   return `
     <div>
-      ${Header("SURAT PERNYATAN", "PEMOTONGAN GAJI DIATAS 70%", undefined, process.env.NEXT_PUBLIC_APP_LOGO, process.env.NEXT_PUBLIC_APP_LOGO)}
-      <p class="mt-3">Yang bertanda tangan dibawah ini :</p>
-      <div class="my-5">
-        ${ListNonStyle([
-          { key: "Nama Lengkap", value: record?.Debitur.fullname || "" },
-          { key: "Nomor Pensiun", value: record?.Debitur.nopen || "" },
-          { key: "Nomor NIK", value: record?.Debitur.nik || "" },
-          {
-            key: "Tempat Tanggal Lahir",
-            value: record
-              ? `${record.Debitur.birthplace}, ${moment(record.Debitur.birthdate).format("DD-MM-YYYY")}`
-              : "",
-          },
-          {
-            key: "Alamat",
-            value: record
-              ? `${record?.Debitur.address}, KELURAHAN ${record?.Debitur.ward} KECAMATAN ${record?.Debitur.district}, ${record?.Debitur.city} ${record?.Debitur.province} ${record?.Debitur.pos_code}`
-              : "",
-          },
-        ])}
+      ${Header("SURAT PERNYATAN", "PERMOHONAN PEMOTONGAN GAJI DIATAS 70%", undefined, process.env.NEXT_PUBLIC_APP_LOGO, undefined)}
+      <p class="mt-3">Yang bertanda tangan dibawah ini.</p>
+      <div class="my-5 flex flex-col gap-2">
+        <div class="flex gap-3">
+          <p class="w-4">1. </p>
+          <div class="w-40">Nama Penerima Pensiun</div>
+          <div class="w-4">:</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+        </div>
+        <div class="flex gap-3">
+          <p class="w-4">2. </p>
+          <div class="w-40">Tempat dan Tanggal Lahir</div>
+          <div class="w-4">:</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+          <div class="w-2">,</div>
+          <div class="w-6 border-b border-gray-600"></div>
+          <div class="w-2">/</div>
+          <div class="w-6 border-b border-gray-600"></div>
+          <div class="w-2">/</div>
+          <div class="w-10 border-b border-gray-600"></div>
+        </div>
+        <div class="flex gap-3">
+          <p class="w-4">3. </p>
+          <div class="w-40">Alamat Lengkap</div>
+          <div class="w-4">:</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+        </div>
+        <div class="flex gap-3">
+          <p class="w-4"></p>
+          <div class="w-40">Kelurahan</div>
+          <div class="w-4">:</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+        </div>
+        <div class="flex gap-3">
+          <p class="w-4"></p>
+          <div class="w-40">Kecamatan</div>
+          <div class="w-4">:</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+        </div>
+        <div class="flex gap-3">
+          <p class="w-4"></p>
+          <div class="w-40">Kabupaten / Kota</div>
+          <div class="w-4">:</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+        </div>
+        <div class="flex gap-3">
+          <p class="w-4"></p>
+          <div class="w-40">Provinsi</div>
+          <div class="w-4">:</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+        </div>
+        <div class="flex gap-3">
+          <p class="w-4">4. </p>
+          <div class="w-40">No. Telepon dan HP</div>
+          <div class="w-4">:</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+        </div>
+        <div class="flex gap-3">
+          <p class="w-4">5. </p>
+          <div class="w-40">Nama Bank</div>
+          <div class="w-4">:</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+          <div class="">No Rekening :</div>
+          <div class="flex-1 border-b border-gray-600"></div>
+        </div>
       </div>
-      <p>Sehubungan saya memerlukan dana yang cukup besar, dengan ini saya menyatakan :</p>
-      <div class="my-2">
+      <div class="my-4">
         ${ListStyle(
           [
-            `<p>Bersedia membayar angsuran pembiayaan kepada ${process.env.NEXT_PUBLIC_APP_FULLNAME} sebesar diatas 70% (Tujuh puluh persen) dari gaji pensiun yang saya terima setiap bulan, hal ini dikarenakan :</p>
-            <div>${ListStyle(
-              [
-                `Saya memiliki penghasilan lain dari gaji pensiun.`,
-                `Saya mendapatkan tunjangan dari keluarga (anak-anak) setiap bulan yang jumlahnya dapat menutupi kekurangan jika sisa gaji pensiun tidak mencukupi untuk kebutuhan sehari-hari.`,
-              ],
-              "lower-alpha",
-            )}</div>
-          `,
-            `Saya bertanggung jawab atas pengambilan sisa gaji saya setiap bulannya di Kantor Bayar tempat gaji saya dibayarkan.`,
+            `Sehubungan dengan kebutuhan pembiayaan yang harus saya penuhi saat ini, dengan ini saya mengajukan permohonan kepada KOPERASI ${process.env.NEXT_PUBLIC_APP_SHORTNAME} agar diberikan fasilitas pembiayaan dengan mekanisme pemotongan manfaat pensiun yang mengakibatkan besarnya angsuran melebihi 70% (tujuh puluh persen) dari Take Home Pay (THP) atau manfaat pensiun yang saya terima setiap bulan`,
+            `Dengan ini saya memberikan kuasa dan persetujuan kepada KOPERASI ${process.env.NEXT_PUBLIC_APP_SHORTNAME} untuk melakukan pemotongan manfaat pensiun saya setiap bulan, termasuk pemotongan yang melebihi 70% (tujuh puluh persen) dari manfaat pensiun atau Take Home Pay (THP), sebagai pembayaran angsuran atas fasilitas pembiayaan yang saya peroleh sesuai dengan perjanjian pembiayaan yang telah disepakati.`,
+            `Dengan ini saya menyatakan bahwa saya memiliki sumber penghasilan lain di luar manfaat pensiun yang saya terima setiap bulan, sehingga kebutuhan hidup sehari-hari saya tetap dapat terpenuhi meskipun dilakukan pemotongan manfaat pensiun sebagaimana dimaksud dalam surat pernyataan ini.`,
           ],
           "number",
         )}
       </div>
       <p class="my-2">
-        Demikian surat pernyataan ini dibuat dengan sebenarnya dengan dilandasi itikad baik tanpa paksaan dari siapapun dan pihak manapun.
+        Demikian Surat Pernyataan dan Permohonan ini saya buat dengan sebenar-benarnya, dalam keadaan sadar, tanpa adanya paksaan, tekanan, maupun pengaruh dari pihak mana pun, untuk dipergunakan sebagaimana mestinya.
       </p>
 
-      <div class="flex gap-4 justify-around font-bold text-center mt-10">
-        <div class="w-52">
-          <p>${record ? record?.Debitur.city?.toLocaleLowerCase().replace("kota", "").replace("kabupaten", "").toUpperCase() : ".................."}, ${record ? moment(record?.created_at).format("DD-MM-YYYY") : "............................."}</p>
-          <p>Yang membuat pernyataan</p>
+      <div class="flex gap-4 justify-end font-bold text-center mt-10">
+        <div class="w-60">
+          <p>_________________,_______ /_______ /__________</p>
+          <p>Pemohon</p>
           <div class="h-36 flex justify-center items-center">
             <p class="text-xs opacity-70">Materai</p>
           </div>
-          <p class="border-b h-5">${record?.Debitur.fullname || ""}</p>
+          <p class="h-5">( ____________________________________ )</p>
           <p class="h-32">DEBITUR</p>
-        </div>
-        <div class="w-52">
-          <p class="h-5"></p>
-          <p>Mengetahui</p>
-          <div class="h-36"></div>
-          <p class="border-b h-5">${ao?.fullname || ""}</p>
-          <p class="h-5">MOC/SPV/KORWIL</p>
         </div>
       </div>
     </div>

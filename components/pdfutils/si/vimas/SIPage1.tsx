@@ -31,7 +31,7 @@ export const SIPage1Vima = (record: IDropping) => {
     <div class="mb-2">
       <p>Kepada Yth,</p>
       <p>${record.Sumdan.name}</p>
-      <p>${record.Sumdan.address}</p>
+      <p>${record.Sumdan.address || "-"}</p>
     </div>
 
     <div>
@@ -126,11 +126,27 @@ export const SIPage1Vima = (record: IDropping) => {
             </div>
           </div>
           <div class="flex gap-2 font-bold">
-            <p class="w-44">Total Dropping</p>
+            <p class="w-44">Total Biaya</p>
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(detail.biayakop + dapem.c_blokir * (detail.angsuran - detail.detail.angsuran_sumdan))}</p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(detail.biayakop)}</p>
+            </div>
+          </div>
+          <div class="flex gap-2 font-bold">
+            <p class="w-44">Total Takeover</p>
+            <p class="w-4">:</p>
+            <div class="w-28 flex justify-between gap-2">
+              <p class="w-4">Rp. </p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(dapem.c_takeover)}</p>
+            </div>
+          </div>
+          <div class="flex gap-2 font-bold">
+            <p class="w-44">Total Terima Bersih</p>
+            <p class="w-4">:</p>
+            <div class="w-28 flex justify-between gap-2">
+              <p class="w-4">Rp. </p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(detail.tb)}</p>
             </div>
           </div>
         </div>
