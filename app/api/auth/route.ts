@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import prisma from "@/libs/Prisma";
 import { getSession, signIn, signOut } from "@/libs/Auth";
-import { IPermission } from "@/libs/IInterfaces";
+import { IPermission, IUser } from "@/libs/IInterfaces";
 
 export const POST = async (req: NextRequest) => {
-  const { username, password } = await req.json();
-  if (!username || !password) {
+  const credential = await req.json();
+  if (!credential || !credential.username || !credential.password) {
     return NextResponse.json(
       { msg: "Mohon lengkapi username & password!", status: 404 },
       { status: 404 },
@@ -15,7 +15,7 @@ export const POST = async (req: NextRequest) => {
 
   try {
     const find = await prisma.user.findUnique({
-      where: { username },
+      where: { username: credential.username },
       select: {
         id: true,
         username: true,
@@ -46,7 +46,10 @@ export const POST = async (req: NextRequest) => {
         { status: 401 },
       );
     }
-    const comparePass = await bcrypt.compare(password, find.password);
+    const comparePass = await bcrypt.compare(
+      credential.password,
+      find.password,
+    );
     if (!comparePass) {
       return NextResponse.json(
         { msg: "Username atau password salah!", status: 401 },
@@ -54,7 +57,27 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    const { id, roleId, sumdanId, cabangId, agentFrontingId, username, fullname, email, phone, target, status, created_at, updated_at, position, nip, nik, Role, Sumdan, Cabang } = find;
+    const {
+      id,
+      roleId,
+      sumdanId,
+      cabangId,
+      agentFrontingId,
+      username,
+      fullname,
+      email,
+      phone,
+      target,
+      status,
+      created_at,
+      updated_at,
+      position,
+      nip,
+      nik,
+      Role,
+      Sumdan,
+      Cabang,
+    } = find;
     await signIn({
       id,
       roleId,
@@ -76,7 +99,7 @@ export const POST = async (req: NextRequest) => {
       sumdan: Sumdan ? Sumdan.name : null,
       cabang: Cabang.name || "",
       area: Cabang.Area.name || "",
-    });
+    } as IUser);
     const access = JSON.parse(Role.permission) as IPermission[];
     if (access.some((a) => a.path === "/dashboard")) {
       return NextResponse.json({ msg: "OK", status: 200 }, { status: 200 });
