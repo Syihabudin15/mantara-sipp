@@ -70,7 +70,7 @@ export const GET = async (req: NextRequest) => {
         created_at: "desc",
       },
       include: {
-        Sumdan: { select: { name: true, code: true } },
+        Sumdan: { select: { name: true, code: true, address: true } },
         Dapems: {
           where: {
             status: true,
