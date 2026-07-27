@@ -142,7 +142,6 @@ export const SIPage4Vima = (
         <div class="flex gap-2 font-bold">
           <p class="w-4">3.</p>
           <p class="w-60">Take Over (T.O) : </p>
-          <p class="w-4">:</p>
           <p class="w-40"></>
         </div>
         <div class="flex gap-2">
@@ -167,10 +166,7 @@ export const SIPage4Vima = (
           <p class="w-4"></p>
           <p class="w-44">Uang Sejumlah :</p>
           <p class="w-4">:</p>
-          <div class="w-28 flex justify-between gap-2">
-            <p class="w-4">Rp. </p>
-            <p class="w-28">_______________________________________________</p>
-          </div>
+          <p class="w-28">_______________________________________________</p>
         </div>
       </div>
       `
