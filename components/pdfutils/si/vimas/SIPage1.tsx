@@ -7,6 +7,7 @@ moment.locale("id");
 export const SIPage1Vima = (record: IDropping) => {
   const dapem = record.Dapems[0];
   const detail = GetDetailDapem(dapem);
+  const blokirkop = dapem.c_blokir * (detail.angsuran - detail.detail.angsuran_sumdan);
   return `
   <div>
      <div class="page-header flex items-center mb-6 border-b pb-4">
@@ -87,15 +88,7 @@ export const SIPage1Vima = (record: IDropping) => {
             <p class="w-4">:</p>
             <div class="w-28 flex justify-between gap-2">
               <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(dapem.c_blokir * (detail.angsuran - detail.detail.angsuran_sumdan))}</p>
-            </div>
-          </div>
-          <div class="flex gap-2 font-bold">
-            <p class="w-44">Total Biaya</p>
-            <p class="w-4">:</p>
-            <div class="w-28 flex justify-between gap-2">
-              <p class="w-4">Rp. </p>
-              <p class="w-4 flex-1 text-right">${IDRFormat(detail.biayakop)}</p>
+              <p class="w-4 flex-1 text-right">${IDRFormat(blon))}</p>
             </div>
           </div>
           <div class="flex gap-2 ml-2">

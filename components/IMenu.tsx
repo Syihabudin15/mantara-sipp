@@ -183,7 +183,7 @@ export const listMenuUI: IMenuType[] = [
     key: "/nominatif",
     icon: <FileProtectOutlined />,
     needaccess: true,
-    availableAccess: ["read", "update"],
+    availableAccess: ["read"],
   },
   {
     label: "Proses TMFTB",
