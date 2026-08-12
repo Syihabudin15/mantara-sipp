@@ -14,7 +14,8 @@ export const IDRFormat = (number: number) => {
 };
 
 export const IDRToNumber = (str: string) => {
-  return parseInt(str.replace(/\D/g, ""));
+  const parsed = parseInt(str.replace(/\D/g, ""), 10);
+  return Number.isNaN(parsed) ? 0 : parsed;
 };
 
 export function GetFullAge(startDate: Date, endDate: Date) {

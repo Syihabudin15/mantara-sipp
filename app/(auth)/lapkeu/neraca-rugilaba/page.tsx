@@ -2,7 +2,7 @@
 
 import { printRL } from "@/components/pdfutils/lapkeu/rugilaba";
 import { IDRFormat } from "@/components/utils/PembiayaanUtil";
-import { ICategoryOfAccount } from "@/libs/IInterfaces";
+import { ICategoryOfAccount, IJournalDetail } from "@/libs/IInterfaces";
 import {
   PrinterOutlined,
   ArrowUpOutlined,
@@ -16,8 +16,8 @@ const { RangePicker } = DatePicker;
 export default function LaporanRugiLaba() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<{
-    pendapatan: ICategoryOfAccount[];
-    beban: ICategoryOfAccount[];
+    pendapatan: IJournalDetail[];
+    beban: IJournalDetail[];
   }>({ pendapatan: [], beban: [] });
   const [backdate, setBackdate] = useState<string | null>(null);
 
@@ -43,19 +43,61 @@ export default function LaporanRugiLaba() {
   }, [backdate]);
 
   // Kalkulasi menggunakan useMemo
+  const pendapatanCategories = useMemo(() => {
+    const map = new Map<
+      string,
+      { id: string; name: string; JournalDetails: IJournalDetail[] }
+    >();
+    data.pendapatan.forEach((item) => {
+      const category = item.CategoryOfAccount;
+      if (!category) return;
+      const existing = map.get(category.id);
+      if (existing) {
+        existing.JournalDetails.push(item);
+      } else {
+        map.set(category.id, {
+          id: category.id,
+          name: category.name,
+          JournalDetails: [item],
+        });
+      }
+    });
+    return Array.from(map.values()) as ICategoryOfAccount[];
+  }, [data.pendapatan]);
+
+  const bebanCategories = useMemo(() => {
+    const map = new Map<
+      string,
+      { id: string; name: string; JournalDetails: IJournalDetail[] }
+    >();
+    data.beban.forEach((item) => {
+      const category = item.CategoryOfAccount;
+      if (!category) return;
+      const existing = map.get(category.id);
+      if (existing) {
+        existing.JournalDetails.push(item);
+      } else {
+        map.set(category.id, {
+          id: category.id,
+          name: category.name,
+          JournalDetails: [item],
+        });
+      }
+    });
+    return Array.from(map.values()) as ICategoryOfAccount[];
+  }, [data.beban]);
+
   const totalPendapatan = useMemo(
     () =>
-      data.pendapatan
-        .flatMap((d) => d.JournalDetails)
-        .reduce((acc, curr) => acc + (curr.credit - curr.debit), 0),
+      data.pendapatan.reduce(
+        (acc, curr) => acc + (curr.credit - curr.debit),
+        0,
+      ),
     [data.pendapatan],
   );
 
   const totalBeban = useMemo(
-    () =>
-      data.beban
-        .flatMap((d) => d.JournalDetails)
-        .reduce((acc, curr) => acc + (curr.debit - curr.credit), 0),
+    () => data.beban.reduce((acc, curr) => acc + (curr.debit - curr.credit), 0),
     [data.beban],
   );
 
@@ -81,7 +123,11 @@ export default function LaporanRugiLaba() {
               type="primary"
               icon={<PrinterOutlined />}
               onClick={() =>
-                printRL(data.pendapatan, data.beban, backdate || undefined)
+                printRL(
+                  pendapatanCategories,
+                  bebanCategories,
+                  backdate || undefined,
+                )
               }
             >
               Cetak
@@ -97,7 +143,7 @@ export default function LaporanRugiLaba() {
               <h3 className="font-bold text-lg">PENDAPATAN</h3>
             </div>
             <div className="space-y-2">
-              {data.pendapatan.map((d) => (
+              {pendapatanCategories.map((d) => (
                 <div
                   className="flex justify-between border-b border-gray-100 pb-1"
                   key={d.id}
@@ -129,7 +175,7 @@ export default function LaporanRugiLaba() {
               <h3 className="font-bold text-lg">BEBAN</h3>
             </div>
             <div className="space-y-2">
-              {data.beban.map((d) => (
+              {bebanCategories.map((d) => (
                 <div
                   className="flex justify-between border-b border-gray-100 pb-1"
                   key={d.id}

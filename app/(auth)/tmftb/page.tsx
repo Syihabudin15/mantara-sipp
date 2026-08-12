@@ -44,7 +44,6 @@ import {
 } from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
 import {
-  GetDapem,
   GetDetailDapem,
   IDRFormat,
   IDRToNumber,
@@ -535,7 +534,7 @@ export default function Page() {
             ? JSON.parse(record.cash_desc)
             : [];
           const total = desc.reduce((acc, curr) => acc + curr.amount, 0);
-          const tb = GetDapem(record).tb;
+          const tb = GetDetailDapem(record).tb;
           const percent = tb > 0 ? ((total / tb) * 100).toFixed(2) : "0.00";
 
           return (

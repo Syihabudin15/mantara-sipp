@@ -94,7 +94,7 @@ export default function Page() {
       await fetch("/api/user?limit=1000")
         .then((res) => res.json())
         .then((res) => setanggotas(res.data));
-      await fetch("/api/coa?limit=1000")
+      await fetch("/api/coa?level=2&limit=1000")
         .then((res) => res.json())
         .then((res) => setAkuns(res.data));
     })();
@@ -207,7 +207,11 @@ export default function Page() {
             style={{ width: 170 }}
             size="small"
             onChange={(date, dateStr) =>
-              setPageProps({ ...pageProps, backdate: dateStr })
+              // Diperbaiki: dateStr adalah array of string, digabungkan menjadi 1 string
+              setPageProps({
+                ...pageProps,
+                backdate: dateStr ? dateStr.join(",") : "",
+              })
             }
           />
           <Select
@@ -301,7 +305,6 @@ const UpsertData = ({
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<IJournalEntry>(record || defaultData);
 
-  // Kalkulasi total di luar render return agar lebih bersih
   const totalDebit = data.JournalDetails.reduce(
     (acc, curr) => acc + curr.debit,
     0,
@@ -313,7 +316,6 @@ const UpsertData = ({
   const isBalanced = totalDebit === totalCredit && totalDebit > 0;
 
   const handleSubmit = async () => {
-    // 1. Validasi Dasar
     if (!isBalanced) {
       return hook.error({
         title: "TIDAK SEIMBANG",
@@ -323,12 +325,43 @@ const UpsertData = ({
 
     setLoading(true);
 
-    // 2. Bersihkan baris kosong
+    const filteredDetails = data.JournalDetails.map((d) => ({
+      ...d,
+      debit: Number.isNaN(d.debit) ? 0 : d.debit,
+      credit: Number.isNaN(d.credit) ? 0 : d.credit,
+      // Diperbaiki: membersihkan temporary id jika baris baru (jika panjang ID > 10, itu dari Date.now)
+      id: d.id && d.id.length > 10 ? undefined : d.id,
+    }))
+      .filter((d) => d.debit !== 0 || d.credit !== 0)
+      .map((d) => ({
+        ...d,
+        categoryOfAccountId: d.categoryOfAccountId || "",
+      }));
+
+    if (filteredDetails.length === 0) {
+      hook.error({
+        title: "ERROR",
+        content: "Detail jurnal tidak boleh kosong.",
+      });
+      setLoading(false);
+      return;
+    }
+
+    const missingAkun = filteredDetails.find((d) => !d.categoryOfAccountId);
+    if (missingAkun) {
+      hook.error({
+        title: "AKUN BELUM DIPILIH",
+        content: "Setiap baris jurnal harus memilih akun.",
+      });
+      setLoading(false);
+      return;
+    }
+
     const payload = {
       ...data,
-      JournalDetails: data.JournalDetails.filter(
-        (d) => d.debit !== 0 || d.credit !== 0 || d.categoryOfAccountId,
-      ),
+      // Hapus ID untuk Entri baru
+      id: data.id === "" ? undefined : data.id,
+      JournalDetails: filteredDetails,
     };
 
     try {
@@ -380,7 +413,7 @@ const UpsertData = ({
       style={{ top: 10 }}
       confirmLoading={loading}
       onOk={handleSubmit}
-      okButtonProps={{ disabled: !isBalanced }} // Disable jika tidak balance
+      okButtonProps={{ disabled: !isBalanced }}
       okText="Simpan Jurnal"
     >
       <div className="flex gap-4 flex-wrap mt-4">
@@ -400,7 +433,6 @@ const UpsertData = ({
             Detail Transaksi
           </p>
 
-          {/* Header */}
           <div className="hidden md:flex gap-4 mb-2 font-bold text-xs text-gray-500 px-2">
             <div className="flex-1">KETERANGAN</div>
             <div className="w-40">DEBIT</div>
@@ -410,12 +442,11 @@ const UpsertData = ({
             <div className="w-10"></div>
           </div>
 
-          {/* Rows */}
           <div className="space-y-3">
             {data.JournalDetails.map((d, i) => (
               <div
                 className="flex gap-4 flex-wrap md:flex-nowrap items-start bg-white p-2 rounded shadow-sm"
-                key={i}
+                key={i} // Disarankan mengganti ini menggunakan `d.id` jika ada unique ID untuk menghindari bug urutan
               >
                 <div className="flex-1 min-w-50">
                   <Input.TextArea
@@ -466,6 +497,7 @@ const UpsertData = ({
                   <Select
                     className="w-full"
                     showSearch
+                    allowClear
                     placeholder="Pilih Anggota"
                     options={anggotas.map((a) => ({
                       label: a.fullname,
@@ -485,7 +517,6 @@ const UpsertData = ({
             ))}
           </div>
 
-          {/* Footer Summary */}
           <div className="mt-6 pt-4 border-t border-gray-300">
             <div className="flex justify-end gap-10 items-center">
               <div className="text-right">
@@ -522,7 +553,11 @@ const UpsertData = ({
             onClick={() =>
               setData({
                 ...data,
-                JournalDetails: [...data.JournalDetails, { ...defaultJournal }],
+                // Diperbaiki: Menambahkan temporary ID unique untuk baris baru
+                JournalDetails: [
+                  ...data.JournalDetails,
+                  { ...defaultJournal, id: Date.now().toString() },
+                ],
               })
             }
           >
@@ -635,7 +670,8 @@ const DeleteData = ({
       .catch((err) => {
         console.log(err);
         hook.error({
-          content: `Internal Server Error!!. Hapus data COA ${record.id}) gagal`,
+          // Diperbaiki: Typo copy-paste dari COA
+          content: `Internal Server Error!!. Hapus data Jurnal ${record.id} gagal`,
         });
       });
     setLoading(false);
@@ -656,21 +692,23 @@ const DeleteData = ({
   );
 };
 
+// Diperbaiki: Kosongkan hardcode string "1"
 const defaultJournal: IJournalDetail = {
-  id: "1",
+  id: "",
   debit: 0,
   credit: 0,
   desciption: "",
   categoryOfAccountId: "",
-  journalEntryId: "1",
+  journalEntryId: "",
   userId: null,
   JournalEntry: {} as JournalEntry,
   CategoryOfAccount: {} as CategoryOfAccount,
   User: null,
 };
 
+// Diperbaiki: Kosongkan hardcode string "1"
 const defaultData: IJournalEntry = {
-  id: "1",
+  id: "",
   date: new Date(),
   JournalDetails: [defaultJournal],
 };

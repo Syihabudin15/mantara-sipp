@@ -7,16 +7,11 @@ import { IUser } from "./IInterfaces";
 // import { listMenuServer } from "@/components/IMenu";
 import prisma from "./Prisma";
 import { getAccessForPath } from "./AccessUtils";
+import { getCacheJSON, setCacheJSON, clearCacheHash } from "./redisservice";
 import { Role } from "@prisma/client";
 
 const secretKey = new TextEncoder().encode(process.env.APP_KEY || "secretcode");
-const globalForCache = globalThis as unknown as {
-  roleCache: Map<string, { permission: any; createdAt: number }>;
-};
-
-const roleCache = globalForCache.roleCache || new Map();
-if (process.env.NODE_ENV !== "production") globalForCache.roleCache = roleCache;
-const CACHE_TTL = 5 * 60 * 60 * 1000;
+const CACHE_TTL = 5 * 60 * 60; // 5 jam dalam detik untuk Redis
 
 export async function encrypt(payload: JwtPayload) {
   return new SignJWT(payload)
@@ -99,36 +94,35 @@ export async function refreshToken(request: NextRequest) {
   return NextResponse.next();
 }
 async function getRoleWithCache(roleId: string) {
-  const now = Date.now();
-  const cached = roleCache.get(roleId);
+  // Cek Redis cache terlebih dahulu
+  const cached = await getCacheJSON<{ permission: string }>(`role:${roleId}`);
 
-  // Jika data ada di cache dan belum kedaluwarsa, ambil dari cache (Secepat Redis!)
-  if (cached && now - cached.createdAt < CACHE_TTL) {
+  if (cached) {
     return cached.permission;
   }
 
-  // Jika tidak ada di cache / sudah kedaluwarsa, ambil dari Database
+  // Jika tidak ada di cache, ambil dari Database
   const role = await prisma.role.findUnique({
     where: { id: roleId },
     select: { permission: true },
   });
 
   if (role) {
-    // Simpan ke cache untuk request berikutnya
-    roleCache.set(roleId, {
-      permission: role.permission,
-      createdAt: now,
-    });
+    // Simpan ke Redis cache untuk request berikutnya
+    await setCacheJSON(`role:${roleId}`, role, CACHE_TTL);
     return role.permission;
   }
 
   return null;
 }
-export function clearRoleCache(roleId?: string) {
+
+export async function clearRoleCache(roleId?: string) {
   if (roleId) {
-    roleCache.delete(roleId);
+    await clearCacheHash(`role:${roleId}`, "");
   } else {
-    roleCache.clear();
+    // Untuk menghapus semua role cache, gunakan clearCachePrefix
+    const { clearCachePrefix } = await import("./redisservice");
+    await clearCachePrefix("role:");
   }
 }
 

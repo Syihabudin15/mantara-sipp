@@ -1,4 +1,9 @@
 import prisma from "@/libs/Prisma";
+import {
+  getCacheJSON,
+  setCacheJSON,
+  clearCachePrefix,
+} from "@/libs/redisservice";
 import { Cabang, Prisma, Role, User } from "@prisma/client";
 
 interface UserWhere extends User {
@@ -82,31 +87,21 @@ export const AOInclude = () => {
   return where;
 };
 
-// 1. Buat kontainer cache global agar tidak ter-reset saat hot-reload (development)
-const globalForUserCache = globalThis as unknown as {
-  userSessionCache: Map<string, { data: any; createdAt: number }>;
-};
-
-const userSessionCache = globalForUserCache.userSessionCache || new Map();
-if (process.env.NODE_ENV !== "production")
-  globalForUserCache.userSessionCache = userSessionCache;
-
-// Tentukan umur cache (misal: 3 menit / 180000 ms)
-const USER_CACHE_TTL = 5 * 60 * 60 * 1000;
+// Tentukan umur cache (5 jam dalam detik untuk Redis)
+const USER_CACHE_TTL = 5 * 60 * 60;
 
 export const GetUserSession = async (session: any) => {
   const userId = session?.user?.id;
   if (!userId) return null;
 
-  const now = Date.now();
-  const cachedUser = userSessionCache.get(userId);
+  // Cek Redis cache terlebih dahulu
+  const cachedUser = await getCacheJSON<any>(`user:${userId}`);
 
-  // 2. Cek apakah data user sudah ada di memori dan belum kedaluwarsa
-  if (cachedUser && now - cachedUser.createdAt < USER_CACHE_TTL) {
-    return cachedUser.data; // Mengembalikan data instan tanpa menyentuh DB (< 1ms)
+  if (cachedUser) {
+    return cachedUser; // Mengembalikan data dari cache (< 1ms)
   }
 
-  // 3. Jika tidak ada di cache, baru lakukan query ke database
+  // Jika tidak ada di cache, baru lakukan query ke database
   const user = await prisma.user.findFirst({
     where: { id: userId },
     include: {
@@ -131,22 +126,20 @@ export const GetUserSession = async (session: any) => {
     },
   });
 
-  // 4. Jika user ditemukan, simpan ke memori cache
+  // Jika user ditemukan, simpan ke Redis cache
   if (user) {
-    userSessionCache.set(userId, {
-      data: user,
-      createdAt: now,
-    });
+    await setCacheJSON(`user:${userId}`, user, USER_CACHE_TTL);
   }
 
   return user;
 };
 
 // Fungsi helper untuk menghapus cache jika data user/cabang/role diubah oleh admin
-export function clearUserSessionCache(userId?: string) {
+export async function clearUserSessionCache(userId?: string) {
   if (userId) {
-    userSessionCache.delete(userId);
+    const { clearCache } = await import("@/libs/redisservice");
+    await clearCache(`user:${userId}`);
   } else {
-    userSessionCache.clear();
+    await clearCachePrefix("user:");
   }
 }

@@ -24,9 +24,12 @@ import {
   Select,
   Table,
   TableProps,
+  Tag,
+  Tooltip,
+  Space,
 } from "antd";
 import { HookAPI } from "antd/es/modal/useModal";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<ICategoryOfAccount>>({
@@ -55,63 +58,91 @@ export default function Page() {
     if (pageProps.search) params.append("search", pageProps.search);
     if (pageProps.type) params.append("type", pageProps.type);
 
-    const res = await fetch(`/api/coa?${params.toString()}`);
-    const json = await res.json();
-    setPageProps((prev) => ({
-      ...prev,
-      data: json.data,
-      total: json.total,
-    }));
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/coa?${params.toString()}`);
+      const json = await res.json();
+      setPageProps((prev) => ({
+        ...prev,
+        data: json.data,
+        total: json.total,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch COA data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    const timeout = setTimeout(async () => {
-      await getData();
-    }, 200);
+    const timeout = setTimeout(() => {
+      getData();
+    }, 300); // Sedikit di-delay untuk debounce pencarian
     return () => clearTimeout(timeout);
   }, [pageProps.page, pageProps.limit, pageProps.search, pageProps.type]);
 
+  // Fungsi untuk mengubah flat array menjadi nested tree
+  const treeData = useMemo(() => {
+    const data = JSON.parse(JSON.stringify(pageProps.data)); // Deep copy
+    const tree: any[] = [];
+    const lookup: Record<string, any> = {};
+
+    data.forEach((item: any) => {
+      lookup[item.id] = { ...item, children: [] };
+    });
+
+    data.forEach((item: any) => {
+      if (item.parentId && lookup[item.parentId]) {
+        lookup[item.parentId].children.push(lookup[item.id]);
+      } else {
+        tree.push(lookup[item.id]);
+      }
+    });
+
+    // Hapus array children yang kosong agar Antd tidak menampilkan icon expand yang tidak perlu
+    const cleanEmptyChildren = (nodes: any[]) => {
+      nodes.forEach((node) => {
+        if (node.children && node.children.length === 0) {
+          delete node.children;
+        } else if (node.children) {
+          cleanEmptyChildren(node.children);
+        }
+      });
+    };
+    cleanEmptyChildren(tree);
+
+    return tree;
+  }, [pageProps.data]);
+
+  const getSifatSaldo = (type: string) => {
+    if (type === "ASSET" || type === "BEBAN") return "D";
+    if (type === "KEWAJIBAN" || type === "PENDAPATAN" || type === "MODAL")
+      return "K";
+    return "";
+  };
+
   const columns: TableProps<ICategoryOfAccount>["columns"] = [
     {
-      title: "ID",
+      title: "ID / Kode",
       dataIndex: "id",
       key: "id",
-      render(value, record, index) {
-        return (
-          <div>
-            <div>{(pageProps.page - 1) * pageProps.limit + index + 1}</div>
-            <div className="opacity-80 text-xs">{record.id}</div>
-          </div>
-        );
-      },
+      width: 150,
+      render: (value) => (
+        <span className="font-semibold text-gray-700">{value}</span>
+      ),
     },
     {
-      title: "Account",
+      title: "Nama Akun",
       dataIndex: "name",
       key: "name",
-      render(value, record, index) {
+      render(value, record) {
         return (
           <div>
-            <span className="opacity-70">
-              (
-              {record.type === "ASSET"
-                ? "D"
-                : record.type === "KEWAJIBAN"
-                  ? "K"
-                  : record.type === "PENDAPATAN"
-                    ? "K"
-                    : record.type === "MODAL"
-                      ? "K"
-                      : record.type === "BEBAN"
-                        ? "D"
-                        : ""}
-              -{record.id})
+            <span className="text-gray-500 mr-2 text-xs">
+              [{getSifatSaldo(record.type)}]
             </span>
-            {record.parentId && (
-              <span className="opacity-70">({record.Parent?.name})</span>
-            )}{" "}
-            {record.name}
+            <span className={!record.parentId ? "font-semibold" : ""}>
+              {record.name}
+            </span>
           </div>
         );
       },
@@ -120,35 +151,52 @@ export default function Page() {
       title: "Type",
       dataIndex: "type",
       key: "type",
+      width: 150,
+      render: (type) => {
+        let color = "default";
+        if (type === "ASSET") color = "blue";
+        if (type === "KEWAJIBAN") color = "volcano";
+        if (type === "MODAL") color = "purple";
+        if (type === "PENDAPATAN") color = "green";
+        if (type === "BEBAN") color = "orange";
+        return <Tag color={color}>{type}</Tag>;
+      },
     },
     {
       title: "Aksi",
       key: "action",
-      width: 100,
+      width: 120,
+      align: "center",
       render: (_, record) => (
-        <div className="flex gap-2">
+        <Space size="small">
           {hasAccess("update") && (
-            <Button
-              icon={<EditOutlined />}
-              size="small"
-              type="primary"
-              onClick={() =>
-                setSelected({ ...selected, selected: record, upsert: true })
-              }
-            ></Button>
+            <Tooltip title="Edit Akun">
+              <Button
+                icon={<EditOutlined />}
+                size="small"
+                type="primary"
+                ghost
+                onClick={() =>
+                  setSelected({ ...selected, selected: record, upsert: true })
+                }
+              />
+            </Tooltip>
           )}
           {hasAccess("delete") && (
-            <Button
-              icon={<DeleteOutlined />}
-              size="small"
-              type="primary"
-              danger
-              onClick={() =>
-                setSelected({ ...selected, delete: true, selected: record })
-              }
-            ></Button>
+            <Tooltip title="Hapus Akun">
+              <Button
+                icon={<DeleteOutlined />}
+                size="small"
+                type="primary"
+                danger
+                ghost
+                onClick={() =>
+                  setSelected({ ...selected, delete: true, selected: record })
+                }
+              />
+            </Tooltip>
           )}
-        </div>
+        </Space>
       ),
     },
   ];
@@ -156,29 +204,30 @@ export default function Page() {
   return (
     <Card
       title={
-        <div className="flex gap-2 font-bold text-xl">
+        <div className="flex items-center gap-2 font-bold text-xl text-gray-800">
           <SnippetsOutlined /> Chart Of Account
         </div>
       }
-      styles={{ body: { padding: 5 } }}
+      styles={{ body: { padding: 16 } }}
+      className="shadow-sm border border-gray-200"
     >
-      <div className="flex justify-between my-1 gap-2 overflow-auto">
+      <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
         <div className="flex gap-2">
           {hasAccess("write") && (
             <Button
-              size="small"
               icon={<PlusCircleOutlined />}
               type="primary"
               onClick={() =>
                 setSelected({ ...selected, selected: undefined, upsert: true })
               }
             >
-              Add New
+              Tambah Akun
             </Button>
           )}
+        </div>
+        <div className="flex flex-wrap gap-2">
           <Select
-            size="small"
-            placeholder="Pilih Status..."
+            placeholder="Filter Tipe..."
             options={[
               { label: "ASSET", value: "ASSET" },
               { label: "KEWAJIBAN", value: "KEWAJIBAN" },
@@ -190,12 +239,10 @@ export default function Page() {
             allowClear
             style={{ width: 170 }}
           />
-        </div>
-        <div className="flex gap-2">
           <Input.Search
-            size="small"
-            style={{ width: 170 }}
-            placeholder="Cari nama..."
+            style={{ width: 220 }}
+            placeholder="Cari nama akun..."
+            allowClear
             onChange={(e) =>
               setPageProps({ ...pageProps, search: e.target.value })
             }
@@ -205,16 +252,17 @@ export default function Page() {
 
       <Table
         columns={columns}
-        dataSource={pageProps.data}
+        dataSource={treeData} // Gunakan treeData disini
         size="small"
         loading={loading}
-        rowKey={"id"}
+        rowKey="id"
         bordered
-        scroll={{ x: "max-content", y: "60vh" }}
+        scroll={{ x: 800, y: "calc(100vh - 300px)" }}
         pagination={{
           current: pageProps.page,
           pageSize: pageProps.limit,
           total: pageProps.total,
+          showSizeChanger: true,
           onChange: (page, pageSize) => {
             setPageProps((prev) => ({
               ...prev,
@@ -222,7 +270,7 @@ export default function Page() {
               limit: pageSize,
             }));
           },
-          pageSizeOptions: [50, 100, 500, 1000],
+          pageSizeOptions: ["50", "100", "500", "1000"],
         }}
       />
 
@@ -235,8 +283,10 @@ export default function Page() {
         getData={getData}
         hook={modal}
         key={selected.selected ? "upsert" + selected.selected.id : "create"}
-        lists={pageProps.data.filter((d) => !d.parentId)}
+        // Tetap gunakan pageProps.data (flat) agar dropdown parent mudah dicari
+        lists={pageProps.data}
       />
+
       {selected.selected && (
         <DeleteData
           open={selected.delete}
@@ -273,34 +323,50 @@ const UpsertData = ({
 
   const handleSubmit = async () => {
     setLoading(true);
-    if ("Parent" in data) delete data.Parent;
-    if ("Children" in data) delete data.Children;
-    if ("JournalEntry" in data) delete data.JournalEntry;
-    await fetch("/api/coa?id=" + record?.id, {
-      method: record ? "PUT" : "POST",
-      body: JSON.stringify(data),
-    })
-      .then((res) => res.json())
-      .then(async (res) => {
-        if (res.status === 200) {
-          setOpen(false);
-          await getData();
-        } else {
-          hook.error({ title: "ERROR!!", content: res.msg });
-        }
+    const payload = { ...data };
+    if ("Parent" in payload) delete (payload as any).Parent;
+    if ("Childrens" in payload) delete (payload as any).Childrens; // <--- Pakai 's' sesuai schema
+    if ("JournalDetails" in payload) delete (payload as any).JournalDetails;
+
+    try {
+      const res = await fetch("/api/coa?id=" + (record?.id || ""), {
+        method: record ? "PUT" : "POST",
+        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
       });
-    setLoading(false);
+
+      const json = await res.json();
+      if (res.status === 200 || json.status === 200) {
+        setOpen(false);
+        await getData();
+        hook.success({
+          content: `Data berhasil ${record ? "diperbarui" : "disimpan"}`,
+        });
+      } else {
+        hook.error({
+          title: "ERROR!!",
+          content: json.msg || "Terjadi kesalahan",
+        });
+      }
+    } catch (err) {
+      hook.error({ title: "ERROR!!", content: "Koneksi ke server gagal." });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Modal
       open={open}
       onCancel={() => setOpen(false)}
-      title="Chart Of Account"
+      title={record ? "Edit Akun" : "Tambah Akun Baru"}
       loading={loading}
       onOk={handleSubmit}
+      okText="Simpan"
+      cancelText="Batal"
+      destroyOnHidden
     >
-      <div className="my-4 flex flex-col gap-3">
+      <div className="my-4 flex flex-col gap-4">
         <FormInput
           data={{
             label: "ID/No Akun",
@@ -339,10 +405,13 @@ const UpsertData = ({
             value: data.parentId,
             onChange: (e: any) => setData({ ...data, parentId: e ? e : null }),
             type: "select",
-            options: lists.map((d) => ({
-              label: `(${TypeAccount(d)}-${d.id}) ${d.name}`,
-              value: d.id,
-            })),
+            // Hindari memilih diri sendiri sebagai parent
+            options: lists
+              .filter((d) => d.id !== record?.id && !d.parentId)
+              .map((d) => ({
+                label: `(${d.id}) ${d.name}`,
+                value: d.id,
+              })),
           }}
         />
       </div>
@@ -364,26 +433,26 @@ const DeleteData = ({
   hook: HookAPI;
 }) => {
   const [loading, setLoading] = useState(false);
+
   const handleDelete = async () => {
     setLoading(true);
-    await fetch("/api/coa?id=" + record.id, { method: "DELETE" })
-      .then((res) => res.json())
-      .then(async (res) => {
-        const { msg, status } = res;
-        if (status === 200) {
-          await getData();
-          setOpen(false);
-        } else {
-          hook.error({ content: msg });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        hook.error({
-          content: `Internal Server Error!!. Hapus data COA ${record.id}) gagal`,
-        });
+    try {
+      const res = await fetch("/api/coa?id=" + record.id, { method: "DELETE" });
+      const json = await res.json();
+      if (res.status === 200 || json.status === 200) {
+        await getData();
+        setOpen(false);
+        hook.success({ content: "Data berhasil dihapus" });
+      } else {
+        hook.error({ content: json.msg || "Gagal menghapus data" });
+      }
+    } catch (err) {
+      hook.error({
+        content: `Internal Server Error!! Hapus data COA ${record.id} gagal`,
       });
-    setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -393,16 +462,23 @@ const DeleteData = ({
       title="Konfirmasi Hapus"
       loading={loading}
       onOk={handleDelete}
+      okText="Hapus"
+      cancelText="Batal"
+      okButtonProps={{ danger: true }}
     >
-      <p className="my-3">
-        Konfirmasi penghapusan COA {record.name} ({record.id})?
+      <p className="my-3 text-gray-700">
+        Apakah Anda yakin ingin menghapus COA{" "}
+        <strong>
+          {record.name} ({record.id})
+        </strong>
+        ? Penghapusan ini mungkin tidak dapat dibatalkan.
       </p>
     </Modal>
   );
 };
 
 const defaultdata: CategoryOfAccount = {
-  id: "001",
+  id: "",
   name: "",
   type: "ASSET",
   parentId: null,

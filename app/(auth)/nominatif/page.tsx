@@ -1038,7 +1038,7 @@ export default function Page() {
               </Table.Summary.Cell>
               <Table.Summary.Cell
                 index={5}
-                colSpan={8}
+                colSpan={10}
                 className="text-center font-bold"
               />
               <Table.Summary.Cell index={12} className="font-bold">

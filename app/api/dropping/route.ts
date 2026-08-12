@@ -104,7 +104,13 @@ export const GET = async (req: NextRequest) => {
                 Sumdan: { select: { code: true, name: true, address: true } },
               },
             },
-            JenisPembiayaan: { select: { name: true } },
+            JenisPembiayaan: {
+              select: {
+                name: true,
+                status_mutasi: true,
+                status_takeover: true,
+              },
+            },
             AO: {
               include: {
                 Cabang: { include: { Area: { select: { name: true } } } },
@@ -169,12 +175,14 @@ export const PUT = async (req: NextRequest) => {
           where: { id: dpm.id },
           data: {
             ...dpmData,
-            takeover_status: JenisPembiayaan.status_takeover
+            ...(!dpmData.status && {
+              takeover_status: JenisPembiayaan.status_takeover
               ? "DRAFT"
               : "DISETUJUI",
             mutasi_status: JenisPembiayaan.status_mutasi
               ? "DRAFT"
-              : "DISETUJUI",
+              : "DISETUJUI"
+            }),
           },
         });
       }

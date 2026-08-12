@@ -8,39 +8,57 @@ export const GET = async (request: NextRequest) => {
   const limit = request.nextUrl.searchParams.get("limit") || "50";
   const search = request.nextUrl.searchParams.get("search");
   const type = request.nextUrl.searchParams.get("type");
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const level = request.nextUrl.searchParams.get("level");
 
-  const find = await prisma.categoryOfAccount.findMany({
-    where: {
-      ...(search && {
-        OR: [{ id: { contains: search } }, { name: { contains: search } }],
-      }),
-      ...(type && { type: type as AccountType }),
-    },
-    skip: skip,
-    take: parseInt(limit),
-    include: { Childrens: true, Parent: true },
-  });
+  const take = parseInt(limit);
+  const skip = (parseInt(page) - 1) * take;
+
+  const whereCondition = {
+    ...(search && {
+      OR: [{ id: { contains: search } }, { name: { contains: search } }],
+    }),
+    ...(type && { type: type as AccountType }),
+    ...(level && { parentId: { not: null } }),
+  };
+
+  // Gunakan $transaction untuk mengambil total baris dan data secara paralel
+  const [total, find] = await prisma.$transaction([
+    prisma.categoryOfAccount.count({ where: whereCondition }),
+    prisma.categoryOfAccount.findMany({
+      where: whereCondition,
+      skip: skip,
+      take: take,
+      orderBy: { id: "asc" }, // WAJIB: Agar Tree Terurut
+      include: { Childrens: true, Parent: true },
+    }),
+  ]);
 
   return NextResponse.json(
-    { data: serializeForApi(find), status: 200 },
+    { data: serializeForApi(find), total, status: 200 },
     { status: 200 },
   );
 };
 
 export const POST = async (req: NextRequest) => {
-  const data: CategoryOfAccount = await req.json();
+  const payload = await req.json();
+
+  // Pisahkan field relasi agar tidak masuk ke Prisma data
+  const { Childrens, Parent, JournalDetails, ...validData } = payload;
+
   const find = await prisma.categoryOfAccount.findFirst({
-    where: { id: data.id },
+    where: { id: validData.id },
   });
-  if (find)
+
+  if (find) {
     return NextResponse.json(
       { msg: "ID atau No Akun sudah digunakan!", status: 400 },
       { status: 400 },
     );
-  try {
-    await prisma.categoryOfAccount.create({ data: data });
+  }
 
+  try {
+    // Gunakan validData
+    await prisma.categoryOfAccount.create({ data: validData });
     return NextResponse.json({ msg: "OK", status: 200 }, { status: 200 });
   } catch (err) {
     console.log(err);
@@ -52,20 +70,43 @@ export const POST = async (req: NextRequest) => {
 };
 
 export const PUT = async (req: NextRequest) => {
-  const data: CategoryOfAccount = await req.json();
-  const id = req.nextUrl.searchParams.get("id") || "1";
+  const payload = await req.json();
+  const id = req.nextUrl.searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json(
+      { msg: "Parameter ID wajib dikirim!", status: 400 },
+      { status: 400 },
+    );
+  }
+
+  // Pisahkan field relasi agar tidak masuk ke Prisma data
+  const { Childrens, Parent, JournalDetails, ...validData } = payload;
+
+  if (validData.parentId === id) {
+    return NextResponse.json(
+      {
+        msg: "Akun tidak boleh menjadi parent untuk dirinya sendiri!",
+        status: 400,
+      },
+      { status: 400 },
+    );
+  }
+
   const find = await prisma.categoryOfAccount.findFirst({
-    where: { id: data.id },
+    where: { id: validData.id },
   });
-  if (id !== data.id && find)
+
+  if (id !== validData.id && find) {
     return NextResponse.json(
       { msg: "ID atau No Akun sudah digunakan!", status: 400 },
       { status: 400 },
     );
+  }
 
   try {
-    await prisma.categoryOfAccount.update({ where: { id }, data: data });
-
+    // Gunakan validData
+    await prisma.categoryOfAccount.update({ where: { id }, data: validData });
     return NextResponse.json({ msg: "OK", status: 200 }, { status: 200 });
   } catch (err) {
     console.log(err);
@@ -77,25 +118,51 @@ export const PUT = async (req: NextRequest) => {
 };
 
 export const DELETE = async (req: NextRequest) => {
-  const id = req.nextUrl.searchParams.get("id") || "1";
-  if (!id)
+  const id = req.nextUrl.searchParams.get("id");
+
+  // Hapus hardcode "1"
+  if (!id) {
     return NextResponse.json(
       { msg: "ID atau No Akun tidak ditemukan!", status: 404 },
       { status: 404 },
     );
+  }
+
   try {
+    // Include Childrens untuk dicek
     const find = await prisma.categoryOfAccount.findFirst({
       where: { id },
-      include: { JournalDetails: true },
+      include: { JournalDetails: true, Childrens: true },
     });
-    if (find && find.JournalDetails.length !== 0)
+
+    if (!find) {
+      return NextResponse.json(
+        { msg: "Data COA tidak ditemukan!", status: 404 },
+        { status: 404 },
+      );
+    }
+
+    if (find.JournalDetails.length !== 0) {
       return NextResponse.json(
         {
-          msg: "COA ini memiliki journal yang terhubung. tidak dapat hapus data!",
+          msg: "COA ini memiliki journal yang terhubung. Tidak dapat menghapus data!",
           status: 400,
         },
         { status: 400 },
       );
+    }
+
+    // Validasi tambahan: Jangan hapus jika punya sub-akun
+    if (find.Childrens && find.Childrens.length !== 0) {
+      return NextResponse.json(
+        {
+          msg: "COA ini memiliki Sub-Akun. Hapus atau pindahkan Sub-Akun terlebih dahulu!",
+          status: 400,
+        },
+        { status: 400 },
+      );
+    }
+
     await prisma.categoryOfAccount.delete({
       where: { id },
     });
