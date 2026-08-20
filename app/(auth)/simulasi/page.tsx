@@ -407,6 +407,7 @@ export default function Page() {
                       c_insurance: find.c_insurance,
                       rounded: findSumdan.rounded,
                       c_ned: findSumdan.c_ned,
+                      c_bop_area: findSumdan.c_bop_area,
                     });
                   }
                 }
@@ -967,7 +968,9 @@ export default function Page() {
                 <Input
                   size="small"
                   disabled={true}
-                  value={IDRFormat(details.tatalaksana + details.provisi)}
+                  value={IDRFormat(
+                    details.tatalaksana + details.provisi - data.c_bop,
+                  )}
                   style={{ textAlign: "right", color: "black" }}
                 />
               </div>
