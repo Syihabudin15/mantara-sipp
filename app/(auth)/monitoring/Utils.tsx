@@ -1571,6 +1571,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                                 rounded: find.Sumdan.rounded,
                                 rounded_sumdan: find.Sumdan.rounded_sumdan,
                                 tbo: find.Sumdan.tbo,
+                                c_bop_area: find.Sumdan.c_bop_area,
                               });
                             }
                           }}
