@@ -138,7 +138,7 @@ export default function Page() {
         ...(pageProps.agentFrontingId && {
           agentFrontingId: pageProps.agentFrontingId,
         }),
-        includes: "true",
+        // includes: "true",
       });
 
       const res = await fetch(`/api/dapem?${params.toString()}`);

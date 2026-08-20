@@ -125,6 +125,107 @@ export const GET = async (request: NextRequest) => {
   };
 
   const [data, total] = await Promise.all([
+    // prisma.dapem.findMany({
+    //   where,
+    //   skip: skip,
+    //   take: parseInt(limit),
+    //   orderBy: {
+    //     created_at: "desc",
+    //   },
+    //   select: {
+    //     id: true,
+    //     plafond: true,
+    //     tenor: true,
+    //     margin_type: true,
+    //     c_margin: true,
+    //     c_margin_sumdan: true,
+    //     rounded: true,
+    //     rounded_sumdan: true,
+    //     verif_status: true,
+    //     slik_status: true,
+    //     approv_status: true,
+    //     verif_desc: true,
+    //     slik_desc: true,
+    //     approv_desc: true,
+    //     dropping_status: true,
+    //     no_contract: true,
+    //     date_contract: true,
+    //     file_contract: true,
+    //     prev_payoffice: true,
+    //     created_at: true,
+    //     updated_at: true,
+    //     nopen: true,
+    //     c_ned: true,
+    //     takeover_from: true,
+    //     ProdukPembiayaan: {
+    //       select: {
+    //         id: true,
+    //         name: true,
+    //         Sumdan: {
+    //           select: {
+    //             id: true,
+    //             name: true,
+    //             code: true,
+    //           },
+    //         },
+    //       },
+    //     },
+    //     User: {
+    //       select: { id: true, fullname: true, nip: true },
+    //     },
+    //     AO: {
+    //       select: {
+    //         id: true,
+    //         fullname: true,
+    //         Cabang: {
+    //           select: {
+    //             id: true,
+    //             name: true,
+    //             Area: { select: { id: true, name: true } },
+    //           },
+    //         },
+    //       },
+    //     },
+    //     AOCabang: {
+    //       select: {
+    //         id: true,
+    //         fullname: true,
+    //         Cabang: {
+    //           select: {
+    //             id: true,
+    //             name: true,
+    //             Area: { select: { id: true, name: true } },
+    //           },
+    //         },
+    //       },
+    //     },
+    //     AOArea: {
+    //       select: {
+    //         id: true,
+    //         fullname: true,
+    //         Cabang: {
+    //           select: {
+    //             id: true,
+    //             name: true,
+    //             Area: { select: { id: true, name: true } },
+    //           },
+    //         },
+    //       },
+    //     },
+    //     PayOffice: { select: { id: true, name: true } },
+    //     JenisPembiayaan: {
+    //       select: {
+    //         id: true,
+    //         name: true,
+    //         status_mutasi: true,
+    //         status_takeover: true,
+    //       },
+    //     },
+    //     AgentFronting: { select: { id: true, name: true, code: true } },
+    //     Debitur: { select: { nopen: true, fullname: true } },
+    //     Dropping: { select: { created_at: true, process_at: true } },
+    //   },
+    // }),
     prisma.dapem.findMany({
       where,
       skip: skip,

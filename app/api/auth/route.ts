@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import prisma from "@/libs/Prisma";
 import { getSession, signIn, signOut } from "@/libs/Auth";
 import { IPermission } from "@/libs/IInterfaces";
+// import { clearUserSessionCache, GetUserSession } from "../utils/wheres";
 
 export const POST = async (req: NextRequest) => {
   const { username, password } = await req.json();
@@ -72,10 +73,11 @@ export const GET = async () => {
       where: { id: session.user.id },
       include: {
         Role: true,
-        Cabang: { include: { Area: true } },
-        Sumdan: true,
+        Cabang: { select: { name: true, Area: { select: { name: true } } } },
+        Sumdan: { select: { name: true } },
       },
     });
+    // const user = await GetUserSession(session);
     if (!user) {
       await signOut();
       return NextResponse.json(
@@ -84,6 +86,7 @@ export const GET = async () => {
       );
     }
     const { Cabang, Sumdan, ...datauser } = user;
+
     return NextResponse.json(
       {
         data: {
@@ -115,13 +118,16 @@ export const DELETE = async (req: NextRequest) => {
         { status: 401 },
       );
     }
-    const user = await prisma.user.findFirst({
-      where: { id: session.user.id },
-      include: {
-        Role: true,
-      },
-    });
+    // const user = await prisma.user.findFirst({
+    //   where: { id: session.user.id },
+    //   include: {
+    //     Role: true,
+    //   },
+    // });
     await signOut();
+    // if (user) {
+    //   await clearUserSessionCache(user.id);
+    // }
     return NextResponse.json({ msg: "OK", status: 200 }, { status: 200 });
   } catch (err) {
     console.log(err);

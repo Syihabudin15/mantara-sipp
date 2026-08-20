@@ -61,28 +61,40 @@ export const ORDapem = (search: string) => {
 
 export const AOInclude = () => {
   const where: Prisma.UserFindFirstArgs = {
-    include: {
+    select: {
+      id: true,
+      fullname: true,
+      nip: true,
       Cabang: {
-        omit: {
-          status: true,
-          created_at: true,
-          updated_at: true,
-          phone: true,
-          address: true,
+        select: {
+          id: true,
+          name: true,
+          Area: { select: { id: true, name: true } },
         },
-        include: { Area: { select: { name: true } } },
       },
     },
-    omit: {
-      status: true,
-      email: true,
-      password: true,
-      target: true,
-      start_pkwt: true,
-      end_pkwt: true,
-      created_at: true,
-      updated_at: true,
-    },
+    // include: {
+    //   Cabang: {
+    //     omit: {
+    //       status: true,
+    //       created_at: true,
+    //       updated_at: true,
+    //       phone: true,
+    //       address: true,
+    //     },
+    //     include: { Area: { select: { name: true } } },
+    //   },
+    // },
+    // omit: {
+    //   status: true,
+    //   email: true,
+    //   password: true,
+    //   target: true,
+    //   start_pkwt: true,
+    //   end_pkwt: true,
+    //   created_at: true,
+    //   updated_at: true,
+    // },
   };
   return where;
 };
@@ -105,25 +117,30 @@ export const GetUserSession = async (session: any) => {
   const user = await prisma.user.findFirst({
     where: { id: userId },
     include: {
-      Role: { select: { data_status: true } },
-      Cabang: { select: { areaId: true, id: true } },
+      Role: {
+        select: { data_status: true, id: true, name: true, permission: true },
+      },
+      Cabang: {
+        select: { areaId: true, id: true, Area: { select: { name: true } } },
+      },
+      Sumdan: { select: { name: true, id: true } },
     },
-    omit: {
-      fullname: true,
-      status: true,
-      pkwt_status: true,
-      phone: true,
-      email: true,
-      password: true,
-      nip: true,
-      nik: true,
-      target: true,
-      position: true,
-      start_pkwt: true,
-      end_pkwt: true,
-      created_at: true,
-      updated_at: true,
-    },
+    // omit: {
+    //   fullname: true,
+    //   status: true,
+    //   pkwt_status: true,
+    //   phone: true,
+    //   email: true,
+    //   password: true,
+    //   nip: true,
+    //   nik: true,
+    //   target: true,
+    //   position: true,
+    //   start_pkwt: true,
+    //   end_pkwt: true,
+    //   created_at: true,
+    //   updated_at: true,
+    // },
   });
 
   // Jika user ditemukan, simpan ke Redis cache

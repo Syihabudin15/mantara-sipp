@@ -967,9 +967,7 @@ export default function Page() {
                 <Input
                   size="small"
                   disabled={true}
-                  value={IDRFormat(
-                    details.tatalaksana + details.provisi - data.c_bop,
-                  )}
+                  value={IDRFormat(details.tatalaksana + details.provisi)}
                   style={{ textAlign: "right", color: "black" }}
                 />
               </div>

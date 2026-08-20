@@ -60,6 +60,7 @@ import {
 } from "antd";
 import moment from "moment";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function UpsertPermohonan({ record }: { record?: IDapem }) {
@@ -78,6 +79,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
   );
   const { modal } = App.useApp();
   const user = useUser();
+  const router = useRouter();
 
   const handleSearch = async () => {
     setLoading(true);
@@ -112,6 +114,7 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
           modal.success({
             title: "BERHASIL",
             content: "Data Pembiayaan berhasil ditambahkan",
+            onOk: () => router.push("/monitoring"),
           });
         } else {
           modal.error({ title: "ERROR!!", content: res.msg });
