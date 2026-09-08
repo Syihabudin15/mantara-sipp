@@ -12,6 +12,7 @@ import { DocChecklist1 } from "./DC1";
 import { DocChecklist2 } from "./DC2";
 import { PK } from "./PK";
 import { FormDSR } from "../etc/forms/formDSR";
+import { FLaggingAsabri } from "./FlaggingAsabri";
 
 moment.locale("id");
 
@@ -56,6 +57,13 @@ const generateContractHtml = (record: IDapem) => {
               page-break-after: always;
               line-height: 17px;
             }
+            .page-invalid {
+              position: relative;
+              min-height: 95vh;    /* atau height A4 jika untuk print */
+              page-break-after: always;
+              line-height: 17px;
+              margin:0mm;
+            }
     
             .page .page-header {
               position: absolute;
@@ -97,8 +105,11 @@ const generateContractHtml = (record: IDapem) => {
       <div class="page text-justify" style="font-size: 12px;">
         ${PernyataanKuasa(record)}
       </div>
-      <div class="page pt-0 text-justify" style="font-size: 12px;">
+      <div class="page-invalid pt-0 text-justify" style="font-size: 12px;">
         ${FLagging(record)}
+      </div>
+      <div class="text-justify border border-gray-700 p-4" style="font-size: 12px; margin-top: 35px;">
+        ${FLaggingAsabri(record)}
       </div>
       <div class="page text-justify" style="font-size: 11px;">
         ${TTPJ(record)}
