@@ -13,10 +13,84 @@ import { DocChecklist2 } from "./DC2";
 import { PK } from "./PK";
 import { FormDSR } from "../etc/forms/formDSR";
 import { FLaggingAsabri } from "./FlaggingAsabri";
+import { FLaggingAsabri2 } from "./FlaggingAsabri2";
+import { PKPerdana } from "./perdana/PKPerdana";
+import { PPPerdana } from "./perdana/PPPerdana";
 
 moment.locale("id");
 
 const generateContractHtml = (record: IDapem) => {
+  const handleGroupSKEP = () => {
+    switch (record.Debitur.group_skep) {
+      case "PT. TASPEN":
+        return `<div class="page text-justify" style="font-size: 12px;">
+        ${FLagging(record)}
+      </div>`;
+      case "TASPEN":
+        return `<div class="page text-justify" style="font-size: 12px;">
+        ${FLagging(record)}
+      </div>`;
+      case "PT. ASABRI":
+        return `
+        <div  
+          class="page page-break text-justify border border-gray-700 p-2"
+          style="font-size: 12px; padding-top: -20px; margin-top: -30px;"
+        >
+          ${FLaggingAsabri(record)}
+        </div>
+        <div class="page text-justify" style="font-size: 12px;">
+        ${FLaggingAsabri2(record)}
+        </div>`;
+      case "ASABRI":
+        return `
+        <div class="page page-break text-justify border border-gray-700 p-2" style="font-size: 12px; padding-top: -30px; margin-top: -30px;">
+          ${FLaggingAsabri(record)}
+        </div>
+        <div class="page page-break text-justify" style="font-size: 12px; ">
+        ${FLaggingAsabri2(record)}
+        </div>`;
+      default:
+        return `
+        <div class="page text-justify" style="font-size: 12px; ">
+          ${FLagging(record)}
+        </div>
+        `;
+    }
+  };
+
+  const handlePK = () => {
+    switch (record.ProdukPembiayaan.Sumdan.code) {
+      case "PERDANA":
+        return `<div class="page text-justify" style="font-family: 'Courier New', Courier, monospace;font-size: 12px; margin-top: -20px; padding-top: -20px;">
+        ${PKPerdana(record)}
+      </div>`;
+      case "VIMA":
+        return `<div class="page text-justify" style="font-size: 12px;">
+        ${PK(record)}
+      </div>`;
+      default:
+        return `<div class="page text-justify" style="font-size: 12px;">
+        ${PK(record)}
+      </div>`;
+    }
+  };
+  const handleSPK = () => {
+    switch (record.ProdukPembiayaan.Sumdan.code) {
+      case "PERDANA":
+        return `<div class="page text-justify" style="font-size: 12px; margin-top: -20px; padding-top: -20px;">
+        ${PPPerdana(record)}
+      </div>`;
+      case "VIMA":
+        return `<div class="page text-justify" style="font-size: 12px;">
+        ${PersetujuanPencairan(record)}
+      </div>`;
+      default:
+        return `<div class="page text-justify" style="font-size: 12px;">
+        ${PersetujuanPencairan(record)}
+      </div>`;
+    }
+  };
+
   const html = `
   <!doctype html>
   <html>
@@ -90,12 +164,8 @@ const generateContractHtml = (record: IDapem) => {
       <div class="page" style="font-size: 11px;">
         ${JadwalAngsuran(record, record.ProdukPembiayaan.Sumdan.name)}
       </div>
-      <div class="page text-justify" style="font-size: 12px;">
-        ${PK(record)}
-      </div>
-      <div class="page text-justify" style="font-size: 12px;">
-        ${PersetujuanPencairan(record)}
-      </div>
+      ${handlePK()}
+      ${handleSPK()}
       <div class="page text-justify" style="font-size: 12px;">
         ${BPK(record)}
       </div>
@@ -105,16 +175,11 @@ const generateContractHtml = (record: IDapem) => {
       <div class="page text-justify" style="font-size: 12px;">
         ${PernyataanKuasa(record)}
       </div>
-      <div class="page-invalid pt-0 text-justify" style="font-size: 12px;">
-        ${FLagging(record)}
-      </div>
-      <div class="text-justify border border-gray-700 p-4" style="font-size: 12px; margin-top: 35px;">
-        ${FLaggingAsabri(record)}
-      </div>
-      <div class="page text-justify" style="font-size: 11px;">
+      ${handleGroupSKEP()}
+      <div class="page page-break text-justify" style="font-size: 11px;">
         ${TTPJ(record)}
       </div>
-      <div class="page text-justify" style="font-size: 11px;">
+      <div class="page page-break text-justify" style="font-size: 11px;">
         ${FormDSR()}
       </div>
       <div class="page text-justify" style="font-size: 11px;">

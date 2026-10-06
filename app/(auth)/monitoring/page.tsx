@@ -102,6 +102,8 @@ export default function Page() {
     jenisPembiayaanId: "",
     agentFrontingId: "",
     backdate: "",
+    groupskep: "",
+    dropping_status: "",
   });
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<IActionTableAkad<IDapem>>({
@@ -138,6 +140,12 @@ export default function Page() {
         ...(pageProps.agentFrontingId && {
           agentFrontingId: pageProps.agentFrontingId,
         }),
+        ...(pageProps.dropping_status && {
+          dropping_status: pageProps.dropping_status,
+        }),
+        ...(pageProps.groupskep && {
+          groupskep: pageProps.groupskep,
+        }),
         // includes: "true",
       });
 
@@ -161,6 +169,8 @@ export default function Page() {
     pageProps.jenisPembiayaanId,
     pageProps.agentFrontingId,
     pageProps.backdate,
+    pageProps.dropping_status,
+    pageProps.groupskep,
   ]);
 
   // Debouncer pencarian
@@ -636,6 +646,8 @@ export default function Page() {
       agentFrontingId: "",
       backdate: "",
       page: 1,
+      dropping_status: "",
+      groupskep: "",
     }));
   }, []);
 
@@ -743,6 +755,57 @@ export default function Page() {
                       setPageProps((prev) => ({
                         ...prev,
                         agentFrontingId: e,
+                        page: 1,
+                      }))
+                    }
+                    allowClear
+                    style={{ width: "100%" }}
+                  />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide truncate">
+                    Status Pembiayaan
+                  </label>
+                  <Select
+                    size="small"
+                    placeholder="Status..."
+                    options={[
+                      { label: "DRAFT", value: "DRAFT" },
+                      { label: "PENDING", value: "PENDING" },
+                      { label: "PROSES", value: "PROSES" },
+                      { label: "DISETUJUI", value: "DISETUJUI" },
+                      { label: "DITOLAK", value: "DITOLAK" },
+                      { label: "BATAL", value: "BATAL" },
+                      { label: "LUNAS", value: "LUNAS" },
+                    ]}
+                    value={pageProps.dropping_status}
+                    onChange={(e) =>
+                      setPageProps((prev) => ({
+                        ...prev,
+                        dropping_status: e,
+                        page: 1,
+                      }))
+                    }
+                    allowClear
+                    style={{ width: "100%" }}
+                  />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide truncate">
+                    Pengelola Pensiun
+                  </label>
+                  <Select
+                    size="small"
+                    placeholder="Pengelola..."
+                    options={[
+                      { label: "PT. TASPEN", value: "TASPEN" },
+                      { label: "PT. ASABRI", value: "ASABRI" },
+                    ]}
+                    value={pageProps.groupskep}
+                    onChange={(e) =>
+                      setPageProps((prev) => ({
+                        ...prev,
+                        groupskep: e,
                         page: 1,
                       }))
                     }

@@ -606,7 +606,8 @@ function UpsertUser({
               mode: "horizontal",
               type: "select",
               value: data.sumdanId,
-              onChange: (e: string) => setData({ ...data, sumdanId: e }),
+              onChange: (e: any) =>
+                setData((prev) => ({ ...prev, sumdanId: e || null })),
               options: sumdans.map((r) => ({ label: r.name, value: r.id })),
             }}
           />
@@ -616,7 +617,11 @@ function UpsertUser({
               mode: "horizontal",
               type: "select",
               value: data.agentFrontingId,
-              onChange: (e: string) => setData({ ...data, agentFrontingId: e }),
+              onChange: (e: any) =>
+                setData((prev) => ({
+                  ...prev,
+                  agentFrontingId: e || null,
+                })),
               options: agents.map((r) => ({ label: r.name, value: r.id })),
             }}
           />

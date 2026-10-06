@@ -43,6 +43,7 @@ export const GET = async (request: NextRequest) => {
     payOfficeId,
     insuranceId,
     includes,
+    groupskep,
   } = params;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -105,6 +106,7 @@ export const GET = async (request: NextRequest) => {
     ...(agentFrontingId && { agentFrontingId: agentFrontingId }),
     ...(payOfficeId && { payOfficeId: payOfficeId }),
     ...(insuranceId && { insuranceId: insuranceId }),
+    ...(groupskep && { Debitur: { group_skep: { contains: groupskep } } }),
     ...(backdate
       ? {
           created_at: {

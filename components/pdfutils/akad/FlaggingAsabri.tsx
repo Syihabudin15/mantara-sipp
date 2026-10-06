@@ -204,9 +204,9 @@ export const FLaggingAsabri = (record: IDapem) => {
   <div class="text-xs">
     <p class="font-bold">Disampaikan : </p>
     <ul class="list-item list-none list-inside">
-      <li>Lembar I untuk Bank / Giro</li>
-      <li>Lembar II untuk Kantor C abang PT ASABRI (Persero )</li>
-      <li>Lembar III untuk penerima Pensiun</li>
+      <li>1. Lembar I untuk Bank / Giro</li>
+      <li>2. Lembar II untuk Kantor Cabang PT ASABRI (Persero)</li>
+      <li>3. Lembar III untuk penerima Pensiun</li>
     </ul>
   </div>
 
