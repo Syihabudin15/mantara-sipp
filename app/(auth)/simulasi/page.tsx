@@ -2,12 +2,26 @@
 
 import { FormInput } from "@/components";
 import {
-  GetDetailDapem, GetFullAge, getInitialDapemDetail, GetMaxPlafond, GetMaxTenor, IDRFormat, IDRToNumber, } from "@/components/utils/PembiayaanUtil";
+  GetDetailDapem,
+  GetFullAge,
+  getInitialDapemDetail,
+  GetMaxPlafond,
+  GetMaxTenor,
+  IDRFormat,
+  IDRToNumber,
+} from "@/components/utils/PembiayaanUtil";
 import {
-  IDapem, IDebitur, IOutputDapemDetail, ISumdan, } from "@/libs/IInterfaces";
+  IDapem,
+  IDebitur,
+  IOutputDapemDetail,
+  ISumdan,
+} from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  HistoryOutlined, PrinterOutlined, SearchOutlined, } from "@ant-design/icons";
+  HistoryOutlined,
+  PrinterOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import {
   type Debitur,
   type JenisPembiayaan,
@@ -413,10 +427,10 @@ export default function Page() {
               }}
               allowClear
             />
-            <p className="mt-1 text-xs text-gray-500">
+            {/* <p className="mt-1 text-xs text-gray-500">
               Sumdan Agent Fronting: {data.Sumdan?.name || "-"}
               {data.Sumdan?.code ? ` (${data.Sumdan.code})` : ""}
-            </p>
+            </p> */}
           </div>
           {hasAccess("deviasi") ? (
             <div className="w-full flex gap-2">
