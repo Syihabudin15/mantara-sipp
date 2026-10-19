@@ -1,34 +1,35 @@
 import {
-  AgentFronting,
-  Angsuran,
-  Area,
-  Berkas,
-  Cabang,
-  CategoryOfAccount,
-  Dapem,
-  Debitur,
-  Dropping,
-  HeadArea,
-  HeadCabang,
-  Insurance,
-  Jaminan,
-  JenisPembiayaan,
-  JournalDetail,
-  JournalEntry,
-  PayOffice,
-  Pelunasan,
-  ProdukPembiayaan,
-  Role,
-  Sumdan,
-  SumdanAgentFronting,
-  User,
-} from "@prisma/client";
+  type AgentFronting,
+  type Angsuran,
+  type Area,
+  type Berkas,
+  type Cabang,
+  type CategoryOfAccount,
+  type Dapem,
+  type Debitur,
+  type Dropping,
+  type HeadArea,
+  type HeadCabang,
+  type Insurance,
+  type Jaminan,
+  type JenisPembiayaan,
+  type JournalDetail,
+  type JournalEntry,
+  type PayOffice,
+  type Pelunasan,
+  type ProdukPembiayaan,
+  type Role,
+  type Sumdan,
+  type SumdanAgentFronting,
+  type User,
+} from "@/generated/prisma/client";
 
 export interface IUser extends User {
   sumdan: string | null;
   cabang: string;
   area: string;
   Role: Role;
+  fee: number;
 }
 
 export interface IPermission {
@@ -217,6 +218,7 @@ export interface IOutputDapemDetail {
     bop_area: number;
     angsuran: number;
     angsuran_sumdan: number;
+    fee_agent: number;
   };
   angsuran: number;
   tatalaksana: number;

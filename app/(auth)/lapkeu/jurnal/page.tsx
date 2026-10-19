@@ -4,20 +4,11 @@ import { FormInput } from "@/components";
 import { TypeAccount } from "@/components/utils/CompUtils";
 import { IDRFormat, IDRToNumber } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable,
-  IJournalDetail,
-  IJournalEntry,
-  IPageProps,
-} from "@/libs/IInterfaces";
+  IActionTable, IJournalDetail, IJournalEntry, IPageProps, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  AccountBookOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  PlusCircleOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
-import { CategoryOfAccount, JournalEntry, User } from "@prisma/client";
+  AccountBookOutlined, DeleteOutlined, EditOutlined, PlusCircleOutlined, PlusOutlined, } from "@ant-design/icons";
+import { type CategoryOfAccount, type JournalEntry, type User } from "@/generated/prisma/client";
 import {
   Table,
   DatePicker,

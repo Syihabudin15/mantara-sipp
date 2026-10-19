@@ -5,36 +5,18 @@ import { printPelunasan } from "@/components/pdfutils/etc/printPelunasan";
 import { useUser } from "@/components/UserContext";
 import { FilterData } from "@/components/utils/CompUtils";
 import {
-  GetAngsuran,
-  GetSisaPokokMargin,
-  IDRFormat,
-  IDRToNumber,
-} from "@/components/utils/PembiayaanUtil";
+  GetAngsuran, GetSisaPokokMargin, IDRFormat, IDRToNumber, } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable,
-  IDapem,
-  IPageProps,
-  IPelunasan,
-  IViewFiles,
-} from "@/libs/IInterfaces";
+  IActionTable, IDapem, IPageProps, IPelunasan, IViewFiles, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  DeleteOutlined,
-  DollarCircleOutlined,
-  EditOutlined,
-  FileFilled,
-  FormOutlined,
-  HistoryOutlined,
-  MoneyCollectOutlined,
-  PlusCircleOutlined,
-  PrinterOutlined,
-} from "@ant-design/icons";
+  DeleteOutlined, DollarCircleOutlined, EditOutlined, FileFilled, FormOutlined, HistoryOutlined, MoneyCollectOutlined, PlusCircleOutlined, PrinterOutlined, } from "@ant-design/icons";
 import {
   EDocStatus,
   ESettleStatus,
   ESubmissionStatus,
-  Sumdan,
-} from "@prisma/client";
+  type Sumdan,
+} from "@/generated/prisma/browser";
 import {
   App,
   Button,

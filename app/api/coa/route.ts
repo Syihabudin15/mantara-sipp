@@ -1,6 +1,6 @@
 import { serializeForApi } from "@/components/utils/PembiayaanUtil";
 import prisma from "@/libs/Prisma";
-import { AccountType, CategoryOfAccount } from "@prisma/client";
+import { AccountType, type CategoryOfAccount } from "@/generated/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {

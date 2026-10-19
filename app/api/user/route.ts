@@ -1,7 +1,7 @@
 import prisma from "@/libs/Prisma";
 import moment from "moment";
 
-import { Prisma } from "@prisma/client";
+import { type Prisma } from "@/generated/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { getSession } from "@/libs/Auth";

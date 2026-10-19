@@ -1,7 +1,7 @@
 import { GetAngsuran, GetDetailDapem } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
-import { Angsuran, Dapem } from "@prisma/client";
+import { type Angsuran, type Dapem } from "@/generated/prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 

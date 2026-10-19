@@ -5,28 +5,13 @@ import { printSIStandar } from "@/components/pdfutils/si/SIStandar";
 import { printSIVima } from "@/components/pdfutils/si/SIVima";
 import { FilterData } from "@/components/utils/CompUtils";
 import {
-  GetAngsuran,
-  GetDetailDapem,
-  IDRFormat,
-} from "@/components/utils/PembiayaanUtil";
+  GetAngsuran, GetDetailDapem, IDRFormat, } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable,
-  IDapem,
-  IDropping,
-  IPageProps,
-  IViewFiles,
-} from "@/libs/IInterfaces";
+  IActionTable, IDapem, IDropping, IPageProps, IViewFiles, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  BankOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  FileFilled,
-  FormOutlined,
-  PrinterOutlined,
-  TransactionOutlined,
-} from "@ant-design/icons";
-import { Sumdan } from "@prisma/client";
+  BankOutlined, DeleteOutlined, EditOutlined, FileFilled, FormOutlined, PrinterOutlined, TransactionOutlined, } from "@ant-design/icons";
+import { type Sumdan } from "@/generated/prisma/client";
 import {
   App,
   Button,

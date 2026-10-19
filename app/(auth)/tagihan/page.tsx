@@ -3,38 +3,20 @@
 import { FormInput } from "@/components";
 import { useUser } from "@/components/UserContext";
 import {
-  ExportToExcel,
-  FilterData,
-  MappingToTagihan,
-} from "@/components/utils/CompUtils";
+  ExportToExcel, FilterData, MappingToTagihan, } from "@/components/utils/CompUtils";
 import {
-  GetDetailDapem,
-  GetSisaPokokMargin,
-  IDRFormat,
-  IDRToNumber,
-} from "@/components/utils/PembiayaanUtil";
+  GetDetailDapem, GetSisaPokokMargin, IDRFormat, IDRToNumber, } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable,
-  IDapem,
-  IPageProps,
-  IPelunasan,
-} from "@/libs/IInterfaces";
+  IActionTable, IDapem, IPageProps, IPelunasan, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  BankOutlined,
-  CalendarOutlined,
-  CheckCircleOutlined,
-  CloudUploadOutlined,
-  DollarCircleOutlined,
-  DownloadOutlined,
-  EditOutlined,
-  FormOutlined,
-  HistoryOutlined,
-  MoneyCollectOutlined,
-  PayCircleOutlined,
-  PrinterOutlined,
-} from "@ant-design/icons";
-import { Angsuran, ESettleStatus, PayOffice, Sumdan } from "@prisma/client";
+  BankOutlined, CalendarOutlined, CheckCircleOutlined, CloudUploadOutlined, DollarCircleOutlined, DownloadOutlined, EditOutlined, FormOutlined, HistoryOutlined, MoneyCollectOutlined, PayCircleOutlined, PrinterOutlined, } from "@ant-design/icons";
+import {
+  type Angsuran,
+  ESettleStatus,
+  type PayOffice,
+  type Sumdan,
+} from "@/generated/prisma/browser";
 import {
   App,
   Button,

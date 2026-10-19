@@ -1,7 +1,7 @@
 import { serializeForApi } from "@/components/utils/PembiayaanUtil";
 import { getSession } from "@/libs/Auth";
 import prisma from "@/libs/Prisma";
-import { Prisma } from "@prisma/client";
+import { type Prisma } from "@/generated/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { WheresDapem } from "../utils/wheres";
 
@@ -36,16 +36,22 @@ export const GET = async (request: NextRequest) => {
         { phone: { contains: search } },
       ],
     }),
-    ...(user.sumdanId && { id: user.sumdanId }),
-    ...(user.agentFrontingId && {
-      SumdanAgentFrontings: {
-        some: {
-          sumdanId: {
-            in: user.AgentFronting?.SumdanAgentFrontings.map((s) => s.sumdanId),
+    ...(user.agentFrontingId
+      ? {
+          SumdanAgentFrontings: {
+            some: {
+              sumdanId: {
+                in:
+                  user.AgentFronting?.SumdanAgentFrontings.map(
+                    (s) => s.sumdanId,
+                  ) ?? [],
+              },
+            },
           },
-        },
-      },
-    }),
+        }
+      : user.sumdanId
+        ? { id: user.sumdanId }
+        : {}),
     status: true,
   };
 

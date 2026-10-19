@@ -1,6 +1,6 @@
 import moment from "moment";
 import { PV } from "@formulajs/formulajs";
-import { EMarginType } from "@prisma/client";
+import { EMarginType } from "@/generated/prisma/browser";
 import { IDapem, IOutputDapemDetail } from "@/libs/IInterfaces";
 
 export const IDRFormat = (number: number) => {
@@ -108,6 +108,7 @@ export const GetAngsuran = (
 };
 
 export const GetDapem = (data: IDapem) => {
+  const c_fee_fronting = data.c_fee_fronting || data.c_agent;
   const adm =
     data.plafond *
     ((data.c_adm_sumdan + data.c_adm + data.c_adm_mitra + data.c_adm_ff) / 100);
@@ -118,7 +119,8 @@ export const GetDapem = (data: IDapem) => {
       data.c_fee_cabang +
       data.c_fee_area +
       data.c_fee_bpp +
-      data.c_fee_bpb) /
+      data.c_fee_bpb +
+      c_fee_fronting) /
       100);
   const asuransi = data.plafond * (data.c_insurance / 100);
   const angs = GetAngsuran(
@@ -149,6 +151,7 @@ export const GetDapem = (data: IDapem) => {
 };
 
 export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
+  const c_fee_fronting = dapem.c_fee_fronting || dapem.c_agent;
   const adm_sumdan = dapem.plafond * (dapem.c_adm_sumdan / 100);
   const provisi_sumdan = dapem.plafond * (dapem.c_provisi_sumdan / 100);
   const asuransi = dapem.plafond * (dapem.c_insurance / 100);
@@ -160,7 +163,9 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
   const fee_area = dapem.plafond * (dapem.c_fee_area / 100);
   const fee_bpp = dapem.plafond * (dapem.c_fee_bpp / 100);
   const fee_bpb = dapem.plafond * (dapem.c_fee_bpb / 100);
-  const provisi = fee_ao + fee_cabang + fee_area + fee_bpp + fee_bpb;
+  const fee_agent = dapem.plafond * (c_fee_fronting / 100);
+  const provisi =
+    fee_ao + fee_cabang + fee_area + fee_bpp + fee_bpb + fee_agent;
   const bop_area = dapem.c_bop * (dapem.c_bop_area / 100);
 
   const administrasi = adm + adm_mita + adm_ff;
@@ -203,6 +208,7 @@ export const GetDetailDapem = (dapem: IDapem): IOutputDapemDetail => {
       angsuran,
       angsuran_sumdan,
       bop_area,
+      fee_agent,
     },
     angsuran: angs,
     tatalaksana,
@@ -330,6 +336,7 @@ export const getInitialDapemDetail = (): IOutputDapemDetail => ({
     angsuran: 0,
     angsuran_sumdan: 0,
     bop_area: 0,
+    fee_agent: 0,
   },
   angsuran: 0,
   tatalaksana: 0,

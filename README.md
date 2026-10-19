@@ -1,5 +1,12 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Prisma
+
+Prisma Client is generated into `generated/prisma` during install. Configure
+`DATABASE_URL` with the MySQL connection string; the application uses Prisma's
+MariaDB driver adapter. Prisma CLI settings and the seed command are defined in
+`prisma.config.ts`.
+
 ## Getting Started
 
 First, run the development server:

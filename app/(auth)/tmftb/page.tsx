@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect, useState, useCallback, useId } from "react";
 import moment from "moment";
-import { EDapemStatus, JenisPembiayaan, Sumdan } from "@prisma/client";
+import { EDapemStatus, type JenisPembiayaan, type Sumdan } from "@/generated/prisma/browser";
 import {
   App,
   Button,
@@ -86,7 +86,7 @@ const GENERAL_STATUS_OPTIONS = [
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
     page: 1,
-    limit: 100,
+    limit: 25,
     total: 0,
     data: [],
     search: "",
@@ -103,6 +103,7 @@ export default function Page() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [selected, setSelected] = useState<IActionTable<IDapem>>({
     upsert: false,
     delete: false,
@@ -123,13 +124,13 @@ export default function Page() {
   const user = useUser();
 
   // Membungkus fetch data utama dengan useCallback
-  const getData = useCallback(async () => {
+  const getData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     const params = new URLSearchParams({
       page: pageProps.page.toString(),
       limit: pageProps.limit.toString(),
       approv_status: "DISETUJUI",
-      includes: "true",
+      includes: "tmftb",
       ...(pageProps.search && { search: pageProps.search }),
       ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
       ...(pageProps.jenisPembiayaanId && {
@@ -156,17 +157,19 @@ export default function Page() {
     });
 
     try {
-      const res = await fetch(`/api/dapem?${params.toString()}`);
+      const res = await fetch(`/api/dapem?${params.toString()}`, { signal });
+      if (!res.ok) throw new Error("Gagal memuat data TMFTB.");
       const json = await res.json();
+      if (signal?.aborted) return;
       setPageProps((prev) => ({
         ...prev,
         data: json.data || [],
         total: json.total || 0,
       }));
     } catch (error) {
-      console.error("Failed to fetch dapem data:", error);
+      if (!signal?.aborted) console.error("Failed to fetch TMFTB data:", error);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [
     pageProps.page,
@@ -186,10 +189,14 @@ export default function Page() {
 
   // Debounce data fetching
   useEffect(() => {
+    const controller = new AbortController();
     const timeout = setTimeout(() => {
-      getData();
+      getData(controller.signal);
     }, 200);
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [getData]);
 
   // Fetch data master sekali saat mounting
@@ -237,6 +244,46 @@ export default function Page() {
   const agentOptions = useMemo(
     () => agents.map((s) => ({ label: s.name, value: s.id })),
     [agents],
+  );
+
+  const calculatedDetails = useMemo(
+    () =>
+      new Map(pageProps.data.map((record) => [record.id, GetDetailDapem(record)])),
+    [pageProps.data],
+  );
+
+  const openDapemDetails = useCallback(
+    async (record: IDapem) => {
+      setDetailLoading(true);
+      try {
+        const response = await fetch(`/api/dapem?id=${record.id}`, {
+          method: "PATCH",
+        });
+        const result = (await response.json()) as {
+          data?: IDapem;
+          msg?: string;
+        };
+        if (!response.ok || !result.data) {
+          throw new Error(result.msg || "Gagal memuat detail pembiayaan.");
+        }
+        setSelected((prev) => ({
+          ...prev,
+          selected: result.data,
+          upsert: true,
+        }));
+      } catch (error) {
+        modal.error({
+          title: "Gagal memuat detail",
+          content:
+            error instanceof Error
+              ? error.message
+              : "Terjadi kesalahan saat memuat detail pembiayaan.",
+        });
+      } finally {
+        setDetailLoading(false);
+      }
+    },
+    [modal],
   );
 
   // Definisi kolom tabel dimemokan agar referensinya tetap sama
@@ -290,7 +337,7 @@ export default function Page() {
         dataIndex: "angsuran",
         key: "angsuran",
         render: (_, record) => {
-          const detail = GetDetailDapem(record);
+          const detail = calculatedDetails.get(record.id)!;
           return (
             <div className="text-xs">
               <div className="flex gap-2 items-center">
@@ -534,7 +581,7 @@ export default function Page() {
             ? JSON.parse(record.cash_desc)
             : [];
           const total = desc.reduce((acc, curr) => acc + curr.amount, 0);
-          const tb = GetDetailDapem(record).tb;
+          const tb = calculatedDetails.get(record.id)!.tb;
           const percent = tb > 0 ? ((total / tb) * 100).toFixed(2) : "0.00";
 
           return (
@@ -757,19 +804,23 @@ export default function Page() {
                 type="primary"
                 size="small"
                 onClick={() =>
-                  setSelected((prev) => ({
-                    ...prev,
-                    upsert: true,
-                    selected: record,
-                  }))
+                  void openDapemDetails(record)
                 }
+                loading={detailLoading}
               />
             </Tooltip>
           </div>
         ),
       },
     ],
-    [pageProps.page, pageProps.limit, hasAccess],
+    [
+      pageProps.page,
+      pageProps.limit,
+      hasAccess,
+      calculatedDetails,
+      detailLoading,
+      openDapemDetails,
+    ],
   );
 
   const handleClearFilter = useCallback(() => {
@@ -802,11 +853,12 @@ export default function Page() {
       0,
     );
     const angsSumdan = pageData.reduce(
-      (acc, item) => acc + (GetDetailDapem(item).detail.angsuran_sumdan || 0),
+      (acc, item) =>
+        acc + (calculatedDetails.get(item.id)!.detail.angsuran_sumdan || 0),
       0,
     );
     const totalAngs = pageData.reduce(
-      (acc, item) => acc + (GetDetailDapem(item).angsuran || 0),
+      (acc, item) => acc + (calculatedDetails.get(item.id)!.angsuran || 0),
       0,
     );
     const admAngsuran = Math.ceil(totalAngs - angsSumdan);
@@ -832,7 +884,7 @@ export default function Page() {
         />
       </Table.Summary.Row>
     );
-  }, []);
+  }, [calculatedDetails]);
 
   return (
     <Card
@@ -1038,7 +1090,11 @@ export default function Page() {
             placeholder="Cari nama..."
             value={pageProps.search}
             onChange={(e) =>
-              setPageProps((prev) => ({ ...prev, search: e.target.value }))
+              setPageProps((prev) => ({
+                ...prev,
+                search: e.target.value,
+                page: 1,
+              }))
             }
           />
         </div>
@@ -1059,7 +1115,7 @@ export default function Page() {
           onChange: (page, pageSize) => {
             setPageProps((prev) => ({ ...prev, page, limit: pageSize }));
           },
-          pageSizeOptions: [50, 100, 500, 1000],
+          pageSizeOptions: [25, 50, 100],
           showSizeChanger: true,
         }}
         summary={handleTableSummary}

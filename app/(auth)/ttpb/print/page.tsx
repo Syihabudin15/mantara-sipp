@@ -3,18 +3,11 @@
 import { FormInput } from "@/components";
 import { IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
-  IDapem,
-  IDocument,
-  IPageProps,
-  ISumdanDropping,
-} from "@/libs/IInterfaces";
+  IDapem, IDocument, IPageProps, ISumdanDropping, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  FolderAddOutlined,
-  PrinterOutlined,
-  RobotOutlined,
-} from "@ant-design/icons";
-import { Sumdan } from "@prisma/client";
+  FolderAddOutlined, PrinterOutlined, RobotOutlined, } from "@ant-design/icons";
+import { type Sumdan } from "@/generated/prisma/client";
 import { App, Button, Card, Modal, Table, TableProps } from "antd";
 import moment from "moment";
 import { useEffect, useState } from "react";

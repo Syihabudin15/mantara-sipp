@@ -5,22 +5,11 @@ import { printSDStandar } from "@/components/pdfutils/si/SDStandar";
 import { useUser } from "@/components/UserContext";
 import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable,
-  IDapem,
-  IDocument,
-  IPageProps,
-  IViewFiles,
-} from "@/libs/IInterfaces";
+  IActionTable, IDapem, IDocument, IPageProps, IViewFiles, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  DeleteOutlined,
-  EditOutlined,
-  FileFilled,
-  FolderOpenOutlined,
-  FormOutlined,
-  PrinterOutlined,
-} from "@ant-design/icons";
-import { EDocStatus, Sumdan } from "@prisma/client";
+  DeleteOutlined, EditOutlined, FileFilled, FolderOpenOutlined, FormOutlined, PrinterOutlined, } from "@ant-design/icons";
+import { EDocStatus, type Sumdan } from "@/generated/prisma/browser";
 import {
   App,
   Button,

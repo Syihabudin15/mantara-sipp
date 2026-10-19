@@ -6,8 +6,8 @@ import {
   EDapemStatus,
   EDocStatus,
   ESubmissionStatus,
-  Prisma,
-} from "@prisma/client";
+  type Prisma,
+} from "@/generated/prisma/client";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -45,7 +45,17 @@ export const GET = async (request: NextRequest) => {
     includes,
     groupskep,
   } = params;
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const isMonitoringRequest = includes === "monitoring";
+  const isNominatifRequest = includes === "nominatif";
+  const isTmftbRequest = includes === "tmftb";
+  const isSummaryRequest =
+    isMonitoringRequest || isNominatifRequest || isTmftbRequest;
+  const pageNumber = Number.parseInt(page, 10);
+  const requestedLimit = Number.parseInt(limit, 10);
+  const pageLimit = isSummaryRequest
+    ? Math.min(Math.max(requestedLimit || 25, 1), 100)
+    : requestedLimit;
+  const skip = (pageNumber - 1) * pageLimit;
 
   const session = await getSession();
   if (!session)
@@ -231,49 +241,102 @@ export const GET = async (request: NextRequest) => {
     prisma.dapem.findMany({
       where,
       skip: skip,
-      take: parseInt(limit),
+      take: pageLimit,
       orderBy: {
         created_at: "desc",
       },
       include: {
         // ...(includes && {
-        Debitur: true,
-        ProdukPembiayaan: {
-          include: {
-            Sumdan: {
+        Debitur: isSummaryRequest
+          ? {
               select: {
-                name: true,
-                code: true,
-                dsr: true,
-                logo: true,
-                sk_date: true,
-                sk_no: true,
-                contract_date: true,
-                contract_no: true,
-                contract_no2: true,
+                fullname: true,
+                nopen: true,
+                no_skep: true,
+                salary: true,
+                birthdate: true,
                 address: true,
               },
+            }
+          : true,
+        ProdukPembiayaan: isSummaryRequest
+          ? {
+              select: {
+                name: true,
+                sumdanId: true,
+                Sumdan: {
+                  select: isMonitoringRequest
+                    ? { name: true, code: true, dsr: true }
+                    : { name: true, code: true },
+                },
+              },
+            }
+          : {
+              include: {
+                Sumdan: {
+                  select: {
+                    name: true,
+                    code: true,
+                    dsr: true,
+                    logo: true,
+                    sk_date: true,
+                    sk_no: true,
+                    contract_date: true,
+                    contract_no: true,
+                    contract_no2: true,
+                    address: true,
+                  },
+                },
+              },
             },
-          },
+        PayOffice: {
+          select: isSummaryRequest
+            ? { name: true, code: true }
+            : { name: true, code: true, logo: true },
         },
-        PayOffice: { select: { name: true, code: true, logo: true } },
         JenisPembiayaan: {
           select: { name: true, status_mutasi: true, status_takeover: true },
         },
         // Angsurans: true,
-        ...(includes && {
-          Angsurans: {
-            select: { id: true },
-            where: { date_paid: { not: null } },
-          },
-        }),
+        ...(includes === "true" || isSummaryRequest
+          ? {
+              Angsurans: {
+                select: { id: true, date_paid: true },
+                where: { date_paid: { not: null } },
+              },
+            }
+          : {}),
         User: AOInclude(),
         AO: AOInclude(),
         AOCabang: AOInclude(),
         AOArea: AOInclude(),
-        Dropping: true,
+        Dropping: isSummaryRequest ? { select: { process_at: true } } : true,
+        ...(isNominatifRequest || isTmftbRequest
+          ? {
+              Berkas: {
+                select: {
+                  file_sub: true,
+                  file_proof: true,
+                  process_at: true,
+                  status: true,
+                },
+              },
+              Jaminan: {
+                select: {
+                  file_sub: true,
+                  file_proof: true,
+                  process_at: true,
+                  status: true,
+                },
+              },
+            }
+          : {}),
         // }),
-        AgentFronting: { select: { code: true, name: true, pic: true } },
+        AgentFronting: {
+          select: isSummaryRequest
+            ? { name: true, pic: true }
+            : { code: true, name: true, pic: true },
+        },
       },
     }),
     prisma.dapem.count({ where }),

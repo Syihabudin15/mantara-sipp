@@ -1,11 +1,7 @@
-import {
-  GetDapem,
-  GetDetailDapem,
-  IDRFormat,
-} from "@/components/utils/PembiayaanUtil";
+import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import { IDapem } from "@/libs/IInterfaces";
 import moment from "moment";
-import { ListNonStyle, NumberToWordsID } from "../../utils";
+import { NumberToWordsID } from "../../utils";
 moment.locale("id");
 
 export const PPPerdana = (record: IDapem) => {
@@ -64,7 +60,7 @@ export const PPPerdana = (record: IDapem) => {
       <p class="w-4">:</p>
       <div class="flex gap-8">
       <p class="w-10"></p>
-        <p class="w-28 text-right">${record.c_margin + record.c_margin_sumdan}% Efektif p.a</p>
+        <p class="w-28 text-right">${record.c_margin_sumdan}% Efektif p.a</p>
       </div>
     </div>
 
@@ -74,7 +70,7 @@ export const PPPerdana = (record: IDapem) => {
       <p class="w-4">:</p>
       <div class="flex gap-8">
       <p class="w-10">Rp. </p>
-        <p class="w-28 text-right">${IDRFormat(detail.detail.adm_sumdan + detail.detail.provisi_sumdan)}</p>
+        <p class="w-28 text-right">${IDRFormat(detail.detail.provisi_sumdan)}</p>
       </div>
     </div>
     <div class="flex gap-2">
@@ -83,7 +79,7 @@ export const PPPerdana = (record: IDapem) => {
       <p class="w-4">:</p>
       <div class="flex gap-8">
       <p class="w-10">Rp. </p>
-        <p class="w-28 text-right">${IDRFormat(detail.administrasi)}</p>
+        <p class="w-28 text-right">${IDRFormat(detail.detail.adm_sumdan)}</p>
       </div>
     </div>
     <div class="flex gap-2">
@@ -155,7 +151,7 @@ export const PPPerdana = (record: IDapem) => {
       <p class="w-4">:</p>
       <div class="flex gap-8">
       <p class="w-10">Rp. </p>
-        <p class="w-28 text-right">${IDRFormat(record.plafond - (detail.detail.adm_sumdan + detail.detail.provisi_sumdan + detail.administrasi + detail.asuransi + record.c_stamp + detail.angsuran * record.c_blokir))}</p>
+        <p class="w-28 text-right">${IDRFormat(record.plafond - (detail.detail.adm_sumdan + detail.detail.provisi_sumdan + detail.asuransi + record.c_stamp + detail.angsuran * record.c_blokir))}</p>
       </div>
     </div>
     <div class="flex gap-2">
@@ -201,7 +197,7 @@ export const PPPerdana = (record: IDapem) => {
       <p class="w-full border-b font-bold"></p>
     </div>
     <div class="w-80">
-      <p>${record.Debitur.city?.toLocaleLowerCase().replace("kota", "").replace("kabupaten", "").toUpperCase()}, ${moment(record.date_contract).format("DD-MM-YYYY")}</p>
+      
       <p>Debitur,</p>
       <div class="h-28"></div>
       <p class="w-full border-b font-bold">${record.Debitur.fullname}</p>

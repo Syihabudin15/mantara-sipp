@@ -5,13 +5,8 @@ import { IDRFormat, IDRToNumber } from "@/components/utils/PembiayaanUtil";
 import { IActionTable, IPageProps } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  DeleteOutlined,
-  DropboxOutlined,
-  EditOutlined,
-  PlusCircleFilled,
-  SaveOutlined,
-} from "@ant-design/icons";
-import { JenisPembiayaan } from "@prisma/client";
+  DeleteOutlined, DropboxOutlined, EditOutlined, PlusCircleFilled, SaveOutlined, } from "@ant-design/icons";
+import { type JenisPembiayaan } from "@/generated/prisma/client";
 import {
   App,
   Button,

@@ -8,7 +8,7 @@ import { IUser } from "./IInterfaces";
 import prisma from "./Prisma";
 import { getAccessForPath } from "./AccessUtils";
 import { getCacheJSON, setCacheJSON, clearCacheHash } from "./redisservice";
-import { Role } from "@prisma/client";
+import { type Role } from "@/generated/prisma/client";
 
 const secretKey = new TextEncoder().encode(process.env.APP_KEY || "secretcode");
 const CACHE_TTL = 5 * 60 * 60; // 5 jam dalam detik untuk Redis

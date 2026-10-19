@@ -4,22 +4,11 @@ import { FormInput, ViewFiles } from "@/components";
 import { printSJStandar } from "@/components/pdfutils/si/SJStandar";
 import { GetAngsuran, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable,
-  IDapem,
-  IDocument,
-  IPageProps,
-  IViewFiles,
-} from "@/libs/IInterfaces";
+  IActionTable, IDapem, IDocument, IPageProps, IViewFiles, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  DeleteOutlined,
-  EditOutlined,
-  FileFilled,
-  FormOutlined,
-  PrinterOutlined,
-  SecurityScanOutlined,
-} from "@ant-design/icons";
-import { EDocStatus, Sumdan } from "@prisma/client";
+  DeleteOutlined, EditOutlined, FileFilled, FormOutlined, PrinterOutlined, SecurityScanOutlined, } from "@ant-design/icons";
+import { EDocStatus, type Sumdan } from "@/generated/prisma/browser";
 import {
   App,
   Button,

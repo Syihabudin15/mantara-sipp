@@ -5,13 +5,12 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["relationJoins"]
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 enum EDataStatus {
@@ -94,8 +93,9 @@ model Role {
   updated_at DateTime @default(now())
   Users      User[]
 
-  @@index([name])
-  @@index([data_status])
+  @@index([status, name])
+  @@index([status, data_status])
+  @@index([status, data_status, name])
 }
 
 model Sumdan {
@@ -152,8 +152,7 @@ model Sumdan {
   Jaminans             Jaminan[]
   SumdanAgentFrontings SumdanAgentFronting[]
 
-  @@index([name])
-  @@index([code])
+  @@index([status, name, code])
 }
 
 model Area {
@@ -165,7 +164,7 @@ model Area {
   Cabangs    Cabang[]
   HeadAreas  HeadArea[]
 
-  @@index([name])
+  @@index([status, name])
 }
 
 model Cabang {
@@ -182,7 +181,7 @@ model Cabang {
   Users       User[]
   HeadCabangs HeadCabang[]
 
-  @@index([name])
+  @@index([status, name])
 }
 
 model User {
@@ -219,12 +218,9 @@ model User {
   HeadAreas       HeadArea[]
   HeadCabangs     HeadCabang[]
 
-  @@index([nip])
-  @@index([fullname])
-  @@index([email])
-  @@index([phone])
-  @@index([end_pkwt])
-  @@index([pkwt_status])
+  @@index([status, fullname, nik, email, phone])
+  @@index([status, end_pkwt])
+  @@index([status, pkwt_status])
 }
 
 model HeadArea {
@@ -270,7 +266,7 @@ model ProdukPembiayaan {
   sumdanId   String
   Dapems     Dapem[]
 
-  @@index([name])
+  @@index([status, sumdanId, name])
 }
 
 model JenisPembiayaan {
@@ -286,7 +282,10 @@ model JenisPembiayaan {
   updated_at      DateTime @default(now())
   Dapems          Dapem[]
 
-  @@index([name])
+  @@index([status, name])
+  @@index([status, status_mutasi])
+  @@index([status, status_takeover])
+  @@index([status, status_takeover, status_mutasi, name])
 }
 
 model Debitur {
@@ -325,15 +324,7 @@ model Debitur {
   PayOffice      PayOffice? @relation(fields: [payOfficeId], references: [id])
   payOfficeId    String?
 
-  @@index([fullname])
-  @@index([nik])
-  @@index([name_skep])
-  @@index([no_skep])
-  @@index([account_number])
-  @@index([province])
-  @@index([city])
-  @@index([district])
-  @@index([ward])
+  @@index([nopen, fullname, nik, account_number])
 }
 
 model Dapem {
@@ -367,6 +358,7 @@ model Dapem {
   c_takeover     Int
   c_bop          Int
   c_bop_area     Float       @default(0)
+  c_agent        Float       @default(0)
   tbo            Int
   rounded        Int
   rounded_sumdan Int         @default(0)
@@ -486,22 +478,19 @@ model Dapem {
   Aianalyses         AIAnalysis[]
   userId             String
 
-  @@index([dropping_status])
-  @@index([document_status])
-  @@index([guarantee_status])
-  @@index([slik_status])
-  @@index([verif_status])
-  @@index([approv_status])
-  @@index([created_at])
-  @@index([takeover_date])
-  @@index([takeover_status])
-  @@index([mutasi_status])
-  @@index([flagging_status])
-  @@index([cash_status])
-  @@index([tbo_date])
-  @@index([no_contract])
-  @@index([date_contract])
-  @@index([date_end])
+  @@index([status, nopen, no_contract])
+  @@index([status, dropping_status])
+  @@index([status, slik_status])
+  @@index([status, verif_status])
+  @@index([status, approv_status])
+  @@index([status, dropping_status, takeover_status])
+  @@index([status, dropping_status, mutasi_status])
+  @@index([status, dropping_status, flagging_status])
+  @@index([status, dropping_status, cash_status])
+  @@index([status, payOfficeId])
+  @@index([status, agentFrontingId])
+  @@index([status, jenisPembiayaanId])
+  @@index([status, created_at, date_contract])
 }
 
 model AIAnalysis {
@@ -536,8 +525,7 @@ model PayOffice {
   Dapems     Dapem[]
   Debiturs   Debitur[]
 
-  @@index([name])
-  @@index([code])
+  @@index([status, name, code])
 }
 
 model Insurance {
@@ -556,8 +544,7 @@ model Insurance {
   updated_at DateTime @default(now())
   Dapems     Dapem[]
 
-  @@index([name])
-  @@index([code])
+  @@index([status, name, code])
 }
 
 model Dropping {
@@ -571,8 +558,6 @@ model Dropping {
   Sumdan     Sumdan    @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
   sumdanId   String
 
-  @@index([process_at])
-  @@index([created_at])
   @@index([status])
 }
 
@@ -587,8 +572,6 @@ model Berkas {
   Sumdan     Sumdan     @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
   sumdanId   String
 
-  @@index([process_at])
-  @@index([created_at])
   @@index([status])
 }
 
@@ -603,8 +586,6 @@ model Jaminan {
   Sumdan     Sumdan     @relation(fields: [sumdanId], references: [id], onUpdate: Cascade)
   sumdanId   String
 
-  @@index([process_at])
-  @@index([created_at])
   @@index([status])
 }
 
@@ -628,7 +609,6 @@ model Pelunasan {
   @@index([type])
   @@index([guarantee_status])
   @@index([status_paid])
-  @@index([process_at])
   @@index([created_at])
 }
 
@@ -647,6 +627,8 @@ model Angsuran {
   dapemId     String
 
   @@index([date_pay])
+  @@index([date_paid])
+  @@index([dapemId, date_pay, date_paid])
 }
 
 // AKUNTING
@@ -714,8 +696,7 @@ model AgentFronting {
   Users                User[]
   Dapems               Dapem[]
 
-  @@index([name])
-  @@index([code])
+  @@index([status, name, code])
 }
 
 model SumdanAgentFronting {
@@ -724,4 +705,6 @@ model SumdanAgentFronting {
   sumdanId        String
   AgentFronting   AgentFronting @relation(fields: [agentFrontingId], references: [id], onUpdate: Cascade)
   agentFrontingId String
+
+  @@index([sumdanId, agentFrontingId])
 }

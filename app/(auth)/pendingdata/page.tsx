@@ -6,43 +6,17 @@ import { printContract } from "@/components/pdfutils/akad/Akad";
 import { printMonitoring } from "@/components/pdfutils/etc/printMonitoring";
 import { useUser } from "@/components/UserContext";
 import {
-  ExportToExcel,
-  FilterData,
-  GetDroppingStatusTag,
-  GetStatusTag,
-  MappingToExcelDapem,
-} from "@/components/utils/CompUtils";
+  ExportToExcel, FilterData, GetDroppingStatusTag, GetStatusTag, MappingToExcelDapem, } from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
 import {
-  GetDetailDapem,
-  GetRoman,
-  IDRFormat,
-} from "@/components/utils/PembiayaanUtil";
+  GetDetailDapem, GetRoman, IDRFormat, } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable,
-  IAgentFronting,
-  IDapem,
-  IDesc,
-  IPageProps,
-  IViewFiles,
-} from "@/libs/IInterfaces";
+  IActionTable, IAgentFronting, IDapem, IDesc, IPageProps, IViewFiles, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 
 import {
-  ArrowRightOutlined,
-  BankOutlined,
-  CheckCircleOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  FileFilled,
-  FolderOutlined,
-  PayCircleOutlined,
-  PrinterOutlined,
-  ReadOutlined,
-  RobotOutlined,
-  SwapOutlined,
-} from "@ant-design/icons";
-import { JenisPembiayaan, Sumdan } from "@prisma/client";
+  ArrowRightOutlined, BankOutlined, CheckCircleOutlined, DeleteOutlined, EditOutlined, FileFilled, FolderOutlined, PayCircleOutlined, PrinterOutlined, ReadOutlined, RobotOutlined, SwapOutlined, } from "@ant-design/icons";
+import { type JenisPembiayaan, type Sumdan } from "@/generated/prisma/client";
 import {
   App,
   Button,

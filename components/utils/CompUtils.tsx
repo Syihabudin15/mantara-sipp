@@ -2,11 +2,11 @@
 
 import { IDapem, IDesc, IExportData, IFiles, IUser } from "@/libs/IInterfaces";
 import {
-  CategoryOfAccount,
+  type CategoryOfAccount,
   EDapemStatus,
   EDocStatus,
   ESubmissionStatus,
-} from "@prisma/client";
+} from "@/generated/prisma/browser";
 import {
   Button,
   Divider,

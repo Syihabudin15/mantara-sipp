@@ -39,6 +39,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             pkwt_status: res.data.pkwt_status,
             nik: res.data.nik,
             agentFrontingId: res.data.agentFrontingId,
+            fee: res.data.fee,
           });
           if (pathname === "/") {
             window && window.location.replace("/dashboard");

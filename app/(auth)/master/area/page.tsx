@@ -4,14 +4,8 @@ import { FormInput } from "@/components";
 import { IActionTable, IArea, IPageProps } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  DeleteOutlined,
-  EditOutlined,
-  EnvironmentOutlined,
-  PhoneOutlined,
-  PlusCircleFilled,
-  SaveOutlined,
-} from "@ant-design/icons";
-import { Cabang } from "@prisma/client";
+  DeleteOutlined, EditOutlined, EnvironmentOutlined, PhoneOutlined, PlusCircleFilled, SaveOutlined, } from "@ant-design/icons";
+import { type Cabang } from "@/generated/prisma/client";
 import { App, Button, Card, Input, Modal, Table, TableProps, Tag } from "antd";
 import { HookAPI } from "antd/es/modal/useModal";
 import moment from "moment";

@@ -39,7 +39,7 @@ export const PKPerdana = (record: IDapem) => {
         <p class="w-4">:</p>
         <p class="flex-1">Ketua Koperasi</p>
       </div>
-      <p>Dalam hal ini bertindak untuk dan atas nama Pemberi Kuasa PT Bank Perekonomian Rakyat Daya Perdana Nusantara, berdasarkan surat kuasa yang diberikan oleh Direktur PT Bank Perekonomian Rakyat Daya Perdana Nusantara kepada Koperasi *** Nomor <span class="font-bold">${record.ProdukPembiayaan.Sumdan.sk_no || "________________"}</span>.</p>
+      <p>Dalam hal ini bertindak untuk dan atas nama Pemberi Kuasa PT Bank Perekonomian Rakyat Daya Perdana Nusantara, berdasarkan surat kuasa yang diberikan oleh Direktur PT Bank Perekonomian Rakyat Daya Perdana Nusantara kepada Koperasi Mandiri Artha Nusantara Nomor <span class="font-bold">${record.ProdukPembiayaan.Sumdan.sk_no || "........................................................"}</span>.</p>
       <p>Untuk selanjutnya disebut <span class="font-bold">BANK</span>.</p>
     </div>
   </div>
@@ -99,11 +99,11 @@ export const PKPerdana = (record: IDapem) => {
         <p>Bahwa guna keperluan usahanya, DEBITUR yang telah mengajukan permohonan pinjaman atau kredit yakni sebagaimana:</p>
         <div class="flex gap-2 ml-3">
           <p class="w-4">a.</p>
-          <p class="">Surat Permohonan atau Pengajuan Pinjaman secara tertulis yang diajukan DEBITUR kepada BANK Nomor ${record.id.replace("P", "")} tertanggal ${moment(record.created_at).format("DD-MM-YYYY")}.</p>
+          <p class="">Surat Permohonan atau Pengajuan Pinjaman secara tertulis yang diajukan DEBITUR kepada BANK Nomor .......................................... tertanggal ........................</p>
         </div>
         <div class="flex gap-2 ml-3">
           <p class="w-4">b.</p>
-          <p class="">Surat Persetujuan Permohonan Kredit secara tertulis dari BANK Nomor ......................................... tertanggal ........................ dengan ketentuan pokok yang telah disetujui DEBITUR.</p>
+          <p class="">Surat Persetujuan Permohonan Kredit secara tertulis dari BANK Nomor .......................................... tertanggal ........................ dengan ketentuan pokok yang telah disetujui DEBITUR.</p>
         </div>
       </div>
     </div>

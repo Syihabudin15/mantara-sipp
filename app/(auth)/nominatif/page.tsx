@@ -3,35 +3,17 @@
 import { ViewFiles } from "@/components";
 import { useUser } from "@/components/UserContext";
 import {
-  ExportToExcel,
-  FilterData,
-  GetBerkasStatusTag,
-  GetDroppingStatusTag,
-  MappingToExcelDapem,
-} from "@/components/utils/CompUtils";
+  ExportToExcel, FilterData, GetBerkasStatusTag, GetDroppingStatusTag, MappingToExcelDapem, } from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
 import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable,
-  IAgentFronting,
-  IDapem,
-  IPageProps,
-  IPayOffice,
-  IViewFiles,
-} from "@/libs/IInterfaces";
+  IActionTable, IAgentFronting, IDapem, IPageProps, IPayOffice, IViewFiles, } from "@/libs/IInterfaces";
 
 import {
-  ArrowRightOutlined,
-  BankOutlined,
-  FileFilled,
-  FileProtectOutlined,
-  FolderOutlined,
-  PayCircleOutlined,
-  PrinterOutlined,
-  SwapOutlined,
-} from "@ant-design/icons";
-import { JenisPembiayaan, Sumdan } from "@prisma/client";
+  ArrowRightOutlined, BankOutlined, FileFilled, FileProtectOutlined, FolderOutlined, PayCircleOutlined, PrinterOutlined, SwapOutlined, } from "@ant-design/icons";
+import { type JenisPembiayaan, type Sumdan } from "@/generated/prisma/client";
 import {
+  App,
   Button,
   Card,
   DatePicker,
@@ -53,7 +35,7 @@ const { Paragraph } = Typography;
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
     page: 1,
-    limit: 50,
+    limit: 25,
     total: 0,
     data: [],
     search: "",
@@ -66,6 +48,7 @@ export default function Page() {
     backdate: "",
   });
   const [loading, setLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [selected, setSelected] = useState<IActionTable<IDapem>>({
     upsert: false,
     delete: false,
@@ -81,9 +64,10 @@ export default function Page() {
     open: false,
     data: [],
   });
+  const { modal } = App.useApp();
 
   // OPTIMASI 1: Amankan fungsi fetch dengan useCallback agar referensinya stabil
-  const getData = useCallback(async () => {
+  const getData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -106,20 +90,22 @@ export default function Page() {
         }),
         ...(pageProps.payOfficeId && { payOfficeId: pageProps.payOfficeId }),
         ...(pageProps.backdate && { backdate: pageProps.backdate }),
-        includes: "true",
+        includes: "nominatif",
       });
 
-      const res = await fetch(`/api/dapem?${params.toString()}`);
+      const res = await fetch(`/api/dapem?${params.toString()}`, { signal });
+      if (!res.ok) throw new Error("Gagal memuat data nominatif.");
       const json = await res.json();
+      if (signal?.aborted) return;
       setPageProps((prev) => ({
         ...prev,
         data: json.data,
         total: json.total,
       }));
     } catch (err) {
-      console.error("Failed to fetch dapem data", err);
+      if (!signal?.aborted) console.error("Failed to fetch nominatif data", err);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [
     pageProps.page,
@@ -137,11 +123,15 @@ export default function Page() {
   // OPTIMASI 2: Gabungkan trigger pemanggilan getData ke dalam satu debounced-effect terpusat
   // Ini mencegah request ganda (duplicate requests) saat parameter berubah bersamaan
   useEffect(() => {
+    const controller = new AbortController();
     const timeout = setTimeout(() => {
-      getData();
+      getData(controller.signal);
     }, 180); // Debounce ringan 180ms sangat efektif menahan ketikan keyboard pada kolom pencarian
 
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [
     getData,
     pageProps.page,
@@ -197,7 +187,47 @@ export default function Page() {
   );
   const paysOptions = useMemo(
     () => pays.map((s) => ({ label: s.name, value: s.id })),
-    [agents],
+    [pays],
+  );
+
+  const calculatedDetails = useMemo(
+    () =>
+      new Map(pageProps.data.map((record) => [record.id, GetDetailDapem(record)])),
+    [pageProps.data],
+  );
+
+  const openDapemDetails = useCallback(
+    async (record: IDapem) => {
+      setDetailLoading(true);
+      try {
+        const response = await fetch(`/api/dapem?id=${record.id}`, {
+          method: "PATCH",
+        });
+        const result = (await response.json()) as {
+          data?: IDapem;
+          msg?: string;
+        };
+        if (!response.ok || !result.data) {
+          throw new Error(result.msg || "Gagal memuat detail pembiayaan.");
+        }
+        setSelected((prev) => ({
+          ...prev,
+          selected: result.data,
+          upsert: true,
+        }));
+      } catch (error) {
+        modal.error({
+          title: "Gagal memuat detail",
+          content:
+            error instanceof Error
+              ? error.message
+              : "Terjadi kesalahan saat memuat detail pembiayaan.",
+        });
+      } finally {
+        setDetailLoading(false);
+      }
+    },
+    [modal],
   );
 
   // OPTIMASI 3: Gunakan useMemo untuk definisi kolom agar Table AntD tidak membuat ulang objek kolom di setiap render
@@ -257,7 +287,7 @@ export default function Page() {
         dataIndex: "angsuran",
         key: "angsuran",
         render(value, record) {
-          const detail = GetDetailDapem(record);
+          const detail = calculatedDetails.get(record.id)!;
           return (
             <div className="text-xs">
               <div className="flex gap-2 items-center">
@@ -640,7 +670,7 @@ export default function Page() {
         dataIndex: "blokir",
         key: "blokir",
         render(value, record) {
-          const angs = GetDetailDapem(record).angsuran;
+          const angs = calculatedDetails.get(record.id)!.angsuran;
           return (
             <div className="text-xs text-right">
               <p>
@@ -680,19 +710,22 @@ export default function Page() {
                 type="primary"
                 size="small"
                 onClick={() =>
-                  setSelected((prev) => ({
-                    ...prev,
-                    upsert: true,
-                    selected: record,
-                  }))
+                  void openDapemDetails(record)
                 }
+                loading={detailLoading}
               ></Button>
             </Tooltip>
           </div>
         ),
       },
     ],
-    [pageProps.page, pageProps.limit],
+    [
+      pageProps.page,
+      pageProps.limit,
+      calculatedDetails,
+      detailLoading,
+      openDapemDetails,
+    ],
   );
 
   // OPTIMASI 4: Pindahkan kalkulasi matematika berat di bagian Summary ke dalam useMemo terpisah
@@ -727,7 +760,7 @@ export default function Page() {
 
     for (let i = 0; i < pageProps.data.length; i++) {
       const curr = pageProps.data[i];
-      const detailDapem = GetDetailDapem(curr);
+      const detailDapem = calculatedDetails.get(curr.id)!;
 
       totalPlafond += curr.plafond;
       angs += detailDapem.angsuran;
@@ -775,7 +808,7 @@ export default function Page() {
       takeover,
       blokir,
     };
-  }, [pageProps.data]);
+  }, [calculatedDetails, pageProps.data]);
 
   // Handler yang di-memoized
   const handleClearFilter = useCallback(() => {
@@ -993,7 +1026,11 @@ export default function Page() {
             style={{ width: 170 }}
             placeholder="Cari nama..."
             onChange={(e) =>
-              setPageProps((prev) => ({ ...prev, search: e.target.value }))
+              setPageProps((prev) => ({
+                ...prev,
+                search: e.target.value,
+                page: 1,
+              }))
             }
           />
         </div>
@@ -1014,7 +1051,7 @@ export default function Page() {
           onChange: (page, pageSize) => {
             setPageProps((prev) => ({ ...prev, page, limit: pageSize }));
           },
-          pageSizeOptions: [50, 100, 500, 1000],
+          pageSizeOptions: [25, 50, 100],
           showSizeChanger: true,
         }}
         summary={() => {

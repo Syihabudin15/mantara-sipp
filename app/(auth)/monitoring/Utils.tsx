@@ -3,48 +3,21 @@
 import { FormInput } from "@/components";
 import { useUser } from "@/components/UserContext";
 import {
-  GetDetailDapem,
-  GetFullAge,
-  getInitialDapemDetail,
-  GetMaxPlafond,
-  GetMaxTenor,
-  IDRFormat,
-  IDRToNumber,
-} from "@/components/utils/PembiayaanUtil";
+  GetDetailDapem, GetFullAge, getInitialDapemDetail, GetMaxPlafond, GetMaxTenor, IDRFormat, IDRToNumber, } from "@/components/utils/PembiayaanUtil";
 import {
-  IAgentFronting,
-  IDapem,
-  IInsurance,
-  IOutputDapemDetail,
-  IPayOffice,
-  IProdukPembiayaan,
-  ISumdan,
-  IUserDapem,
-} from "@/libs/IInterfaces";
+  IAgentFronting, IDapem, IInsurance, IOutputDapemDetail, IPayOffice, IProdukPembiayaan, ISumdan, IUserDapem, } from "@/libs/IInterfaces";
 import {
-  BranchesOutlined,
-  CalculatorOutlined,
-  DollarCircleOutlined,
-  FolderOutlined,
-  KeyOutlined,
-  SearchOutlined,
-  SecurityScanOutlined,
-  SettingOutlined,
-  SignatureOutlined,
-  SolutionOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+  BranchesOutlined, CalculatorOutlined, DollarCircleOutlined, FolderOutlined, KeyOutlined, SearchOutlined, SecurityScanOutlined, SettingOutlined, SignatureOutlined, SolutionOutlined, TeamOutlined, UserOutlined, } from "@ant-design/icons";
 import {
-  Berkas,
-  Debitur,
-  Dropping,
+  type Berkas,
+  type Debitur,
+  type Dropping,
   EMarginType,
   EMarriageStatus,
-  Jaminan,
-  JenisPembiayaan,
-  Pelunasan,
-} from "@prisma/client";
+  type Jaminan,
+  type JenisPembiayaan,
+  type Pelunasan,
+} from "@/generated/prisma/browser";
 import {
   App,
   Button,
@@ -64,7 +37,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function UpsertPermohonan({ record }: { record?: IDapem }) {
-  const [data, setData] = useState<IDapem>(record || defaultData);
+  const [data, setData] = useState<IDapem>(() =>
+    record
+      ? {
+          ...record,
+          c_fee_fronting: record.c_fee_fronting || record.c_agent || 0,
+          c_agent: 0,
+        }
+      : defaultData,
+  );
   const [loading, setLoading] = useState(false);
   const [jenis, setJenis] = useState<JenisPembiayaan[]>([]);
   const [sumdan, setSumdan] = useState<ISumdan[]>([]);
@@ -149,6 +130,19 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
       setLoading(false);
     })();
   }, []);
+
+  useEffect(() => {
+    if (record || !user?.agentFrontingId) return;
+
+    const agent = agents.find((item) => item.id === user.agentFrontingId);
+    setData((prev) => ({
+      ...prev,
+      agentFrontingId: user.agentFrontingId,
+      AgentFronting: agent || prev.AgentFronting,
+      c_fee_fronting: user.fee || agent?.c_fee || 0,
+      c_agent: 0,
+    }));
+  }, [agents, record, user?.agentFrontingId, user?.fee]);
 
   useEffect(() => {
     const { year, month } = GetFullAge(data.Debitur.birthdate, data.created_at);
@@ -1576,6 +1570,13 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                             }
                           }}
                         />
+                        <p className="mt-1 text-xs text-gray-500">
+                          Sumdan Agent Fronting:{" "}
+                          {data.ProdukPembiayaan?.Sumdan?.name || "-"}
+                          {data.ProdukPembiayaan?.Sumdan?.code
+                            ? ` (${data.ProdukPembiayaan.Sumdan.code})`
+                            : ""}
+                        </p>
                       </div>
                       <div className="flex flex-wrap gap-4">
                         <FormInput
@@ -1919,13 +1920,28 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                             type="number"
                           />
                         </Tooltip>
+                        <Tooltip title="Fee Agent Fronting">
+                          <Input
+                            size="small"
+                            style={{ width: 65 }}
+                            value={data.c_fee_fronting}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                c_fee_fronting: Number(e.target.value || 0),
+                              })
+                            }
+                            type="number"
+                          />
+                        </Tooltip>
                         <Input
                           size="small"
                           disabled
                           value={IDRFormat(
                             details.detail.fee_ao +
                               details.detail.fee_cabang +
-                              details.detail.fee_area,
+                              details.detail.fee_area +
+                              details.detail.fee_agent,
                           )}
                           style={{
                             textAlign: "right",
@@ -2252,6 +2268,8 @@ export default function UpsertPermohonan({ record }: { record?: IDapem }) {
                             ...data,
                             agentFrontingId: e,
                             AgentFronting: find || null,
+                            c_fee_fronting: find ? find.c_fee : 0,
+                            c_agent: 0,
                           });
                         },
                       }}
@@ -2681,6 +2699,7 @@ const defaultData: IDapem = {
   c_fee_area: 0,
   c_fee_bpp: 0,
   c_fee_bpb: 0,
+  c_fee_fronting: 0,
   c_ned: 0,
   c_bop: 0,
   c_bop_area: 0,
@@ -2689,7 +2708,6 @@ const defaultData: IDapem = {
   rounded_sumdan: 0,
   margin_type: "ANUITAS",
   agentFrontingId: null,
-  c_fee_fronting: 0,
 
   prev_payoffice: null,
   takeover_from: null,
@@ -2807,6 +2825,7 @@ const defaultData: IDapem = {
   jaminanId: null,
   payOfficeId: null,
   insuranceId: null,
+  c_agent: 0,
 };
 
 interface ITemp {

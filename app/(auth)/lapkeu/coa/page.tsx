@@ -3,18 +3,11 @@
 import { FormInput } from "@/components";
 import { TypeAccount } from "@/components/utils/CompUtils";
 import {
-  IActionTable,
-  ICategoryOfAccount,
-  IPageProps,
-} from "@/libs/IInterfaces";
+  IActionTable, ICategoryOfAccount, IPageProps, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  DeleteOutlined,
-  EditOutlined,
-  PlusCircleOutlined,
-  SnippetsOutlined,
-} from "@ant-design/icons";
-import { AccountType, CategoryOfAccount } from "@prisma/client";
+  DeleteOutlined, EditOutlined, PlusCircleOutlined, SnippetsOutlined, } from "@ant-design/icons";
+import { AccountType, type CategoryOfAccount } from "@/generated/prisma/browser";
 import {
   App,
   Button,

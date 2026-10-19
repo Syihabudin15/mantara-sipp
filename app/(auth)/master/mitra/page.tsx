@@ -2,27 +2,12 @@
 
 import { FormInput } from "@/components";
 import {
-  GetSisaPokokMargin,
-  IDRFormat,
-  IDRToNumber,
-  serializeForApi,
-} from "@/components/utils/PembiayaanUtil";
+  GetSisaPokokMargin, IDRFormat, IDRToNumber, serializeForApi, } from "@/components/utils/PembiayaanUtil";
 import { IActionTable, IDapem, IPageProps, ISumdan } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  BankOutlined,
-  CalendarOutlined,
-  DeleteOutlined,
-  DollarCircleOutlined,
-  EditOutlined,
-  EnvironmentOutlined,
-  FileProtectOutlined,
-  FileTextOutlined,
-  PhoneOutlined,
-  PlusCircleFilled,
-  SaveOutlined,
-} from "@ant-design/icons";
-import { ProdukPembiayaan, Sumdan } from "@prisma/client";
+  BankOutlined, CalendarOutlined, DeleteOutlined, DollarCircleOutlined, EditOutlined, EnvironmentOutlined, FileProtectOutlined, FileTextOutlined, PhoneOutlined, PlusCircleFilled, SaveOutlined, } from "@ant-design/icons";
+import { type ProdukPembiayaan, type Sumdan } from "@/generated/prisma/client";
 import {
   App,
   Button,

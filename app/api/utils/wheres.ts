@@ -1,10 +1,6 @@
 import prisma from "@/libs/Prisma";
-import {
-  getCacheJSON,
-  setCacheJSON,
-  clearCachePrefix,
-} from "@/libs/redisservice";
-import { Cabang, Prisma, Role, User } from "@prisma/client";
+import { getCacheJSON, setCacheJSON, clearCachePrefix, } from "@/libs/redisservice";
+import { type Cabang, type Prisma, type Role, type User } from "@/generated/prisma/client";
 
 interface UserWhere extends User {
   Cabang: Cabang;

@@ -4,12 +4,8 @@ import { IMenu, listMenuUI } from "@/components/IMenu";
 import { IActionTable, IPageProps, IPermission } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  DeleteOutlined,
-  EditOutlined,
-  KeyOutlined,
-  PlusCircleFilled,
-} from "@ant-design/icons";
-import { EDataStatus, Role } from "@prisma/client";
+  DeleteOutlined, EditOutlined, KeyOutlined, PlusCircleFilled, } from "@ant-design/icons";
+import { EDataStatus, type Role } from "@/generated/prisma/browser";
 import {
   App,
   Button,

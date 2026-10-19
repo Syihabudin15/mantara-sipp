@@ -2,7 +2,7 @@ import { getSession } from "@/libs/Auth";
 import { IArea } from "@/libs/IInterfaces";
 import prisma from "@/libs/Prisma";
 
-import { Prisma } from "@prisma/client";
+import { type Prisma } from "@/generated/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (request: NextRequest) => {

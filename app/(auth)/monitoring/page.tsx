@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import moment from "moment";
-import { JenisPembiayaan, Sumdan } from "@prisma/client";
+import { type JenisPembiayaan, type Sumdan } from "@/generated/prisma/client";
 import {
   App,
   Button,
@@ -94,7 +94,7 @@ interface IActionTableAkad<T> extends IActionTable<T> {
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
     page: 1,
-    limit: 100,
+    limit: 25,
     total: 0,
     data: [],
     search: "",
@@ -106,6 +106,7 @@ export default function Page() {
     dropping_status: "",
   });
   const [loading, setLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [selected, setSelected] = useState<IActionTableAkad<IDapem>>({
     upsert: false,
     delete: false,
@@ -125,12 +126,13 @@ export default function Page() {
   const [views, setViews] = useState<IViewFiles>({ open: false, data: [] });
 
   // 1. Fetch data utama dibungkus useCallback agar stabil
-  const getData = useCallback(async () => {
+  const getData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
         page: pageProps.page.toString(),
         limit: pageProps.limit.toString(),
+        includes: "monitoring",
         ...(pageProps.search && { search: pageProps.search }),
         ...(pageProps.sumdanId && { sumdanId: pageProps.sumdanId }),
         ...(pageProps.backdate && { backdate: pageProps.backdate }),
@@ -149,17 +151,21 @@ export default function Page() {
         // includes: "true",
       });
 
-      const res = await fetch(`/api/dapem?${params.toString()}`);
+      const res = await fetch(`/api/dapem?${params.toString()}`, { signal });
+      if (!res.ok) throw new Error("Gagal memuat data monitoring.");
       const json = await res.json();
+      if (signal?.aborted) return;
       setPageProps((prev) => ({
         ...prev,
         data: json.data || [],
         total: json.total || 0,
       }));
     } catch (err) {
-      console.error("Gagal memuat data dapem pending:", err);
+      if (!signal?.aborted) {
+        console.error("Gagal memuat data monitoring:", err);
+      }
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [
     pageProps.page,
@@ -175,10 +181,14 @@ export default function Page() {
 
   // Debouncer pencarian
   useEffect(() => {
+    const controller = new AbortController();
     const timeout = setTimeout(() => {
-      getData();
+      getData(controller.signal);
     }, 250);
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [getData]);
 
   // Fetch master data sekali saat mount
@@ -220,22 +230,59 @@ export default function Page() {
     [agents],
   );
 
-  // 3. Gabungkan ringkasan kalkulasi data ke dalam satu loop useMemo tunggal
+  const calculatedDetails = useMemo(
+    () =>
+      new Map(pageProps.data.map((record) => [record.id, GetDetailDapem(record)])),
+    [pageProps.data],
+  );
+
   const calculatedSummary = useMemo(() => {
     let angsuran = 0;
     let angsuran_sumdan = 0;
     let plafond = 0;
 
-    const dataLength = pageProps.data?.length || 0;
-    for (let i = 0; i < dataLength; i++) {
-      const d = pageProps.data[i];
-      const angs = GetDetailDapem(d);
+    for (const d of pageProps.data) {
+      const angs = calculatedDetails.get(d.id)!;
       angsuran += angs.angsuran;
       angsuran_sumdan += angs.detail.angsuran_sumdan;
       plafond += d.plafond;
     }
     return { angsuran, angsuran_sumdan, plafond };
-  }, [pageProps.data]);
+  }, [calculatedDetails, pageProps.data]);
+
+  const openDapemDetails = useCallback(
+    async (record: IDapem) => {
+      setDetailLoading(true);
+      try {
+        const response = await fetch(`/api/dapem?id=${record.id}`, {
+          method: "PATCH",
+        });
+        const result = (await response.json()) as {
+          data?: IDapem;
+          msg?: string;
+        };
+        if (!response.ok || !result.data) {
+          throw new Error(result.msg || "Gagal memuat detail pembiayaan.");
+        }
+        setSelected((prev) => ({
+          ...prev,
+          selected: result.data,
+          upsert: true,
+        }));
+      } catch (error) {
+        modal.error({
+          title: "Gagal memuat detail",
+          content:
+            error instanceof Error
+              ? error.message
+              : "Terjadi kesalahan saat memuat detail pembiayaan.",
+        });
+      } finally {
+        setDetailLoading(false);
+      }
+    },
+    [modal],
+  );
 
   // 4. Bersihkan dependensi `selected` dari useMemo columns agar table tidak re-render radikal saat modal dibuka/ditutup
   const columns: TableProps<IDapem>["columns"] = useMemo(() => {
@@ -285,7 +332,7 @@ export default function Page() {
         dataIndex: "angsuran",
         key: "angsuran",
         render: (_, record) => {
-          const temp = GetDetailDapem(record);
+          const temp = calculatedDetails.get(record.id)!;
           return (
             <div className="text-xs">
               <div className="flex gap-2 items-center">
@@ -589,19 +636,23 @@ export default function Page() {
                 type="primary"
                 size="small"
                 onClick={() =>
-                  setSelected((prev) => ({
-                    ...prev,
-                    upsert: true,
-                    selected: record,
-                  }))
+                  void openDapemDetails(record)
                 }
+                loading={detailLoading}
               />
             </Tooltip>
           </div>
         ),
       },
     ];
-  }, [pageProps.page, pageProps.limit, hasAccess]); // selected DIBUANG dari dependensi agar tabel tidak lag/re-render total
+  }, [
+    pageProps.page,
+    pageProps.limit,
+    hasAccess,
+    calculatedDetails,
+    detailLoading,
+    openDapemDetails,
+  ]);
 
   // Callback excel stabil
   const handleExportExcel = useCallback(() => {
@@ -877,7 +928,7 @@ export default function Page() {
           onChange: (page, pageSize) => {
             setPageProps((prev) => ({ ...prev, page, limit: pageSize }));
           },
-          pageSizeOptions: [50, 100, 500, 1000],
+          pageSizeOptions: [25, 50, 100],
           showSizeChanger: true,
         }}
         summary={handleTableSummary}
@@ -1132,8 +1183,17 @@ const PrintContractSubmission = ({
         }),
       }).then((r) => r.json());
       if (res.status === 200) {
+        const detailRes = await fetch(`/api/dapem?id=${data.id}`, {
+          method: "PATCH",
+        }).then((r) => r.json());
+        if (detailRes.status !== 200 || !detailRes.data) {
+          hook.error({
+            content: detailRes.msg || "Gagal memuat data lengkap untuk cetak akad",
+          });
+          return;
+        }
         await getData();
-        printContract({ ...temp, Angsurans: res.data } as IDapem);
+        printContract(detailRes.data as IDapem);
       } else {
         hook.error({ content: res.msg });
       }

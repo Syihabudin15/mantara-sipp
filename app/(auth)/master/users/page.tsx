@@ -6,19 +6,14 @@ import { IDRFormat, IDRToNumber } from "@/components/utils/PembiayaanUtil";
 import { IActionTable, IArea, IPageProps, UserType } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  BankOutlined,
-  BranchesOutlined,
-  DeleteOutlined,
-  DollarCircleOutlined,
-  EditOutlined,
-  EnvironmentOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  PlusCircleFilled,
-  SaveOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import { AgentFronting, Cabang, Role, Sumdan, User } from "@prisma/client";
+  BankOutlined, BranchesOutlined, DeleteOutlined, DollarCircleOutlined, EditOutlined, EnvironmentOutlined, MailOutlined, PhoneOutlined, PlusCircleFilled, SaveOutlined, UserOutlined, } from "@ant-design/icons";
+import {
+  type AgentFronting,
+  type Cabang,
+  type Role,
+  type Sumdan,
+  type User,
+} from "@/generated/prisma/client";
 import {
   App,
   Button,

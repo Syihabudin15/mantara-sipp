@@ -1,7 +1,8 @@
 "use client";
 
 import { CloudUploadOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Button, Input, Select, Upload, UploadProps } from "antd";
+import { Button, DatePicker, Input, Select, Upload, UploadProps } from "antd";
+import dayjs from "dayjs";
 import { useState } from "react";
 
 export interface IFormInput {
@@ -56,15 +57,23 @@ export const FormInput = ({ data }: { data: IFormInput }) => {
         />
       )}
       {data.type === "date" && (
-        <Input
-          type={"date"}
-          value={data.value}
-          onChange={(e) => data.onChange && data.onChange(e.target.value)}
+        <DatePicker
+          format="DD-MM-YYYY"
+          placeholder="DD-MM-YYYY"
+          value={
+            data.value && dayjs(data.value).isValid()
+              ? dayjs(data.value)
+              : null
+          }
+          onChange={(date) =>
+            data.onChange &&
+            data.onChange(date ? date.format("YYYY-MM-DD") : "")
+          }
           prefix={data.prefix}
-          suffix={data.suffix}
+          suffixIcon={data.suffix}
           disabled={data.disabled}
           required={data.required}
-          style={{ color: "black" }}
+          style={{ width: "100%", color: "black" }}
           allowClear
         />
       )}

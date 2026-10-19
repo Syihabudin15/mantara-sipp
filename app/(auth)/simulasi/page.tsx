@@ -2,32 +2,18 @@
 
 import { FormInput } from "@/components";
 import {
-  GetDetailDapem,
-  GetFullAge,
-  getInitialDapemDetail,
-  GetMaxPlafond,
-  GetMaxTenor,
-  IDRFormat,
-  IDRToNumber,
-} from "@/components/utils/PembiayaanUtil";
+  GetDetailDapem, GetFullAge, getInitialDapemDetail, GetMaxPlafond, GetMaxTenor, IDRFormat, IDRToNumber, } from "@/components/utils/PembiayaanUtil";
 import {
-  IDapem,
-  IDebitur,
-  IOutputDapemDetail,
-  ISumdan,
-} from "@/libs/IInterfaces";
+  IDapem, IDebitur, IOutputDapemDetail, ISumdan, } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  HistoryOutlined,
-  PrinterOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+  HistoryOutlined, PrinterOutlined, SearchOutlined, } from "@ant-design/icons";
 import {
-  Debitur,
-  JenisPembiayaan,
-  ProdukPembiayaan,
-  Sumdan,
-} from "@prisma/client";
+  type Debitur,
+  type JenisPembiayaan,
+  type ProdukPembiayaan,
+  type Sumdan,
+} from "@/generated/prisma/client";
 import {
   App,
   Button,
@@ -42,6 +28,7 @@ import {
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
+import { useUser } from "@/components/UserContext";
 
 export default function Page() {
   const [data, setData] = useState<IDapemSimulasi>(defaultData);
@@ -56,6 +43,7 @@ export default function Page() {
   const { hasAccess } = useAccess(
     window ? window.location.pathname : "/simulasi",
   );
+  const user = useUser();
   const { message } = App.useApp();
 
   useEffect(() => {
@@ -118,6 +106,7 @@ export default function Page() {
         rounded: findSumdan.rounded,
         c_ned: findSumdan.c_ned,
         c_bop_area: findSumdan.c_bop_area,
+        c_fee_fronting: user?.fee || 0,
       }));
     }
     const maxTenn = GetMaxTenor(data.ProdukPembiayaan.max_paid, year, month);
@@ -189,6 +178,7 @@ export default function Page() {
     data.c_account,
     data.c_margin,
     data.c_margin_sumdan,
+    data.c_fee_fronting,
   ]);
 
   const handleSearch = async () => {
@@ -220,6 +210,14 @@ export default function Page() {
       setLoading(false);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!user?.agentFrontingId) return;
+    setData((prev) => ({
+      ...prev,
+      c_fee_fronting: user.fee || 0,
+    }));
+  }, [user?.agentFrontingId, user?.fee]);
 
   return (
     <div className="flex flex-col sm:flex-row">
@@ -408,12 +406,17 @@ export default function Page() {
                       rounded: findSumdan.rounded,
                       c_ned: findSumdan.c_ned,
                       c_bop_area: findSumdan.c_bop_area,
+                      c_fee_fronting: user?.fee || 0,
                     });
                   }
                 }
               }}
               allowClear
             />
+            <p className="mt-1 text-xs text-gray-500">
+              Sumdan Agent Fronting: {data.Sumdan?.name || "-"}
+              {data.Sumdan?.code ? ` (${data.Sumdan.code})` : ""}
+            </p>
           </div>
           {hasAccess("deviasi") ? (
             <div className="w-full flex gap-2">
@@ -697,6 +700,20 @@ export default function Page() {
                     type={"number"}
                   />
                 </Tooltip>
+                <Tooltip title="Fee Agent Fronting">
+                  <Input
+                    size="small"
+                    style={{ flex: 1, minWidth: 50 }}
+                    value={data.c_fee_fronting}
+                    onChange={(e) =>
+                      setData((prev) => ({
+                        ...prev,
+                        c_fee_fronting: parseFloat(e.target.value || "0"),
+                      }))
+                    }
+                    type={"number"}
+                  />
+                </Tooltip>
                 <Tooltip title="Area">
                   <Input
                     size="small"
@@ -717,7 +734,8 @@ export default function Page() {
                   value={IDRFormat(
                     details.detail.fee_ao +
                       details.detail.fee_cabang +
-                      details.detail.fee_area,
+                      details.detail.fee_area +
+                      details.detail.fee_agent,
                   )}
                   style={{ textAlign: "right", color: "black", width: 130 }}
                 />
@@ -1245,8 +1263,18 @@ const ModalDetailPembiayaan = ({
                 </span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
-                <span>Tatalaksana</span>
-                <span>{IDRFormat(detail.tatalaksana + detail.provisi)}</span>
+                <span>Tatalaksana & Provisi</span>
+                <span>
+                  {IDRFormat(
+                    detail.tatalaksana +
+                      detail.provisi -
+                      detail.detail.fee_agent,
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between gap-2 border-b border-dashed">
+                <span>Fee Agent Fronting</span>
+                <span>{IDRFormat(detail.detail.fee_agent)}</span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Buka Rekening</span>
@@ -1344,6 +1372,7 @@ const defaultData: IDapemSimulasi = {
   c_fee_area: 0,
   c_fee_bpp: 0,
   c_fee_bpb: 0,
+  c_fee_fronting: 0,
   c_insurance: 0,
   c_gov: 0,
   c_account_sumdan: 0,
@@ -1356,6 +1385,7 @@ const defaultData: IDapemSimulasi = {
   c_takeover: 0,
   c_bop_area: 0,
   c_bop: 0,
+  c_agent: 0,
   max_plafond: 0,
   max_tenor: 0,
   c_ned: 0,

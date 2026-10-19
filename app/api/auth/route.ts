@@ -21,6 +21,7 @@ export const POST = async (req: NextRequest) => {
         Role: true,
         Sumdan: true,
         Cabang: { include: { Area: true } },
+        AgentFronting: { select: { name: true, c_fee: true } },
       },
     });
     if (!find) {
@@ -45,6 +46,7 @@ export const POST = async (req: NextRequest) => {
       area: Cabang.Area.name || "",
       password: userPass,
       Role: { ...Role, permission: "[]" },
+      fee: payload.AgentFronting ? payload.AgentFronting.c_fee : 0,
     });
     const access = JSON.parse(Role.permission) as IPermission[];
     if (access.some((a) => a.path === "/dashboard")) {
@@ -75,6 +77,7 @@ export const GET = async () => {
         Role: true,
         Cabang: { select: { name: true, Area: { select: { name: true } } } },
         Sumdan: { select: { name: true } },
+        AgentFronting: { select: { name: true, c_fee: true } },
       },
     });
     // const user = await GetUserSession(session);
@@ -94,6 +97,7 @@ export const GET = async () => {
           cabang: Cabang.name,
           area: Cabang.Area.name,
           sumdan: Sumdan?.name,
+          fee: datauser.AgentFronting ? datauser.AgentFronting.c_fee : 0,
         },
         status: 200,
         msg: "OK",

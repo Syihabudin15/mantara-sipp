@@ -15,12 +15,13 @@ import {
 import { useAccess } from "@/libs/Permission";
 import {
   DeleteOutlined,
+  DollarCircleOutlined,
   EditOutlined,
   GlobalOutlined,
   PlusCircleFilled,
   SaveOutlined,
 } from "@ant-design/icons";
-import { Sumdan } from "@prisma/client";
+import { type Sumdan } from "@/generated/prisma/client";
 import {
   App,
   Button,
@@ -64,6 +65,7 @@ export default function Page() {
     const params = new URLSearchParams({
       page: pageProps.page.toString(),
       limit: pageProps.limit.toString(),
+      includes: "true",
       ...(pageProps.search && { search: pageProps.search }),
     });
     const res = await fetch(`/api/agent?${params.toString()}`);
@@ -124,11 +126,20 @@ export default function Page() {
       key: "up",
     },
     {
-      title: "Target Perbulan",
+      title: "Target & Fee",
       dataIndex: "target",
       key: "target",
       render(value, record, index) {
-        return <div>{IDRFormat(record.target)}</div>;
+        return (
+          <div className="opacity-80">
+            <div>
+              <DollarCircleOutlined /> {IDRFormat(record.target)}
+            </div>
+            <div>
+              <DollarCircleOutlined /> {record.c_fee}%
+            </div>
+          </div>
+        );
       },
     },
     {
@@ -414,6 +425,16 @@ function UpsertData({
               value: IDRFormat(data.target),
               onChange: (e: string) =>
                 setData({ ...data, target: IDRToNumber(e || "0") }),
+            }}
+          />
+          <FormInput
+            data={{
+              label: "Fee",
+              mode: "horizontal",
+              type: "number",
+              value: data.c_fee,
+              onChange: (e: number) =>
+                setData({ ...data, c_fee: Number(e || 0) }),
             }}
           />
           <FormInput
