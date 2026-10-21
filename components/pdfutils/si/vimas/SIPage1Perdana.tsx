@@ -60,13 +60,13 @@ export const SIPage1Perdana = (record: IDropping) => {
             value: dapem.ProdukPembiayaan.name,
           },
           {
-            key: `Administrasi ${dapem.c_adm_sumdan}%`,
+            key: `Administrasi Bank`,
             value: IDRFormat(detail.detail.adm_sumdan),
             currency: true,
             classStyle: "font-bold",
           },
           {
-            key: `Provisi ${dapem.c_provisi_sumdan}%`,
+            key: `Provisi Bank`,
             value: IDRFormat(detail.detail.provisi_sumdan),
             currency: true,
             classStyle: "font-bold",

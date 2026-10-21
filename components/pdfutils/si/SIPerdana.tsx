@@ -4,6 +4,7 @@ import { SIPage2Vima } from "./vimas/SIPage2";
 import { SIPage3Vima } from "./vimas/SIPage3";
 import { SIPage4Vima } from "./vimas/SIPage4";
 import { SIPage1Perdana } from "./vimas/SIPage1Perdana";
+import { SIPage2Perdana } from "./vimas/SIPage2Perdana";
 
 moment.locale("id");
 
@@ -70,7 +71,7 @@ const generateSI = (record: IDropping) => {
       ${SIPage1Perdana(record)}
     </div>
     <div class="page" style="font-size: 12px;">
-      ${SIPage2Vima(record)}
+      ${SIPage2Perdana(record)}
     </div>
     <div class="page" style="font-size: 12px;">
       ${SIPage3Vima(record)}
