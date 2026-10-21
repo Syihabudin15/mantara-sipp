@@ -279,8 +279,7 @@ export default function Page() {
                 onClick={() => {
                   if (record.Sumdan.code.includes("VIMA")) {
                     printSIVima(record);
-                  }
-                  if (record.Sumdan.code.includes("PERDANA")) {
+                  } else if (record.Sumdan.code.includes("PERDANA")) {
                     printSIPerdana(record);
                   } else {
                     printSIStandar(record);
