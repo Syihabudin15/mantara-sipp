@@ -5,12 +5,27 @@ import { printSIStandar } from "@/components/pdfutils/si/SIStandar";
 import { printSIVima } from "@/components/pdfutils/si/SIVima";
 import { FilterData } from "@/components/utils/CompUtils";
 import {
-  GetAngsuran, GetDetailDapem, IDRFormat, } from "@/components/utils/PembiayaanUtil";
+  GetAngsuran,
+  GetDetailDapem,
+  IDRFormat,
+} from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable, IDapem, IDropping, IPageProps, IViewFiles, } from "@/libs/IInterfaces";
+  IActionTable,
+  IDapem,
+  IDropping,
+  IPageProps,
+  IViewFiles,
+} from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  BankOutlined, DeleteOutlined, EditOutlined, FileFilled, FormOutlined, PrinterOutlined, TransactionOutlined, } from "@ant-design/icons";
+  BankOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  FileFilled,
+  FormOutlined,
+  PrinterOutlined,
+  TransactionOutlined,
+} from "@ant-design/icons";
 import { type Sumdan } from "@/generated/prisma/client";
 import {
   App,
@@ -260,11 +275,16 @@ export default function Page() {
                 icon={<PrinterOutlined />}
                 size="small"
                 type="primary"
-                onClick={() =>
-                  record.Sumdan.code.includes("VIMA")
-                    ? printSIVima(record)
-                    : printSIStandar(record)
-                }
+                onClick={() => {
+                  if (record.Sumdan.code.includes("VIMA")) {
+                    printSIVima(record);
+                  }
+                  if (record.Sumdan.code.includes("PERDANA")) {
+                    printSIVima(record);
+                  } else {
+                    printSIStandar(record);
+                  }
+                }}
               ></Button>
             </Tooltip>
             <Tooltip title="Berkas Akad & Dropping">

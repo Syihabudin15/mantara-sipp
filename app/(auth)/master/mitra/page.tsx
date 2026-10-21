@@ -2,11 +2,26 @@
 
 import { FormInput } from "@/components";
 import {
-  GetSisaPokokMargin, IDRFormat, IDRToNumber, serializeForApi, } from "@/components/utils/PembiayaanUtil";
+  GetSisaPokokMargin,
+  IDRFormat,
+  IDRToNumber,
+  serializeForApi,
+} from "@/components/utils/PembiayaanUtil";
 import { IActionTable, IDapem, IPageProps, ISumdan } from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 import {
-  BankOutlined, CalendarOutlined, DeleteOutlined, DollarCircleOutlined, EditOutlined, EnvironmentOutlined, FileProtectOutlined, FileTextOutlined, PhoneOutlined, PlusCircleFilled, SaveOutlined, } from "@ant-design/icons";
+  BankOutlined,
+  CalendarOutlined,
+  DeleteOutlined,
+  DollarCircleOutlined,
+  EditOutlined,
+  EnvironmentOutlined,
+  FileProtectOutlined,
+  FileTextOutlined,
+  PhoneOutlined,
+  PlusCircleFilled,
+  SaveOutlined,
+} from "@ant-design/icons";
 import { type ProdukPembiayaan, type Sumdan } from "@/generated/prisma/client";
 import {
   App,
@@ -661,7 +676,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_adm_sumdan,
                       onChange: (e: any) =>
-                        setData({ ...data, c_adm_sumdan: parseFloat(e) }),
+                        setData({ ...data, c_adm_sumdan: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -678,12 +693,12 @@ function UpsertSumdan({
                     data={{
                       label: "Provisi %",
                       mode: "horizontal",
-                      type: "text",
+                      type: "number",
                       value: data.c_provisi_sumdan,
                       onChange: (e: any) =>
                         setData({
                           ...data,
-                          c_provisi_sumdan: parseFloat(e || "0"),
+                          c_provisi_sumdan: Number(e || 0),
                         }),
                     }}
                   />
@@ -707,7 +722,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.dsr,
                       onChange: (e: any) =>
-                        setData({ ...data, dsr: parseFloat(e) }),
+                        setData({ ...data, dsr: Number(e) }),
                     }}
                   />
                   <FormInput
@@ -730,7 +745,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_margin,
                       onChange: (e: any) =>
-                        setData({ ...data, c_margin: parseFloat(e) }),
+                        setData({ ...data, c_margin: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -753,7 +768,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_adm,
                       onChange: (e: any) =>
-                        setData({ ...data, c_adm: parseFloat(e) }),
+                        setData({ ...data, c_adm: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -763,7 +778,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_adm_mitra,
                       onChange: (e: any) =>
-                        setData({ ...data, c_adm_mitra: parseFloat(e) }),
+                        setData({ ...data, c_adm_mitra: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -773,7 +788,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_adm_ff,
                       onChange: (e: any) =>
-                        setData({ ...data, c_adm_ff: parseFloat(e) }),
+                        setData({ ...data, c_adm_ff: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -832,7 +847,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_fee_ao,
                       onChange: (e: any) =>
-                        setData({ ...data, c_fee_ao: parseFloat(e) }),
+                        setData({ ...data, c_fee_ao: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -842,7 +857,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_fee_cabang,
                       onChange: (e: any) =>
-                        setData({ ...data, c_fee_cabang: parseFloat(e) }),
+                        setData({ ...data, c_fee_cabang: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -852,7 +867,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_fee_area,
                       onChange: (e: any) =>
-                        setData({ ...data, c_fee_area: parseFloat(e) }),
+                        setData({ ...data, c_fee_area: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -862,7 +877,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_fee_bpp,
                       onChange: (e: any) =>
-                        setData({ ...data, c_fee_bpp: parseFloat(e) }),
+                        setData({ ...data, c_fee_bpp: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -872,7 +887,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_fee_bpb,
                       onChange: (e: any) =>
-                        setData({ ...data, c_fee_bpb: parseFloat(e) }),
+                        setData({ ...data, c_fee_bpb: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -924,7 +939,7 @@ function UpsertSumdan({
                       type: "number",
                       value: data.c_bop_area,
                       onChange: (e: any) =>
-                        setData({ ...data, c_bop_area: parseFloat(e || "0") }),
+                        setData({ ...data, c_bop_area: Number(e || 0) }),
                     }}
                   />
                   <FormInput
@@ -1391,7 +1406,7 @@ function UpsertProduk({
               value: data.c_margin,
               suffix: `${sumdan.c_margin + data.c_margin}%`,
               onChange: (e: any) =>
-                setData({ ...data, c_margin: parseFloat(e || "0") }),
+                setData({ ...data, c_margin: Number(e || "0") }),
             }}
           />
           <FormInput
@@ -1402,7 +1417,7 @@ function UpsertProduk({
               required: true,
               value: data.c_insurance,
               onChange: (e: any) =>
-                setData({ ...data, c_insurance: parseFloat(e || "0") }),
+                setData({ ...data, c_insurance: Number(e || "0") }),
             }}
           />
           <FormInput
