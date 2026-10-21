@@ -60,10 +60,14 @@ export const SIPage1Vima = (record: IDropping) => {
             value: dapem.ProdukPembiayaan.name,
           },
           {
-            key: `Provisi ${dapem.c_provisi_sumdan + dapem.c_adm_sumdan}%`,
-            value: IDRFormat(
-              detail.detail.adm_sumdan + detail.detail.provisi_sumdan,
-            ),
+            key: `Administrasi ${dapem.c_adm_sumdan}%`,
+            value: IDRFormat(detail.detail.adm_sumdan),
+            currency: true,
+            classStyle: "font-bold",
+          },
+          {
+            key: `Provisi ${dapem.c_provisi_sumdan}%`,
+            value: IDRFormat(detail.detail.provisi_sumdan),
             currency: true,
             classStyle: "font-bold",
           },

@@ -43,6 +43,7 @@ import {
 import { HookAPI } from "antd/es/modal/useModal";
 import moment from "moment";
 import { useEffect, useState } from "react";
+import { printSIPerdana } from "@/components/pdfutils/si/SIPerdana";
 const { RangePicker } = DatePicker;
 
 export default function Page() {
@@ -280,7 +281,7 @@ export default function Page() {
                     printSIVima(record);
                   }
                   if (record.Sumdan.code.includes("PERDANA")) {
-                    printSIVima(record);
+                    printSIPerdana(record);
                   } else {
                     printSIStandar(record);
                   }
