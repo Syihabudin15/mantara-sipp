@@ -21,8 +21,7 @@ const courierPrime = Courier_Prime({
 
 export const metadata: Metadata = {
   title: `${process.env.NEXT_PUBLIC_APP_SHORTNAME || "SIPP"}`,
-  description:
-    "Sistem informasi Pembiayaab Pensiun By Koperasi Jasa Sena Jaya Mandiri (KOPJAS SJM)",
+  description: "Sistem informasi Pembiayaab Pensiun",
 };
 
 export default function RootLayout({

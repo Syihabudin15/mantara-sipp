@@ -6,7 +6,7 @@ import { PersetujuanPencairan } from "./PersetujuanPencairan";
 import { BPK } from "./BPK";
 import { SPK } from "./SPK";
 import { FLagging } from "./Flagging";
-import { PernyataanKuasa } from "./PernyataanKuasa";
+// import { PernyataanKuasa } from "./PernyataanKuasa";
 import { TTPJ } from "./TTPJ";
 import { DocChecklist1 } from "./DC1";
 import { DocChecklist2 } from "./DC2";
@@ -16,6 +16,7 @@ import { FLaggingAsabri } from "./FlaggingAsabri";
 import { FLaggingAsabri2 } from "./FlaggingAsabri2";
 import { PKPerdana } from "./perdana/PKPerdana";
 import { PPPerdana } from "./perdana/PPPerdana";
+import { SKPMantap } from "./SKPMantap";
 
 moment.locale("id");
 
@@ -173,7 +174,7 @@ const generateContractHtml = (record: IDapem) => {
         ${SPK(record)}
       </div>
       <div class="page text-justify" style="font-size: 12px;">
-        ${PernyataanKuasa(record)}
+        ${SKPMantap(record)}
       </div>
       ${handleGroupSKEP()}
       <div class="page page-break text-justify" style="font-size: 11px;">
