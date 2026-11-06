@@ -7,10 +7,10 @@ export const SKPMantap = (record: IDapem) => {
   const detail = GetDetailDapem(record);
   return `
   
-  <p class="font-bold text-xl text-center underline mb-6 -mt-20">SURAT PERNYATAAN DAN KUASA</p>
+  <p class="font-bold text-xl text-center underline mb-4 -mt-20">SURAT PERNYATAAN DAN KUASA</p>
   
 
-  <div class="ml-4 mt-1 ">
+  <div class="ml-4">
     <div class="flex gap-2">
       <p class="w-52">Nama</p>
       <p class="w-4">:</p>
