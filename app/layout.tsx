@@ -21,7 +21,7 @@ const courierPrime = Courier_Prime({
 
 export const metadata: Metadata = {
   title: `${process.env.NEXT_PUBLIC_APP_SHORTNAME || "SIPP"}`,
-  description: "Sistem informasi Pembiayaab Pensiun",
+  description: "Sistem informasi Pembiayaan Pensiun",
 };
 
 export default function RootLayout({

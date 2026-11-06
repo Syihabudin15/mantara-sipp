@@ -281,6 +281,8 @@ export default function Page() {
                     printSIVima(record);
                   } else if (record.Sumdan.code.includes("PERDANA")) {
                     printSIPerdana(record);
+                  } else if (record.Sumdan.code.toLowerCase().includes("xen")) {
+                    printSIVima(record);
                   } else {
                     printSIStandar(record);
                   }
