@@ -97,7 +97,7 @@ export const SKPMantap = (record: IDapem) => {
         <div class="h-24 flex items-center justify-center opacity-50">
         </div>
         <div>
-          <p class="w-full underline font-bold">${process.env.NEXT_PUBLIC_APP_AKAD_NAME}</p>
+          <p class="w-full underline font-bold">H ARIEF FIRMANSYAH</p>
           <p class="font-bold">Ketua Koperasi</p>
         </div>
       </div>
