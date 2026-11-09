@@ -44,6 +44,7 @@ import { HookAPI } from "antd/es/modal/useModal";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { printSIPerdana } from "@/components/pdfutils/si/SIPerdana";
+import { printSIXen } from "@/components/pdfutils/si/SIXen";
 const { RangePicker } = DatePicker;
 
 export default function Page() {
@@ -282,7 +283,7 @@ export default function Page() {
                   } else if (record.Sumdan.code.includes("PERDANA")) {
                     printSIPerdana(record);
                   } else if (record.Sumdan.code.toLowerCase().includes("xen")) {
-                    printSIVima(record);
+                    printSIXen(record);
                   } else {
                     printSIStandar(record);
                   }
