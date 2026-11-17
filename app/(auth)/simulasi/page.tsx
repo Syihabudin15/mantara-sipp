@@ -1277,18 +1277,8 @@ const ModalDetailPembiayaan = ({
                 </span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
-                <span>Tatalaksana & Provisi</span>
-                <span>
-                  {IDRFormat(
-                    detail.tatalaksana +
-                      detail.provisi -
-                      detail.detail.fee_agent,
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between gap-2 border-b border-dashed">
-                <span>Fee Agent Fronting</span>
-                <span>{IDRFormat(detail.detail.fee_agent)}</span>
+                <span>Tatalaksana</span>
+                <span>{IDRFormat(detail.tatalaksana + detail.provisi)}</span>
               </div>
               <div className="flex justify-between gap-2 border-b border-dashed">
                 <span>Buka Rekening</span>

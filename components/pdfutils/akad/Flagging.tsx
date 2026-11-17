@@ -111,7 +111,7 @@ export const FLagging = (record: IDapem) => {
             Pensiun
           </div>
         </div>
-        yang saya terima dari PT TASPEN (Persero), agar dibayarkan melalui rekening saya Nomor ............................................ atas Nama ........................................................... pada PT. BANK MANDIRI TASPEN,  Kantor Cabang ........................................................... <span class="font-bold">sampai dengan Pembiayaan saya lunas/pada saat saya memasuki masa pensiun</span> (*) yaitu Tanggal .................... Bulan .................... Tahun .................... sampai dengan Tanggal .................... Bulan .................... Tahun ....................
+        yang saya terima dari PT. Taspen (Persero), agar dibayarkan melalui rekening saya Nomor ............................................ atas Nama ........................................................... pada PT. BANK MANDIRI TASPEN,  Kantor Cabang ........................................................... <span class="font-bold">sampai dengan Pembiayaan saya lunas/pada saat saya memasuki masa pensiun</span> (*) yaitu Tanggal .................... Bulan .................... Tahun .................... sampai dengan Tanggal .................... Bulan .................... Tahun ....................
         `,
       ],
       "number",
