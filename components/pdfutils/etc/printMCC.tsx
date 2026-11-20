@@ -153,7 +153,7 @@ const generateMCC = (record: IDapem) => {
                     <p class="w-4">6.</p>
                     <p class="w-40">STATUS PEMBIAYAAN</p>
                     <p class="w-4">:</p>
-                    <div class="flex-1 flex">
+                    <div class="flex-1 flex gap-2">
                         <div class="flex gap-1">
                             <div class="w-4 h-4 border border-gray-800 flex justify-center items-center">${jenisPembiayaan.includes("tangan") ? "✓" : ""}</div>
                             <p>SK DITANGAN</p>
