@@ -28,7 +28,7 @@ const generateMCC = (record: IDapem) => {
       <style>
         @page {
           size: A4;
-          margin: 15mm;
+          margin: 10mm;
         }
 
         html, body {
@@ -90,7 +90,7 @@ const generateMCC = (record: IDapem) => {
           }
       </style>
     </head>
-    <body class="bg-white text-gray-800 leading-relaxed p-4 max-w-200">
+    <body class="bg-white text-gray-800 leading-relaxed p-4 max-w-220">
 
     <div class="page" style="font-size: 12px;">
 
