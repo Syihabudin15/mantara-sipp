@@ -1,5 +1,5 @@
 import moment from "moment";
-import { IDapem } from "@/libs/IInterfaces";
+import { IDapem, IDesc } from "@/libs/IInterfaces";
 import {
   GetDetailDapem,
   GetFullAge,
@@ -17,6 +17,10 @@ const generateMCC = (record: IDapem) => {
   const produkPembiayaans =
     record.ProdukPembiayaan?.Sumdan?.ProdukPembiayaans || [];
   const jenisPembiayaan = record.JenisPembiayaan?.name?.toLowerCase() || "";
+
+  const slik = record.slik_desc
+    ? (JSON.parse(record.slik_desc) as IDesc)
+    : null;
 
   const html = `
   <!doctype html>
@@ -207,7 +211,11 @@ const generateMCC = (record: IDapem) => {
             </div>
             <div class="text-lg text-center font-bold bg-gray-800 text-slate-100 py-2 mt-4">ANALISA SLIK + VERIFIKASI CHECKLIST DOKUMEN</div>
             <div class="flex items-end">
-                <div class="flex-1 h-44 border-r border-gray-700"></div>
+                <div class="flex-1 h-44 border-r border-gray-700">
+                    <p>${record.slik_desc ? slik?.desc : ""}</p>
+                    <p>${record.slik_desc ? `By ${slik?.name}, at ${moment(slik?.date).format("DD/MM/YYYY HH:mm")}` : ""}</p>
+                    
+                </div>
                 <div class="w-40 text-center">CREDIT OFFICER</div>
             </div>
             <div class="text-lg text-center font-bold bg-gray-800 text-slate-100 py-2">KEPUTUSAN KOMITE CREDIT</div>
