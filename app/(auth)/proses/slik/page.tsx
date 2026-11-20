@@ -2,15 +2,33 @@
 
 import { useUser } from "@/components/UserContext";
 import {
-  ExportToExcel, FilterData, GetStatusTag, MappingToProsesDapem, ProsesPembiayaan, } from "@/components/utils/CompUtils";
+  ExportToExcel,
+  FilterData,
+  GetStatusTag,
+  MappingToProsesDapem,
+  ProsesPembiayaan,
+} from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
 import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable, IDapem, IDesc, IPageProps, IUser, } from "@/libs/IInterfaces";
+  IActionTable,
+  IDapem,
+  IDesc,
+  IPageProps,
+  IUser,
+} from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 
 import {
-  ArrowRightOutlined, BankOutlined, FileProtectOutlined, FolderOutlined, FormOutlined, PayCircleOutlined, PrinterOutlined, SwapOutlined, } from "@ant-design/icons";
+  ArrowRightOutlined,
+  BankOutlined,
+  FileProtectOutlined,
+  FolderOutlined,
+  FormOutlined,
+  PayCircleOutlined,
+  PrinterOutlined,
+  SwapOutlined,
+} from "@ant-design/icons";
 import { type JenisPembiayaan, type Sumdan } from "@/generated/prisma/client";
 import {
   App,
@@ -33,7 +51,7 @@ const { RangePicker } = DatePicker;
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
     page: 1,
-    limit: 100,
+    limit: 25,
     total: 0,
     data: [],
     search: "",

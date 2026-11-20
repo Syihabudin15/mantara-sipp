@@ -52,7 +52,7 @@ const { RangePicker } = DatePicker;
 export default function Page() {
   const [pageProps, setPageProps] = useState<IPageProps<IDapem>>({
     page: 1,
-    limit: 100,
+    limit: 25,
     total: 0,
     data: [],
     search: "",
@@ -133,6 +133,15 @@ export default function Page() {
   }, []);
 
   const handlePrintMCC = async (record: IDapem) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      notification.error({
+        message: "Popup diblokir",
+        description: "Mohon izinkan popup untuk situs ini lalu coba lagi.",
+      });
+      return;
+    }
+
     notification.open({
       key: record.id,
       title: (
@@ -141,13 +150,30 @@ export default function Page() {
         </>
       ),
     });
-    const { data } = await fetch(`/api/dapem?id=${record.id}`, {
-      method: "PATCH",
-      cache: "no-store",
-    }).then((res) => res.json());
-    const { printMCC } = await import("@/components/pdfutils/etc/printMCC");
-    printMCC(data);
-    notification.destroy(record.id);
+    try {
+      const response = await fetch(`/api/dapem?id=${record.id}`, {
+        method: "PATCH",
+        cache: "no-store",
+      });
+      const result = await response.json();
+      if (!response.ok || !result.data) {
+        throw new Error(result.msg || "Data MCC tidak ditemukan");
+      }
+
+      const { printMCC } = await import("@/components/pdfutils/etc/printMCC");
+      printMCC(result.data, printWindow);
+    } catch (error) {
+      printWindow.close();
+      notification.error({
+        message: "Gagal membuat MCC",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan saat mengambil data.",
+      });
+    } finally {
+      notification.destroy(record.id);
+    }
   };
 
   const columns: TableProps<IDapem>["columns"] = [

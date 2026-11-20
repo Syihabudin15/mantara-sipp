@@ -14,6 +14,9 @@ const generateMCC = (record: IDapem) => {
     record.date_contract || record.created_at,
   );
   const detail = GetDetailDapem(record);
+  const produkPembiayaans =
+    record.ProdukPembiayaan?.Sumdan?.ProdukPembiayaans || [];
+  const jenisPembiayaan = record.JenisPembiayaan?.name?.toLowerCase() || "";
 
   const html = `
   <!doctype html>
@@ -34,6 +37,29 @@ const generateMCC = (record: IDapem) => {
           font-size: 14px;
           text-align: justify;
         }
+        .bg-white { background: white; }
+        .text-gray-800 { color: #1f2937; }
+        .leading-relaxed { line-height: 1.625; }
+        .p-4 { padding: 16px; }
+        .p-2 { padding: 8px; }
+        .mt-4 { margin-top: 16px; }
+        .flex { display: flex; }
+        .flex-1 { flex: 1; }
+        .items-end { align-items: flex-end; }
+        .gap-2 { gap: 8px; }
+        .gap-4 { gap: 16px; }
+        .border { border: 1px solid #000; }
+        .border-gray-800 { border-color: #1f2937; }
+        .text-lg { font-size: 18px; }
+        .font-bold { font-weight: bold; }
+        .text-center { text-align: center; }
+        .bg-gray-800 { background: #1f2937; }
+        .text-slate-100 { color: #f1f5f9; }
+        .py-2 { padding-top: 8px; padding-bottom: 8px; }
+        .w-4 { width: 16px; }
+        .w-40 { width: 160px; }
+        .h-4 { height: 16px; }
+        .h-96 { height: 384px; }
 
         /* Pemisah halaman */
         .page-break {
@@ -105,10 +131,10 @@ const generateMCC = (record: IDapem) => {
                     <p class="w-4">5.</p>
                     <p class="w-40">JENIS PINJAMAN</p>
                     <div class="flex-1 flex gap-4">
-                    ${record.ProdukPembiayaan.Sumdan.ProdukPembiayaans.map(
+                    ${produkPembiayaans.map(
                       (p) => `
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${record.produkPembiayaanId === p.id}</div>
+                            <div class="w-4 h-4">${record.produkPembiayaanId === p.id ? "✓" : ""}</div>
                             <p>${p.name.toUpperCase()}</p>
                         </div>
                         `,
@@ -121,15 +147,15 @@ const generateMCC = (record: IDapem) => {
                     <p class="w-40">STATUS PEMBIAYAAN</p>
                     <div class="flex-1 flex gap-4">
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${record.JenisPembiayaan.name.toLowerCase().includes("tangan")}</div>
+                            <div class="w-4 h-4">${jenisPembiayaan.includes("tangan") ? "✓" : ""}</div>
                             <p>SK DITANGAN</p>
                         </div>
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${record.JenisPembiayaan.name.toLowerCase().includes("mutasi")}</div>
+                            <div class="w-4 h-4">${jenisPembiayaan.includes("mutasi") ? "✓" : ""}</div>
                             <p>MUTASI</p>
                         </div>
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${record.JenisPembiayaan.name.toLowerCase().includes("over")}</div>
+                            <div class="w-4 h-4">${jenisPembiayaan.includes("over") ? "✓" : ""}</div>
                             <p>TAKE OVER</p>
                         </div>
                     </div>
@@ -184,21 +210,22 @@ const generateMCC = (record: IDapem) => {
   return html;
 };
 
-export const printMCC = (record: IDapem) => {
+export const printMCC = (record: IDapem, printWindow?: Window) => {
   const htmlContent = generateMCC(record);
 
-  const w = window.open("", "_blank");
+  const w = printWindow || window.open("", "_blank");
   if (!w) {
     alert("Popup diblokir. Mohon izinkan popup dari situs ini.");
     return;
   }
 
+  w.document.title = "MCC - " + (record.Debitur.fullname || record.nopen || "");
+  w.focus();
   w.document.open();
   w.document.write(htmlContent);
   w.document.close();
-  w.onload = function () {
-    setTimeout(() => {
-      w.print();
-    }, 200);
-  };
+  setTimeout(() => {
+    w.focus();
+    w.print();
+  }, 500);
 };

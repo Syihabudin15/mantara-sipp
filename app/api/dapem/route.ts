@@ -475,7 +475,9 @@ export const PATCH = async (req: NextRequest) => {
     where: { id },
     include: {
       Debitur: true,
-      ProdukPembiayaan: { include: { Sumdan: true } },
+      ProdukPembiayaan: {
+        include: { Sumdan: { include: { ProdukPembiayaans: true } } },
+      },
       JenisPembiayaan: true,
       User: {
         include: {
