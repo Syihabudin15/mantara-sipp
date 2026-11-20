@@ -184,7 +184,7 @@ const generateMCC = (record: IDapem) => {
                     <p class="w-4">9.</p>
                     <p class="w-40">MARGIN EFEKTIF</p>
                     <p class="w-4">:</p>
-                    <div class="flex-1">${(record.c_margin + record.c_margin_sumdan).toFixed(2)}% PER TAHUN (${((record.c_margin + record.c_margin_sumdan) / 12).toFixed(2)}% PER BULAN)</div>
+                    <div class="flex-1">${record.c_margin_sumdan.toFixed(2)}% PER TAHUN (${(record.c_margin_sumdan / 12).toFixed(2)}% PER BULAN)</div>
                 </div>
                 <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">10.</p>
@@ -196,13 +196,13 @@ const generateMCC = (record: IDapem) => {
                     <p class="w-4">11.</p>
                     <p class="w-40">KEWAJIBAN PER BULAN</p>
                     <p class="w-4">:</p>
-                    <div class="flex-1">Rp. ${IDRFormat(detail.angsuran)}</div>
+                    <div class="flex-1">Rp. ${IDRFormat(detail.detail.angsuran_sumdan)}</div>
                 </div>
                 <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">12.</p>
                     <p class="w-40">SISA GAJI PER BULAN</p>
                     <p class="w-4">:</p>
-                    <div class="flex-1">Rp. ${IDRFormat(record.Debitur.salary - detail.angsuran)}</div>
+                    <div class="flex-1">Rp. ${IDRFormat(record.Debitur.salary - detail.detail.angsuran_sumdan)}</div>
                 </div>
             </div>
             <div class="text-lg text-center font-bold bg-gray-800 text-slate-100 py-2 mt-4">ANALISA SLIK + VERIFIKASI CHECKLIST DOKUMEN</div>
