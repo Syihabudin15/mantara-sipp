@@ -108,7 +108,7 @@ export const listMenuUI: IMenuType[] = [
         key: "/proses/approv",
         icon: <FileProtectOutlined />,
         needaccess: true,
-        availableAccess: ["read", "proses"],
+        availableAccess: ["read", "proses", "print"],
       },
     ],
   },

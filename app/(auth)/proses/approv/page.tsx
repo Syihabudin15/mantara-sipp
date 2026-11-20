@@ -2,15 +2,34 @@
 
 import { useUser } from "@/components/UserContext";
 import {
-  ExportToExcel, FilterData, GetStatusTag, MappingToProsesDapem, ProsesPembiayaan, } from "@/components/utils/CompUtils";
+  ExportToExcel,
+  FilterData,
+  GetStatusTag,
+  MappingToProsesDapem,
+  ProsesPembiayaan,
+} from "@/components/utils/CompUtils";
 import { DetailDapem } from "@/components/utils/LayoutUtils";
 import { GetDetailDapem, IDRFormat } from "@/components/utils/PembiayaanUtil";
 import {
-  IActionTable, IDapem, IDesc, IPageProps, IUser, } from "@/libs/IInterfaces";
+  IActionTable,
+  IDapem,
+  IDesc,
+  IPageProps,
+  IUser,
+} from "@/libs/IInterfaces";
 import { useAccess } from "@/libs/Permission";
 
 import {
-  ArrowRightOutlined, BankOutlined, FileProtectOutlined, FolderOutlined, FormOutlined, PayCircleOutlined, PrinterOutlined, SwapOutlined, } from "@ant-design/icons";
+  ArrowRightOutlined,
+  BankOutlined,
+  FileProtectOutlined,
+  FolderOutlined,
+  FormOutlined,
+  LoadingOutlined,
+  PayCircleOutlined,
+  PrinterOutlined,
+  SwapOutlined,
+} from "@ant-design/icons";
 import { type JenisPembiayaan, type Sumdan } from "@/generated/prisma/client";
 import {
   App,
@@ -56,6 +75,7 @@ export default function Page() {
     window ? window.location.pathname : "/proses/approv",
   );
   const user = useUser();
+  const { notification } = App.useApp();
 
   const getData = async () => {
     setLoading(true);
@@ -111,6 +131,24 @@ export default function Page() {
       ]);
     })();
   }, []);
+
+  const handlePrintMCC = async (record: IDapem) => {
+    notification.open({
+      key: record.id,
+      title: (
+        <>
+          Generating... <LoadingOutlined />
+        </>
+      ),
+    });
+    const { data } = await fetch(`/api/dapem?id=${record.id}`, {
+      method: "PATCH",
+      cache: "no-store",
+    }).then((res) => res.json());
+    const { printMCC } = await import("@/components/pdfutils/etc/printMCC");
+    printMCC(data);
+    notification.destroy(record.id);
+  };
 
   const columns: TableProps<IDapem>["columns"] = [
     {
@@ -381,6 +419,14 @@ export default function Page() {
               }
             ></Button>
           )}
+          {hasAccess("print") && record.produkPembiayaanId.toLowerCase().includes("bprxen") && (
+            <Button
+              size="small"
+              type="primary"
+              icon={<PrinterOutlined />}
+              onClick={() => handlePrintMCC(record)}
+            ></Button>
+          )}
         </div>
       ),
     },
@@ -407,6 +453,7 @@ export default function Page() {
                 backdate: "",
               }))
             }
+            // eslint-disable-next-line react/no-children-prop
             children={
               <>
                 <div className="my-2">
@@ -414,7 +461,7 @@ export default function Page() {
                   <RangePicker
                     size="small"
                     value={pageProps.backdate}
-                    onChange={(date, dateStr) =>
+                    onChange={(_date, dateStr) =>
                       setPageProps({ ...pageProps, backdate: dateStr, page: 1 })
                     }
                     style={{ width: "100%" }}

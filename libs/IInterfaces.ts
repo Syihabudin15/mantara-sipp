@@ -83,7 +83,7 @@ export interface IArea extends Area {
   HeadAreas: IHeadArea[];
 }
 export interface IProdukPembiayaan extends ProdukPembiayaan {
-  Sumdan: Sumdan;
+  Sumdan: ISumdan;
   Dapems: IDapem[];
 }
 export interface IJenisPembiayaan extends JenisPembiayaan {
