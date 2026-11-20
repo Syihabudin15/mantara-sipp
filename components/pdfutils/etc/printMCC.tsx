@@ -94,35 +94,39 @@ const generateMCC = (record: IDapem) => {
 
     <div class="page" style="font-size: 12px;">
 
-        ${record.ProdukPembiayaan.Sumdan.logo ? `<img src="${record.ProdukPembiayaan.Sumdan.logo}" style="width: 40%" />` : ""}
+        ${record.ProdukPembiayaan.Sumdan.logo ? `<img src="${record.ProdukPembiayaan.Sumdan.logo}" style="width: 30%" />` : ""}
         <div class="border border-gray-800">
-            <div class="text-lg font-bold bg-gray-800 text-slate-100 py-2">LEMBAR KEPUTUSAN KOMITE KREDIT</div>
+            <div class="text-lg text-center font-bold bg-gray-800 text-slate-100 py-2">LEMBAR KEPUTUSAN KOMITE KREDIT</div>
             <div class="p-2">
                 <div class="flex gap-2">
                     <p class="w-4">1.</p>
                     <p class="w-40">NAMA DEBITUR</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1">${record.Debitur.fullname}</div>
                 </div>
                 <div class="flex gap-2">
                     <p class="w-4">2.</p>
                     <p class="w-40">USIA</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1">${year} Tahun ${month} Bulan ${day} Hari</div>
                 </div>
                 <div class="flex gap-2">
                     <p class="w-4">3.</p>
                     <p class="w-40">NOTAS/NOPEN</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1">${record.nopen}</div>
                 </div>
                 <div class="flex gap-2">
                     <p class="w-4">4.</p>
                     <p class="w-40">INSTANSI</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1 flex gap-4">
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${record.Debitur.group_skep === "PT. ASABRI" ? "✓" : ""}</div>
+                            <div class="w-4 h-4 border-gray-800">${record.Debitur.group_skep === "PT. ASABRI" ? "✓" : ""}</div>
                             <p>ASABRI</p>
                         </div>
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${record.Debitur.group_skep === "PT. TASPEN" ? "✓" : ""}</div>
+                            <div class="w-4 h-4 border-gray-800">${record.Debitur.group_skep === "PT. TASPEN" ? "✓" : ""}</div>
                             <p>TASPEN</p>
                         </div>
                     </div>
@@ -130,12 +134,13 @@ const generateMCC = (record: IDapem) => {
                 <div class="flex gap-2">
                     <p class="w-4">5.</p>
                     <p class="w-40">JENIS PINJAMAN</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1 flex gap-4">
                     ${produkPembiayaans
                       .map(
                         (p) => `
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${record.produkPembiayaanId === p.id ? "✓" : ""}</div>
+                            <div class="w-4 h-4 border-gray-800">${record.produkPembiayaanId === p.id ? "✓" : ""}</div>
                             <p>${p.name.toUpperCase()}</p>
                         </div>
                         `,
@@ -147,17 +152,18 @@ const generateMCC = (record: IDapem) => {
                 <div class="flex gap-2">
                     <p class="w-4">6.</p>
                     <p class="w-40">STATUS PEMBIAYAAN</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1 flex gap-4">
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${jenisPembiayaan.includes("tangan") ? "✓" : ""}</div>
+                            <div class="w-4 h-4 border-gray-800">${jenisPembiayaan.includes("tangan") ? "✓" : ""}</div>
                             <p>SK DITANGAN</p>
                         </div>
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${jenisPembiayaan.includes("mutasi") ? "✓" : ""}</div>
+                            <div class="w-4 h-4 border-gray-800">${jenisPembiayaan.includes("mutasi") ? "✓" : ""}</div>
                             <p>MUTASI</p>
                         </div>
                         <div class="flex gap-2">
-                            <div class="w-4 h-4">${jenisPembiayaan.includes("over") ? "✓" : ""}</div>
+                            <div class="w-4 h-4 border border-gray-800">${jenisPembiayaan.includes("over") ? "✓" : ""}</div>
                             <p>TAKE OVER</p>
                         </div>
                     </div>
@@ -165,40 +171,46 @@ const generateMCC = (record: IDapem) => {
                 <div class="flex gap-2">
                     <p class="w-4">7.</p>
                     <p class="w-40">NOMINAL PLAFOND</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1">Rp. ${IDRFormat(record.plafond)}</div>
                 </div>
                 <div class="flex gap-2">
                     <p class="w-4">8.</p>
                     <p class="w-40">JANGKA WAKTU</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1">${record.tenor} Bulan</div>
                 </div>
                 <div class="flex gap-2">
                     <p class="w-4">9.</p>
                     <p class="w-40">MARGIN EFEKTIF</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1">${(record.c_margin + record.c_margin_sumdan).toFixed(2)}%PER BULAN</div>
                 </div>
                 <div class="flex gap-2">
                     <p class="w-4">10.</p>
                     <p class="w-40">GAJI BERSIH PER BULAN</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1">Rp. ${IDRFormat(record.Debitur.salary)}</div>
                 </div>
                 <div class="flex gap-2">
                     <p class="w-4">11.</p>
                     <p class="w-40">KEWAJIBAN PER BULAN</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1">Rp. ${IDRFormat(detail.angsuran)}</div>
                 </div>
                 <div class="flex gap-2">
                     <p class="w-4">12.</p>
                     <p class="w-40">SISA GAJI PER BULAN</p>
+                    <p class="w-4">:</p>
                     <div class="flex-1">Rp. ${IDRFormat(record.Debitur.salary - detail.angsuran)}</div>
                 </div>
             </div>
-            <div class="text-lg font-bold bg-gray-800 text-slate-100 py-2 mt-4">ANALISA SLIK + VERIFIKASI CHECKLIST DOKUMEN</div>
+            <div class="text-lg text-center font-bold bg-gray-800 text-slate-100 py-2 mt-4">ANALISA SLIK + VERIFIKASI CHECKLIST DOKUMEN</div>
             <div class="flex items-end">
                 <div class="flex-1 h-44 border-r border-gray-700"></div>
                 <div class="w-40 text-center">CREDIT OFFICER</div>
             </div>
-            <div class="text-lg font-bold bg-gray-800 text-slate-100 py-2">KEPUTUSAN KOMITE CREDIT</div>
+            <div class="text-lg text-center font-bold bg-gray-800 text-slate-100 py-2">KEPUTUSAN KOMITE CREDIT</div>
             <div class="flex items-end">
                 <div class="flex-1 h-44 border-r border-gray-700"></div>
                 <div class="w-40 text-center">KABAG KREDIT</div>
