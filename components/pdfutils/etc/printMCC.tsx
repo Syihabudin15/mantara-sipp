@@ -131,14 +131,16 @@ const generateMCC = (record: IDapem) => {
                     <p class="w-4">5.</p>
                     <p class="w-40">JENIS PINJAMAN</p>
                     <div class="flex-1 flex gap-4">
-                    ${produkPembiayaans.map(
-                      (p) => `
+                    ${produkPembiayaans
+                      .map(
+                        (p) => `
                         <div class="flex gap-2">
                             <div class="w-4 h-4">${record.produkPembiayaanId === p.id ? "✓" : ""}</div>
                             <p>${p.name.toUpperCase()}</p>
                         </div>
                         `,
-                    ).join("")}
+                      )
+                      .join("")}
                         
                     </div>
                 </div>
@@ -193,12 +195,12 @@ const generateMCC = (record: IDapem) => {
             </div>
             <div class="text-lg font-bold bg-gray-800 text-slate-100 py-2 mt-4">ANALISA SLIK + VERIFIKASI CHECKLIST DOKUMEN</div>
             <div class="flex items-end">
-                <div class="flex-1 h-96"></div>
+                <div class="flex-1 h-44 border-r border-gray-700"></div>
                 <div class="w-40 text-center">CREDIT OFFICER</div>
             </div>
             <div class="text-lg font-bold bg-gray-800 text-slate-100 py-2">KEPUTUSAN KOMITE CREDIT</div>
             <div class="flex items-end">
-                <div class="flex-1 h-96"></div>
+                <div class="flex-1 h-44 border-r border-gray-700"></div>
                 <div class="w-40 text-center">KABAG KREDIT</div>
             </div>
         </div>
