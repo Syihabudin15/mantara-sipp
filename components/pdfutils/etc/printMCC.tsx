@@ -121,11 +121,11 @@ const generateMCC = (record: IDapem) => {
                     <p class="w-40">INSTANSI</p>
                     <p class="w-4">:</p>
                     <div class="flex-1 flex gap-2">
-                        <div class="flex">
+                        <div class="flex gap-1">
                             <div class="w-4 h-4 border border-gray-800 flex justify-center items-center">${record.Debitur.group_skep === "PT. ASABRI" ? "✓" : ""}</div>
                             <p>ASABRI</p>
                         </div>
-                        <div class="flex">
+                        <div class="flex gap-1">
                             <div class="w-4 h-4 border border-gray-800 flex justify-center items-center">${record.Debitur.group_skep === "PT. TASPEN" ? "✓" : ""}</div>
                             <p>TASPEN</p>
                         </div>
@@ -139,7 +139,7 @@ const generateMCC = (record: IDapem) => {
                     ${produkPembiayaans
                       .map(
                         (p) => `
-                        <div class="flex">
+                        <div class="flex gap-1">
                             <div class="w-4 h-4 border border-gray-800 flex justify-center items-center">${record.produkPembiayaanId === p.id ? "✓" : ""}</div>
                             <p>${p.name.toUpperCase()}</p>
                         </div>
@@ -154,15 +154,15 @@ const generateMCC = (record: IDapem) => {
                     <p class="w-40">STATUS PEMBIAYAAN</p>
                     <p class="w-4">:</p>
                     <div class="flex-1 flex">
-                        <div class="flex gap-2">
+                        <div class="flex gap-1">
                             <div class="w-4 h-4 border border-gray-800 flex justify-center items-center">${jenisPembiayaan.includes("tangan") ? "✓" : ""}</div>
                             <p>SK DITANGAN</p>
                         </div>
-                        <div class="flex">
+                        <div class="flex gap-1">
                             <div class="w-4 h-4 border border-gray-800 flex justify-center items-center">${jenisPembiayaan.includes("mutasi") ? "✓" : ""}</div>
                             <p>MUTASI</p>
                         </div>
-                        <div class="flex">
+                        <div class="flex gap-1">
                             <div class="w-4 h-4 border border-gray-800 flex justify-center items-center">${jenisPembiayaan.includes("over") ? "✓" : ""}</div>
                             <p>TAKE OVER</p>
                         </div>
