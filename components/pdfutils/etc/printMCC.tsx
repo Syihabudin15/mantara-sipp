@@ -211,7 +211,7 @@ const generateMCC = (record: IDapem) => {
             </div>
             <div class="text-lg text-center font-bold bg-gray-800 text-slate-100 py-2 mt-4">ANALISA SLIK + VERIFIKASI CHECKLIST DOKUMEN</div>
             <div class="flex items-end">
-                <div class="flex-1 h-44 border-r border-gray-700">
+                <div class="flex-1 h-44 border-r border-gray-700 p-2">
                     <p>${record.slik_desc ? slik?.desc : ""}</p>
                     <p>${record.slik_desc ? `By ${slik?.name}, at ${moment(slik?.date).format("DD/MM/YYYY HH:mm")}` : ""}</p>
                     
