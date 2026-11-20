@@ -184,7 +184,7 @@ const generateMCC = (record: IDapem) => {
                     <p class="w-4">9.</p>
                     <p class="w-40">MARGIN EFEKTIF</p>
                     <p class="w-4">:</p>
-                    <div class="flex-1">${(record.c_margin + record.c_margin_sumdan).toFixed(2)}%PER BULAN</div>
+                    <div class="flex-1">${(record.c_margin + record.c_margin_sumdan).toFixed(2)}% PER TAHUN (${((record.c_margin + record.c_margin_sumdan) / 12).toFixed(2)}% PER BULAN)</div>
                 </div>
                 <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">10.</p>
