@@ -419,7 +419,7 @@ export default function Page() {
               }
             ></Button>
           )}
-          {hasAccess("print") && record.produkPembiayaanId.toLowerCase().includes("bprxen") && (
+          {hasAccess("print") && (
             <Button
               size="small"
               type="primary"
