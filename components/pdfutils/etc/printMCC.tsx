@@ -98,25 +98,25 @@ const generateMCC = (record: IDapem) => {
         <div class="border border-gray-800">
             <div class="text-lg text-center font-bold bg-gray-800 text-slate-100 py-2">LEMBAR KEPUTUSAN KOMITE KREDIT</div>
             <div class="p-2">
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">1.</p>
                     <p class="w-40">NAMA DEBITUR</p>
                     <p class="w-4">:</p>
                     <div class="flex-1">${record.Debitur.fullname}</div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">2.</p>
                     <p class="w-40">USIA</p>
                     <p class="w-4">:</p>
                     <div class="flex-1">${year} Tahun ${month} Bulan ${day} Hari</div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">3.</p>
                     <p class="w-40">NOTAS/NOPEN</p>
                     <p class="w-4">:</p>
                     <div class="flex-1">${record.nopen}</div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">4.</p>
                     <p class="w-40">INSTANSI</p>
                     <p class="w-4">:</p>
@@ -131,7 +131,7 @@ const generateMCC = (record: IDapem) => {
                         </div>
                     </div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">5.</p>
                     <p class="w-40">JENIS PINJAMAN</p>
                     <p class="w-4">:</p>
@@ -149,7 +149,7 @@ const generateMCC = (record: IDapem) => {
                         
                     </div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">6.</p>
                     <p class="w-40">STATUS PEMBIAYAAN</p>
                     <p class="w-4">:</p>
@@ -168,37 +168,37 @@ const generateMCC = (record: IDapem) => {
                         </div>
                     </div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">7.</p>
                     <p class="w-40">NOMINAL PLAFOND</p>
                     <p class="w-4">:</p>
                     <div class="flex-1">Rp. ${IDRFormat(record.plafond)}</div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">8.</p>
                     <p class="w-40">JANGKA WAKTU</p>
                     <p class="w-4">:</p>
                     <div class="flex-1">${record.tenor} Bulan</div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">9.</p>
                     <p class="w-40">MARGIN EFEKTIF</p>
                     <p class="w-4">:</p>
                     <div class="flex-1">${(record.c_margin + record.c_margin_sumdan).toFixed(2)}%PER BULAN</div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">10.</p>
                     <p class="w-40">GAJI BERSIH PER BULAN</p>
                     <p class="w-4">:</p>
                     <div class="flex-1">Rp. ${IDRFormat(record.Debitur.salary)}</div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">11.</p>
                     <p class="w-40">KEWAJIBAN PER BULAN</p>
                     <p class="w-4">:</p>
                     <div class="flex-1">Rp. ${IDRFormat(detail.angsuran)}</div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 border-b border-gray-400">
                     <p class="w-4">12.</p>
                     <p class="w-40">SISA GAJI PER BULAN</p>
                     <p class="w-4">:</p>
